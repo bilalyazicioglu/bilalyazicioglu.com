@@ -35,21 +35,64 @@ function formatDate(date: string) {
 export function BlogList({ posts }: { posts: BlogListPost[] }) {
   const [filter, setFilter] = useState<Filter>("all");
 
-  // Counts come off the full list, so a chip never reads "(0)" just because
-  // another chip is currently active.
+  // Group posts for "all" view:
+  // If multiple posts share the same translationKey, only show one row (preferring Turkish as primary)
+  const allGrouped = useMemo(() => {
+    const seenKeys = new Set<string>();
+    const result: (BlogListPost & { availableLangs: PostLang[] })[] = [];
+
+    const keyLangs = new Map<string, PostLang[]>();
+    for (const post of posts) {
+      if (post.translationKey) {
+        const list = keyLangs.get(post.translationKey) || [];
+        if (!list.includes(post.lang)) list.push(post.lang);
+        keyLangs.set(post.translationKey, list);
+      }
+    }
+
+    // Sort so 'tr' comes before 'en' for primary representative
+    const sorted = [...posts].sort((a, b) => {
+      if (a.translationKey && b.translationKey && a.translationKey === b.translationKey) {
+        return a.lang === "tr" ? -1 : 1;
+      }
+      return 0;
+    });
+
+    for (const post of sorted) {
+      if (post.translationKey) {
+        if (seenKeys.has(post.translationKey)) continue;
+        seenKeys.add(post.translationKey);
+        result.push({
+          ...post,
+          availableLangs: keyLangs.get(post.translationKey) || [post.lang],
+        });
+      } else {
+        result.push({
+          ...post,
+          availableLangs: [post.lang],
+        });
+      }
+    }
+
+    return result;
+  }, [posts]);
+
+  // Counts come off the unique articles in 'all', and explicit lang counts
   const counts = useMemo(
     () => ({
-      all: posts.length,
+      all: allGrouped.length,
       tr: posts.filter((post) => post.lang === "tr").length,
       en: posts.filter((post) => post.lang === "en").length,
     }),
-    [posts]
+    [posts, allGrouped]
   );
 
-  const visible = useMemo(
-    () => (filter === "all" ? posts : posts.filter((post) => post.lang === filter)),
-    [filter, posts]
-  );
+  const visible = useMemo(() => {
+    if (filter === "all") return allGrouped;
+    return posts
+      .filter((post) => post.lang === filter)
+      .map((p) => ({ ...p, availableLangs: [p.lang] }));
+  }, [filter, posts, allGrouped]);
 
   return (
     <div className="flex flex-col">
@@ -99,7 +142,9 @@ export function BlogList({ posts }: { posts: BlogListPost[] }) {
                       trackView={false}
                     />
                     <span className="rounded-full border border-accent px-2 py-0.5 font-ui text-[10px] font-bold uppercase tracking-wider text-accent">
-                      {post.lang}
+                      {post.availableLangs && post.availableLangs.length > 1
+                        ? post.availableLangs.map((l) => l.toUpperCase()).join(" · ")
+                        : post.lang.toUpperCase()}
                     </span>
                   </div>
                   <h2 className="font-ui text-lg font-bold group-hover:text-accent">

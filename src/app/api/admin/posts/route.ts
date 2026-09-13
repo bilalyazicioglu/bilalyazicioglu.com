@@ -68,6 +68,10 @@ function parsePayload(body: unknown): { post: PostInput; overwrite: boolean } | 
       lang: raw.lang === "tr" ? "tr" : "en",
       draft: raw.draft === true,
       content,
+      translationKey:
+        typeof raw.translationKey === "string" && raw.translationKey.trim()
+          ? raw.translationKey.trim()
+          : undefined,
     },
     overwrite: raw.overwrite === true,
   };

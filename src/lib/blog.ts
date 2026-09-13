@@ -25,6 +25,7 @@ export type PostMeta = {
   lang: PostLang;
   draft: boolean;
   readingTime: string;
+  translationKey?: string;
 };
 
 export type Post = PostMeta & {
@@ -40,6 +41,7 @@ export type PostInput = {
   lang: PostLang;
   draft: boolean;
   content: string;
+  translationKey?: string;
 };
 
 function postPath(slug: string): string {
@@ -73,6 +75,7 @@ function toMeta(slug: string, data: matter.GrayMatterFile<string>["data"], conte
     lang: data.lang === "tr" ? "tr" : "en",
     draft: data.draft === true,
     readingTime: readingTime(content).text,
+    translationKey: typeof data.translationKey === "string" ? data.translationKey.trim() : undefined,
   };
 }
 
@@ -120,6 +123,7 @@ export function writePost(input: PostInput): void {
     tags: input.tags,
     lang: input.lang,
     ...(input.draft ? { draft: true } : {}),
+    ...(input.translationKey ? { translationKey: input.translationKey } : {}),
   });
 
   const tmpPath = `${filePath}.${Date.now()}.${Math.random().toString(36).substring(2, 8)}.tmp`;
@@ -129,4 +133,12 @@ export function writePost(input: PostInput): void {
 
 export function deletePost(slug: string): void {
   fs.rmSync(postPath(slug), { force: true });
+}
+
+/** Returns the translation pair for a given slug if one exists. */
+export function getPostTranslation(slug: string): PostMeta | null {
+  const current = getPostMeta(slug);
+  if (!current.translationKey) return null;
+  const all = getAllPosts(true);
+  return all.find((p) => p.slug !== slug && p.translationKey === current.translationKey) ?? null;
 }

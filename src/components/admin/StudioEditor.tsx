@@ -16,6 +16,7 @@ export type StudioPost = {
   lang: PostLang;
   draft: boolean;
   content: string;
+  translationKey?: string;
 };
 
 function today(): string {
@@ -120,6 +121,7 @@ export function StudioEditor({
   const [lang, setLang] = useState<PostLang>(initialPost?.lang ?? "tr");
   const [draft, setDraft] = useState(initialPost?.draft ?? true);
   const [content, setContent] = useState(initialPost?.content ?? "");
+  const [translationKey, setTranslationKey] = useState(initialPost?.translationKey ?? "");
 
   const [viewMode, setViewMode] = useState<"split" | "editor" | "preview">("split");
   const [busy, setBusy] = useState(false);
@@ -232,6 +234,7 @@ export function StudioEditor({
             .filter(Boolean),
           draft: asDraft,
           content,
+          translationKey: translationKey.trim() || undefined,
           overwrite: mode === "edit",
         }),
       });
@@ -457,6 +460,19 @@ export function StudioEditor({
             value={tags}
             onChange={(e) => setTags(e.target.value)}
             placeholder="Rust, P2P, Networks"
+            className="w-full border border-ink bg-canvas px-3 py-2 font-ui text-sm text-ink outline-none focus:border-accent"
+          />
+        </div>
+
+        <div className="sm:col-span-3">
+          <label className="mb-1 block font-ui text-[11px] font-bold uppercase tracking-wider text-ink/60">
+            Ortak Çeviri Anahtarı / Translation Key (Opsiyonel)
+          </label>
+          <input
+            type="text"
+            value={translationKey}
+            onChange={(e) => setTranslationKey(e.target.value)}
+            placeholder="Örn: admin-security (Aynı yazının TR ve EN versiyonunu eşleştirmek için ikisine de aynı anahtarı yazın)"
             className="w-full border border-ink bg-canvas px-3 py-2 font-ui text-sm text-ink outline-none focus:border-accent"
           />
         </div>

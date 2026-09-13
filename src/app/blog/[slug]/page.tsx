@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { MDXRemote } from "next-mdx-remote/rsc";
-import { getAllSlugs, getPostBySlug } from "@/lib/blog";
+import { getAllSlugs, getPostBySlug, getPostTranslation } from "@/lib/blog";
 import { getViewCount } from "@/lib/views";
 import { CtaBand } from "@/components/CtaBand";
 import { ViewCounter } from "@/components/ViewCounter";
@@ -26,11 +26,21 @@ export async function generateMetadata({
   try {
     const post = getPostBySlug(slug);
     if (post.draft) return {};
+
+    const translation = getPostTranslation(slug);
+    const languages: Record<string, string> = {
+      [post.lang === "tr" ? "tr" : "en"]: `${siteConfig.url}/blog/${slug}`,
+    };
+    if (translation) {
+      languages[translation.lang === "tr" ? "tr" : "en"] = `${siteConfig.url}/blog/${translation.slug}`;
+    }
+
     return {
       title: post.title,
       description: post.summary,
       alternates: {
         canonical: `${siteConfig.url}/blog/${slug}`,
+        languages,
       },
       openGraph: {
         locale: post.lang === "tr" ? "tr_TR" : "en_US",
@@ -69,6 +79,7 @@ export default async function BlogPostPage({
   }
 
   const initialViews = getViewCount(slug);
+  const translation = getPostTranslation(slug);
 
   const blogPostingJsonLd = {
     "@context": "https://schema.org",
@@ -138,6 +149,27 @@ export default async function BlogPostPage({
           ))}
         </div>
       </div>
+
+      {translation && !translation.draft && (
+        <div className="mx-4 mt-6 border-[1.5px] border-accent/40 bg-accent/5 p-4 sm:mx-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2 font-ui text-xs text-ink">
+              <span className="text-base">🌐</span>
+              <span className="font-bold">
+                {post.lang === "tr"
+                  ? "Bu yazının İngilizce versiyonu da mevcut:"
+                  : "This article is also available in Turkish:"}
+              </span>
+            </div>
+            <Link
+              href={`/blog/${translation.slug}`}
+              className="border border-accent bg-accent px-3 py-1 font-ui text-[11px] font-bold uppercase tracking-wider text-accent-ink transition-opacity hover:opacity-90"
+            >
+              {post.lang === "tr" ? "Read in English →" : "Türkçe Oku →"}
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* The document is `lang="en"`; a Turkish post has to say so itself, or a
           screen reader reads it with English phonetics. */}
