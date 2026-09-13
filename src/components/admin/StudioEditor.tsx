@@ -60,7 +60,7 @@ function renderMarkdownPreview(md: string): string {
   // Headings
   html = html.replace(/^### (.*$)/gim, "<h3 class='font-ui uppercase font-bold text-base mt-6 mb-2 text-ink'>$1</h3>");
   html = html.replace(/^## (.*$)/gim, "<h2 class='font-ui uppercase tracking-wider font-bold text-lg mt-8 mb-3 text-ink border-b border-ink/10 pb-1'>$1</h2>");
-  html = html.replace(/^# (.*$)/gim, "<h1 class='font-display text-2xl sm:text-3xl mt-8 mb-4 text-ink'>$1</h1>");
+  html = html.replace(/^# (.*$)/gim, "<h1 class='font-ui font-bold text-2xl sm:text-3xl mt-8 mb-4 text-ink tracking-tight'>$1</h1>");
 
   // Blockquotes: > quote
   html = html.replace(/^\> (.*$)/gim, "<blockquote class='border-l-4 border-accent pl-4 py-1 my-4 bg-canvas/40 italic font-ui text-sm text-ink/80'>$1</blockquote>");
@@ -608,8 +608,8 @@ export function StudioEditor({
                     </span>
                   )}
                 </div>
-                <h1 className="font-display text-2xl sm:text-4xl text-ink leading-[1.2]">
-                  {title || "Başlıksız Yazı"}
+                <h1 className="font-ui text-2xl font-bold tracking-tight text-ink sm:text-4xl leading-tight">
+                  {title || <span className="text-ink/30 italic font-normal">Başlıksız Yazı</span>}
                 </h1>
                 {summary && (
                   <p className="mt-3 font-ui text-xs leading-relaxed text-ink/70">
@@ -682,3 +682,4 @@ export function StudioEditor({
     </div>
   );
 }
+

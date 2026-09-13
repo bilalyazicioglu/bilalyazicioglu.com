@@ -32,3 +32,4 @@ export default async function NewPostStudioPage({
     <StudioEditor mode="new" baseStudioPath={`/${adminSecret}`} />
   );
 }
+
