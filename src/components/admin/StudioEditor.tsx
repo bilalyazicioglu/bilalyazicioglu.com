@@ -292,8 +292,8 @@ export function StudioEditor({
             ← Studio Paneli
           </Link>
           <span className="font-ui text-xs text-ink/40">/</span>
-          <h1 className="font-display text-lg sm:text-xl">
-            {mode === "new" ? "YENİ_YAZI" : `DÜZENLE: ${initialPost?.slug}`}
+          <h1 className="font-ui text-sm sm:text-base font-bold uppercase tracking-wider text-ink">
+            {mode === "new" ? "Yeni Yazı" : `Düzenle: ${initialPost?.slug}`}
           </h1>
           <span
             className={`border px-2 py-0.5 font-ui text-[10px] font-bold uppercase tracking-wider ${
