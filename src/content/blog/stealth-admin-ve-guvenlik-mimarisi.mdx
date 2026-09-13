@@ -1,0 +1,110 @@
+---
+title: "Veritabanı Olmadan Güvenlik: Kendi Bloguma Nasıl Stealth Admin Paneli Yazdım?"
+summary: "Sitem için veritabanı kurmadan, SQL Injection riskini sıfırlayan, timing attack korumalı ve dış dünyaya tamamen 404 görünen çok katmanlı bir gizli admin stüdyosu mimarisi."
+date: "2026-09-14"
+tags: ["güvenlik", "nextjs", "mimari", "web"]
+lang: "tr"
+draft: false
+translationKey: "stealth-admin-security"
+---
+
+Kendi sitemde blog yazmaya başladığımda çoğu geliştiricinin düştüğü ikileme ben de düştüm: Ya gidip hazır bir CMS veya Notion/Ghost entegrasyonu kuracaksın, ya koca bir PostgreSQL/MySQL veritabanı ayağa kaldırıp kullanıcı tabloları, ORM'ler ve admin panelleriyle uğraşacaksın, ya da her seferinde VS Code açıp Markdown dosyası yazıp `git push` yapacaksın.
+
+Üçü de içime sinmedi.
+
+Telefonumdan veya dışarıdayken herhangi bir tarayıcıdan siteme girip şık bir şekilde yazımı yazabilmek istiyordum. Ama aynı zamanda sitemin arkasında ne devasa bir veritabanı maliyeti ve bakım yükü olsun istedim, ne de internetteki botların her gün vurduğu o klasik `/admin`, `/wp-login` sayfalarından biri açılsın istedim.
+
+Sonunda oturup kendi "Stealth" (Hayalet) Admin mimarimi yazdım. Bu yazıda hem mimariyi, hem de bir web sitesini veritabanı kullanmadan nasıl savunma derinliği (defense-in-depth) prensibiyle güvenli hale getirdiğimi anlatıyorum.
+
+## 1. Veritabanı Yoksa, SQL Injection da Yok (%0 Saldırı Yüzeyi)
+
+Güvenliğin en temel kuralı şudur: **Olmayan bir şeyi hackleyemezsiniz.**
+
+Bir web uygulamasına sızmanın en yaygın yollarından biri SQL Injection'dır. `admin' OR '1'='1` gibi payload'larla veritabanını bypass etmeye çalışırlar. Peki arkada bir SQL veritabanı yoksa ne olur?
+
+Saldırı yüzeyi matematiksel olarak sıfırlanır.
+
+Yazılarım doğrudan `/app/content/blog/*.mdx` altında flat-file (düz dosya) olarak saklanıyor. Docker üzerinde bu klasörü bir volume olarak bağlıyorum. Admin paneli bir yazı kaydettiğinde geçici bir `.tmp` dosyasına atomik olarak yazıp `fs.renameSync` ile yerine koyuyor. Ne bağlantı havuzu (connection pool) şişmesi var, ne SQL injection riski, ne de veritabanı migration dertleri.
+
+## 2. Kapıyı Bulamayan, Kilidi Zorlayamaz (Stealth Routing)
+
+İnternette açık olan bir sunucunuz varsa, saniyede onlarca otomatik botun `/admin`, `/wp-admin`, `/dashboard`, `/login.php` yollarını taradığını loglardan görürsünüz.
+
+Benim sitemde `/admin` adresi public internetten gelen herkese istisnasız **404 Not Found** döner. Sanki öyle bir sayfa hiç var olmamış gibi.
+
+Peki gerçek panele nasıl giriyorum?
+
+1. **Dinamik Rota (`[adminSecret]`):** Klasör adım sabit değil, dinamik. URL uzantısı sunucudaki `.env` dosyasında gizli (örneğin `/studio-x88`). Next.js'in derleme çıktısını (JS bundle) didik didik etseniz bile bu URL'i bulamazsınız çünkü hiçbir kodun içinde geçmiyor.
+2. **Gizli Kapı Anahtarı (`?key=...`):** Diyelim ki biri şans eseri gizli URL'i tahmin etti ve `bilalyazicioglu.com/studio-x88` yazdı. Sunucu yine **404** veriyor! Giriş formunun ekranda render edilmesi için URL sonuna gizli anahtarın girilmesi şart: `?key=gizli-anahtarim`.
+
+İkisinden biri eksikse tarayıcıya giden yanıt bomboş bir 404 sayfasıdır. Dışarıdan bakan bir güvenlik tarayıcısı sitenin arkasında bir admin paneli olduğunu dahi anlayamaz.
+
+## 3. String Eşitliği Neden Yetmez? (Timing Attack Koruması)
+
+Çoğu yazılımcı şifre kontrolünü şöyle yazar:
+
+```ts
+// TEHLİKELİ KOD:
+if (inputPassword === actualPassword) { ... }
+```
+
+Görünüşte mantıklı, değil mi? Ama siber güvenlikte buna **Timing Attack (Zamanlama Saldırısı)** denir.
+
+JavaScript motorları string karşılaştırmasını karakter karakter yapar. İlk karakter yanlışsa hemen `false` döner. Eğer ilk karakter doğruysa bir sonraki karaktere geçer ve bu karşılaştırma işlemcide birkaç nanosaniye daha uzun sürer. Saldırgan mikrosaniyelik gecikmeleri ölçerek şifrenizi harf harf çözebilir.
+
+Bunu engellemek için tüm parola, kullanıcı adı ve PIN kontrollerini Node.js'in `crypto.timingSafeEqual` fonksiyonuyla yapıyorum:
+
+```ts
+import crypto from "node:crypto";
+
+export function timingSafeCompare(a: string, b: string): boolean {
+  if (typeof a !== "string" || typeof b !== "string") return false;
+  const bufA = Buffer.from(a, "utf8");
+  const bufB = Buffer.from(b, "utf8");
+  if (bufA.length !== bufB.length) {
+    crypto.timingSafeEqual(bufA, bufA); // Zaman sızıntısını önleyen sahte kıyaslama
+    return false;
+  }
+  return crypto.timingSafeEqual(bufA, bufB);
+}
+```
+
+Şifrenin ilk harfi yanlış da olsa, son harfi yanlış da olsa sunucu tam olarak aynı sürede yanıt verir.
+
+## 4. İki Faktörlü Statik PIN ve Brute-Force Kilidi
+
+Giriş ekranına ulaşıldığında tek bir şifre yetmiyor:
+- **Kullanıcı Adı**
+- **Yüksek Entropili Şifre**
+- **İkinci Faktör Statik Güvenlik PIN'i** (Telefon taşımadığım anlarda bile çalışabilen, bağımsız bir güvenlik kodu)
+
+Ayrıca arkada in-memory bir **Rate Limiter** çalışıyor. 5 kere hatalı deneme yapıldığı anda o IP adresi 15 dakika boyunca kilitleniyor ve `429 Too Many Requests` hatası alıyor. Trilyonlarca olasılığı denemeye çalışan bir brute-force saldırısının bu kilitle başarılı olması matematiksel olarak imkansız.
+
+## 5. Oturum Güvenliği (HMAC-SHA256 Signed Cookies)
+
+Giriş başarılı olduğunda sunucu istemciye `admin_session` adında bir çerez bırakıyor:
+- **HttpOnly:** JavaScript (ve dolayısıyla olası bir XSS açığı) çerezi asla okuyamaz.
+- **SameSite=Strict:** CSRF (Cross-Site Request Forgery) saldırılarını tamamen engeller.
+- **Secure:** Sadece HTTPS üzerinden taşınır.
+- **HMAC İmzalı:** Token içeriği sunucudaki 64 karakterlik gizli bir anahtarla SHA256 ile imzalanır. Saldırgan çerez içeriğini değiştirirse imza geçersiz kalır ve oturum anında düşer.
+
+## "Bunu Yazmak Güvenliğini Zayıflatmaz mı?"
+
+Birkaç arkadaşıma bu mimariyi anlattığımda ilk tepkileri şu oldu: *"Oğlum bunu blogda yazarsan adamlar sistemi öğrenip seni hacklemez mi?"*
+
+Cevap çok net: **Hayır.**
+
+Kriptografide 1883'ten beri bilinen çok ünlü bir kural vardır: **Kerckhoffs İlkesi (ve Shannon Maksimi):**
+> *"Düşman sistemi biliyor kabul edilmelidir. Bir sistemin güvenliği kodunun gizli kalmasına değil, anahtarların (`.env`) gizliliğine dayanmalıdır."*
+
+Benim kodum zaten GitHub'da açık kaynak (`bilalyazicioglu/portfolio`). Kodun nasıl çalıştığını herkes görebilir. Ama kapıyı açan anahtarlar yalnızca benim sunucumdaki `.env` dosyasında duruyor. Saldırgan mimariyi ezbere bilse bile anahtarlar olmadan hiçbir kapıyı açamaz.
+
+## Sonuç
+
+Günün sonunda elimde:
+- Hiçbir veritabanı maliyeti olmayan,
+- Dış dünyaya tamamen hayalet (404) gibi davranan,
+- Markdown/MDX destekli, sürükle-bırak görsel yükleyebildiğim ve canlı önizleme yapabildiğim,
+- Ve en önemlisi gece kafamı yastığa rahat koymamı sağlayan bir blog stüdyosu kaldı.
+
+Bazen en iyi mühendislik, yeni bir veritabanı veya karmaşık bir servis eklemek değil; mevcut araçları savunma derinliği ilkeleriyle birleştirip fazlalıklardan kurtulmaktır.
