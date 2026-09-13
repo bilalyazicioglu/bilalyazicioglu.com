@@ -74,7 +74,7 @@ function parsePayload(body: unknown): { post: PostInput; overwrite: boolean } | 
 }
 
 export async function GET(request: NextRequest) {
-  if (!isAdminRequestAllowed(request.headers)) return notFound();
+  if (!isAdminRequestAllowed(request.headers, request.cookies)) return notFound();
 
   return NextResponse.json(
     { posts: getAllPosts(true) },
@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  if (!isAdminRequestAllowed(request.headers)) return notFound();
+  if (!isAdminRequestAllowed(request.headers, request.cookies)) return notFound();
 
   let body: unknown;
   try {

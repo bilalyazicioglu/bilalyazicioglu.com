@@ -18,10 +18,15 @@ services:
     environment:
       - NODE_ENV=production
       - BLOG_DIR_PATH=/app/content/blog
-      # Admin gate — see src/lib/admin-gate.ts. Fails closed if the request did
-      # not arrive over the tailnet.
+      # Admin gate — see src/lib/admin-gate.ts and src/lib/admin-auth.ts
       - ADMIN_TAILNET_HOST=${ADMIN_TAILNET_HOST:-}
       - ADMIN_TAILSCALE_LOGIN=${ADMIN_TAILSCALE_LOGIN:-}
+      - ADMIN_SECRET_SLUG=${ADMIN_SECRET_SLUG:-}
+      - ADMIN_ACCESS_KEY=${ADMIN_ACCESS_KEY:-}
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+      - ADMIN_SECURITY_PIN=${ADMIN_SECURITY_PIN:-}
+      - ADMIN_SESSION_SECRET=${ADMIN_SESSION_SECRET:-}
     volumes:
       - views-data:/app/data
       - content-data:/app/content

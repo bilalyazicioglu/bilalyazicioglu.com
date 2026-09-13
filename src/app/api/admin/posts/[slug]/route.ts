@@ -18,7 +18,7 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
-  if (!isAdminRequestAllowed(request.headers)) return notFound();
+  if (!isAdminRequestAllowed(request.headers, request.cookies)) return notFound();
 
   const { slug } = await params;
   if (!isValidSlug(slug) || !postExists(slug)) return notFound();
@@ -30,7 +30,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
-  if (!isAdminRequestAllowed(request.headers)) return notFound();
+  if (!isAdminRequestAllowed(request.headers, request.cookies)) return notFound();
 
   const { slug } = await params;
   if (!isValidSlug(slug) || !postExists(slug)) return notFound();

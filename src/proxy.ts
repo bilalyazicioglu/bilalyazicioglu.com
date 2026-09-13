@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { isAdminPath, isAdminRequestAllowed } from "@/lib/admin-gate";
+import { isAdminRequestAllowed, isSessionAuthorized } from "@/lib/admin-gate";
+import { getAdminConfig, timingSafeCompare } from "@/lib/admin-auth";
 import { siteConfig } from "@/site.config";
 
 /** The one host every page declares as its canonical — see `siteConfig.url`. */
@@ -30,11 +31,60 @@ export function proxy(request: NextRequest) {
     );
   }
 
-  // Admin surface exists only for requests arriving over the tailnet.
-  // For everyone else it must be indistinguishable from a route that does not exist.
-  if (isAdminPath(path) && !isAdminRequestAllowed(request.headers)) {
-    console.log(`[admin-denied] ip=${ip} path=${path} host=${request.headers.get("host") ?? "-"}`);
+  // 1. Standard /admin is completely blocked and masked as 404 for public internet
+  if (path === "/admin" || path.startsWith("/admin/")) {
     return new NextResponse(null, { status: 404 });
+  }
+
+  // 2. Admin API routes:
+  if (path.startsWith("/api/admin")) {
+    const config = getAdminConfig();
+    // Allow login endpoint only when accompanied by the secret access key
+    if (path === "/api/admin/auth/login") {
+      const providedKey =
+        request.nextUrl.searchParams.get("key") ||
+        request.headers.get("x-admin-key") ||
+        "";
+      if (!config.accessKey || !timingSafeCompare(providedKey, config.accessKey)) {
+        return new NextResponse(null, { status: 404 });
+      }
+      return NextResponse.next();
+    }
+
+    if (path === "/api/admin/auth/logout") {
+      return NextResponse.next();
+    }
+
+    // All other /api/admin endpoints require an authenticated session or tailnet authorization
+    if (!isAdminRequestAllowed(request.headers, request.cookies)) {
+      return new NextResponse(null, { status: 404 });
+    }
+    return NextResponse.next();
+  }
+
+  // 3. Stealth Studio routes
+  const config = getAdminConfig();
+  if (config.secretSlug) {
+    const isExactStealth = path === `/${config.secretSlug}`;
+    const isSubStealth = path.startsWith(`/${config.secretSlug}/`);
+
+    if (isExactStealth || isSubStealth) {
+      // Authenticated session: let them through
+      if (isSessionAuthorized(request.cookies)) {
+        return NextResponse.next();
+      }
+
+      // Not authenticated: only render login form if correct ?key= is given on root stealth path
+      if (isExactStealth) {
+        const key = request.nextUrl.searchParams.get("key") || "";
+        if (config.accessKey && timingSafeCompare(key, config.accessKey)) {
+          return NextResponse.next();
+        }
+      }
+
+      // In any other case, act as a completely non-existent route (404)
+      return new NextResponse(null, { status: 404 });
+    }
   }
 
   return NextResponse.next();
