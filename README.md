@@ -1,151 +1,130 @@
-# Personal site & blog
+# Personal Portfolio & Blog Studio
 
-A personal website and blog built with Next.js (App Router), TypeScript,
-Tailwind CSS, and MDX.
+Modern, ultra-secure personal website and blog built with **Next.js 16 (App Router & Turbopack)**, **TypeScript**, **Tailwind CSS**, and **MDX**.
 
-## Getting started
+---
+
+## 🚀 Features
+
+- **Blazing Fast Static & Dynamic Rendering**: Prerendered static pages with on-demand ISR for dynamic blog views and runtime post publishing.
+- **Stealth Multi-Factor Admin Studio**:
+  - Camouflaged behind a dynamic secret route (`[adminSecret]`) that returns a clean **404 Not Found** to the public internet and automated crawlers.
+  - Requires a secret query key (`?key=...`) to even render the login portal.
+  - Multi-factor authentication: **Username + Password + Secondary Static Security PIN**.
+  - Protected against timing attacks via constant-time byte comparisons (`crypto.timingSafeEqual`).
+  - Zero SQL database = **0% SQL Injection attack surface**.
+  - Built-in rate limiter (5 failed attempts locks the client IP for 15 minutes).
+  - Stateless HMAC-SHA256 signed cookies (`HttpOnly`, `SameSite=Strict`, `Secure`).
+- **Live Dual-Pane MDX Editor**:
+  - Left pane: Frontmatter controls (Title, Slug, Excerpt, Date, Language, Tags, Draft toggle, Translation Key) + Markdown textarea.
+  - Right pane: Instant live preview rendered with the exact typography, fonts (`IBM Plex Mono` & `IBM Plex Sans`), and theme styling of the real blog.
+  - **Drag-and-Drop Image Upload**: Drop images directly into the editor; they are sanitized, saved to `public/uploads/blog/`, and inserted into the cursor position automatically.
+  - **Interactive MDX Cheatsheet**: One-click drawer with copyable templates for headings, Rust/TS code blocks, blockquotes, tables, and media.
+- **Bilingual Translation Pairing (`translationKey`)**:
+  - Write articles in Turkish (`tr`) and English (`en`) linked by a common `translationKey`.
+  - In the **"All (Tümü)"** feed, paired posts appear only once with a `TR · EN` badge, eliminating duplicate entries.
+  - Category filters display the respective language version cleanly.
+  - Automatic on-page language switcher banner and Google `hreflang` / alternate metadata for international SEO.
+- **Observability Stack**: Built-in Prometheus metrics (`/metrics`), Grafana dashboard, Loki, Promtail, and Node Exporter.
+
+---
+
+## 🛠️ Getting Started (Local Development)
 
 ```bash
+# 1. Install dependencies
 npm install
+
+# 2. Start development server
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## Content
+In local development, the admin studio is available at:
+```text
+http://localhost:3000/admin-studio?key=dev-secret-key
+```
+*(Default dev credentials: user: `admin`, pass: `admin12345`, pin: `0000`)*
 
-- `src/site.config.ts` — name, role, bio, socials, contact info.
-- `src/lib/projects.ts` — portfolio project data.
-- `src/content/blog/*.mdx` — blog posts (frontmatter: `title`, `summary`, `date`,
-  `tags`, `lang: "tr" | "en"`, optional `draft: true`). `lang` drives the TR/EN
-  filter on `/blog` and the `lang` attribute on the post itself; anything other
-  than `"tr"` is treated as English.
+---
 
-Posts with `draft: true` are hidden from `/blog`, from the sitemap, and return
-404 on their public URL. They are only visible through the admin preview.
+## 🔐 Environment Configuration
 
-## Writing posts (`/admin`)
+Create a `.env` file in the project root (see `.env.example` for reference):
 
-`/admin` is a browser editor for creating, editing, previewing, and deleting
-posts. It is reachable **only over the tailnet** — see below.
+```env
+# 1. Stealth Path Configuration
+ADMIN_SECRET_SLUG="your-secret-slug"
 
-Locally it is simply available at http://localhost:3000/admin (the gate is
-disabled outside production).
+# 2. Stealth Gate Key (required in URL query: ?key=your-key)
+ADMIN_ACCESS_KEY="your-secret-gate-key"
 
-### How the access gate works
+# 3. Authentication Credentials
+ADMIN_USERNAME="your-username"
+ADMIN_PASSWORD="your-strong-password"
 
-The real boundary is the network, not application code:
+# 4. Secondary Multi-Factor PIN
+ADMIN_SECURITY_PIN="1234"
 
-- The container port is bound to `127.0.0.1` (`docker-compose.yml`), so the app
-  is only reachable through two doors: the public reverse proxy (nginx, behind
-  Cloudflare) and `tailscale serve`.
-- `src/proxy.ts` returns **404** for `/admin` and `/api/admin` on anything that
-  came through the public door — identified by the `cf-connecting-ip` header
-  Cloudflare always sets, and by the `Host` not matching the tailnet hostname.
-- There is no login form, no password, and no session token to steal.
+# 5. Session Cryptographic Secret (64-char random hex string)
+ADMIN_SESSION_SECRET="generate-via-crypto-randomBytes-32-hex"
 
-`/admin` is deliberately **not** listed in `robots.txt` — that would advertise a
-path that is otherwise invisible.
-
-### One-time VPS setup
-
-1. Serve the app on the tailnet:
-
-   ```bash
-   tailscale serve --bg 3000
-   tailscale serve status   # prints your https://<host>.tailXXXX.ts.net URL
-   ```
-
-2. Put the tailnet hostname in a `.env` file next to `docker-compose.yml`
-   (gitignored):
-
-   ```bash
-   ADMIN_TAILNET_HOST=vps.tailXXXX.ts.net
-   ADMIN_TAILSCALE_LOGIN=you@example.com   # optional second check
-   ```
-
-   **`ADMIN_TAILNET_HOST` is required in production.** If it is unset the gate
-   fails closed: every admin request gets a 404 and a `[admin-gate]` line is
-   logged.
-
-3. In the public nginx `server` block, drop any identity header a client tries
-   to smuggle in:
-
-   ```nginx
-   proxy_set_header Tailscale-User-Login "";
-   ```
-
-4. Confirm the origin port is not publicly reachable — from another network:
-
-   ```bash
-   curl --connect-timeout 5 http://<vps-ip>:3000   # must fail
-   ```
-
-### Where posts are stored in production
-
-The production image does not contain `src/content/blog`. Posts live on the
-`content-data` Docker volume at `/app/content/blog` (`BLOG_DIR_PATH`), which is
-what makes runtime writing possible. On first boot `docker-entrypoint.sh` seeds
-the volume from the git-tracked posts baked into the image.
-
-This means **the volume is the source of truth in production**. Posts written
-from `/admin` exist only on the VPS until you pull them back into git:
-
-```bash
-./scripts/sync-content.sh <ssh-host-or-tailnet-name>
-git add src/content/blog && git commit
+# 6. Optional: Content Directory Path (Defaults to src/content/blog)
+# BLOG_DIR_PATH=/app/content/blog
 ```
 
-Publishing calls `revalidatePath`, so a new post appears on the public site
-within seconds — no rebuild needed.
+---
 
-## Build
+## 🐳 Docker Deployment & Automatic Content Seeding
 
-```bash
-npm run build
-npm run start
-```
+The application is containerized and optimized with a multi-stage Docker build running as an unprivileged `nextjs` user.
 
-`npm run build` produces a standard Node.js server build. Deploy it to any
-Node-capable host (a VPS, Docker container, Railway, Render, Fly.io, Netlify,
-Cloudflare, etc.) — no platform-specific configuration is required.
+### Where Posts Live in Production
+- In production, runtime-created posts live on the persistent Docker volume `content-data` mounted at `/app/content/blog`.
+- `docker-entrypoint.sh` automatically compares git-tracked seed posts (`content-seed`) with the volume on every container startup. Any new post added in git is **automatically copied into the volume without overwriting existing server edits**.
 
-## Monitoring (Prometheus + Grafana)
-
-The app exposes Prometheus metrics at `/metrics` (Node.js process metrics via
-`prom-client`, plus `blog_request_errors_total` and
-`blog_last_request_timestamp_seconds`). The Docker Compose stack includes:
-
-- `node-exporter` — host metrics (CPU, memory, disk, network)
-- `prometheus` — scrapes the blog and the host (bound to 127.0.0.1:9090)
-- `grafana` — provisioned datasource + "Blog Monitoring" dashboard (port 3001)
-
-Start everything:
+### Deploying / Updating on VPS
 
 ```bash
-GRAFANA_ADMIN_PASSWORD=<strong-password> docker compose up -d --build
-```
+# Pull latest code
+git pull
 
-Then open:
-
-- Grafana: http://localhost:3001 (admin / `$GRAFANA_ADMIN_PASSWORD`)
-- Prometheus: http://localhost:9090 (localhost only — use an SSH tunnel or
-  restrict it via firewall if you need remote access)
-
-By default the stack retains Prometheus data for 30 days
-(`--storage.tsdb.retention.time=30d`). Data persists in the
-`prometheus-data` and `grafana-data` volumes.
-
-Restart just the app after a code change:
-
-```bash
+# Rebuild and restart the blog service
 docker compose up -d --build blog
 ```
 
-Notes:
+---
 
-- `/metrics` is unauthenticated; block it from the public internet (firewall /
-  reverse proxy) if you don't want it exposed.
-- The Grafana admin password defaults to `admin` if `GRAFANA_ADMIN_PASSWORD`
-  is not set — always set it on a live host.
-# portfolio
+## 📊 Monitoring Stack
+
+Start the application along with Prometheus and Grafana:
+
+```bash
+GRAFANA_ADMIN_PASSWORD="your-secure-password" docker compose up -d --build
+```
+
+- **Grafana**: `http://localhost:3001` (login: `admin` / your password)
+- **Prometheus**: `http://localhost:9090` (localhost only)
+- **Node Exporter**: Metrics on CPU, memory, disk, and network I/O
+
+---
+
+## 🔒 Repository & Branch Protection (Securing Git)
+
+By default, GitHub only allows the repository owner and explicitly invited collaborators to push code. To ensure that **no one can push directly to `main` without authorization or rewrite history**:
+
+1. Go to your repository on GitHub: **Settings → Branches** (or **Rulesets**).
+2. Click **Add branch ruleset** (or **Add branch protection rule**).
+3. Target branch: `main`.
+4. Enable the following protections:
+   - ✅ **Restrict updates / pushes**: Only allow `bilalyazicioglu` to push.
+   - ✅ **Block force pushes**: Disables `git push --force` to prevent overwriting history.
+   - ✅ **Do not allow deletions**: Prevents accidental deletion of the `main` branch.
+   - ✅ **Require a pull request before merging** *(optional, if collaborating with others)*.
+
+---
+
+## 📄 License
+
+Private & Personal Portfolio of Ahmet Bilal Yazıcıoğlu. All rights reserved.
