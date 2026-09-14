@@ -10,9 +10,15 @@ SEED_DIR="/app/content-seed"
 
 mkdir -p "$CONTENT_DIR"
 
-if [ -d "$SEED_DIR" ] && [ -z "$(ls -A "$CONTENT_DIR" 2>/dev/null)" ]; then
-  echo "[entrypoint] seeding $CONTENT_DIR from $SEED_DIR"
-  cp -a "$SEED_DIR"/. "$CONTENT_DIR"/
+if [ -d "$SEED_DIR" ]; then
+  for file in "$SEED_DIR"/*; do
+    [ -e "$file" ] || continue
+    fname=$(basename "$file")
+    if [ ! -e "$CONTENT_DIR/$fname" ]; then
+      echo "[entrypoint] seeding new post: $fname"
+      cp -a "$file" "$CONTENT_DIR/$fname"
+    fi
+  done
 fi
 
 exec "$@"
