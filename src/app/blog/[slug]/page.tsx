@@ -151,14 +151,17 @@ export default async function BlogPostPage({
       </div>
 
       {translation && !translation.draft && (
-        <div className="mx-4 mt-6 border-[1.5px] border-accent/40 bg-accent/5 p-4 sm:mx-6">
+        <div
+          lang={post.lang === "tr" ? "en" : "tr"}
+          className="mx-4 mt-6 border-[1.5px] border-accent/40 bg-accent/5 p-4 sm:mx-6"
+        >
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2 font-ui text-xs text-ink">
               <span className="text-base">🌐</span>
               <span className="font-bold">
                 {post.lang === "tr"
-                  ? "Bu yazının İngilizce versiyonu da mevcut:"
-                  : "This article is also available in Turkish:"}
+                  ? "This article is also available in English:"
+                  : "Bu yazı Türkçe olarak da mevcuttur:"}
               </span>
             </div>
             <Link
