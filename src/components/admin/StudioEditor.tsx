@@ -55,6 +55,14 @@ function renderMarkdownPreview(md: string): string {
   // Images: ![alt](url)
   html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, "<figure class='my-6'><img src='$2' alt='$1' class='w-full border border-ink/15 object-cover max-h-[400px]' /><figcaption class='mt-2 text-center font-ui text-xs text-ink/60 italic'>$1</figcaption></figure>");
 
+  // Videos: <video src="..." ... /> or <video ...></video>
+  html = html.replace(
+    /&lt;video[\s\S]*?src=["']([^"']+)["'][\s\S]*?(&gt;&lt;\/video&gt;|\/&gt;)/gi,
+    (_m, src) => {
+      return `<div class="my-6 border border-ink/15 bg-black/5 overflow-hidden"><video src="${src}" autoplay loop muted playsinline class="w-full object-cover max-h-[450px]"></video></div>`;
+    }
+  );
+
   // Links: [text](url)
   html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, "<a href='$2' target='_blank' rel='noopener noreferrer' class='underline decoration-accent decoration-2 underline-offset-4 hover:text-accent'>$1</a>");
 
