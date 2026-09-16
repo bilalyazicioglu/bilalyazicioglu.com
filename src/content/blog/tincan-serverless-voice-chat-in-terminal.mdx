@@ -1,6 +1,6 @@
 ---
 title: "tincan: Serverless Voice Chat in the Terminal"
-summary: "I built a terminal voice chat that does what Discord does, but without a single central server. The invite code is the coordinator's public key, and audio flows directly peer-to-peer."
+summary: "I built a terminal voice chat that does what Discord does, but without a single central server. The invite code is the coordinator's public key, audio flows directly peer-to-peer, and two cans are joined by a taut string."
 date: "2026-08-25"
 tags: ["rust", "p2p", "terminal"]
 lang: "en"
@@ -8,88 +8,169 @@ draft: false
 translationKey: "tincan-p2p-voice"
 ---
 
-When playing games with friends, we always connect to someone else's server for voice chat. If Discord goes down, if your account gets suspended, or if you simply don't want your voice passing through someone else's infrastructure, you don't have many options. Self-hosted solutions like Mumble exist, but someone still has to rent a VPS and forward ports. So I started wondering: *"Can we do this with absolutely zero servers?"*
+When playing games or pairing on code with friends, we almost always connect to someone else's server for voice chat. If Discord goes down, if your account gets suspended, or if you simply don't want your private conversation traversing someone else's infrastructure, you don't have many options. Self-hosted solutions like Mumble exist, but someone still has to rent a VPS, configure firewalls, and forward ports.
 
-That’s how **tincan** came to be.
+So I started wondering: *"Can we do this with absolutely zero servers?"*
 
-The concept is straightforward: whoever opens the app first hosts the room, the terminal prints an invite code, you send that code to your friends, and they join from anywhere in the world. No VPN, no port forwarding, no account creation. Everything happens right inside the terminal.
+That's how **tincan** came to life.
+
+The concept is as elementary as two tin cans and a string: whoever opens the app first creates the room, the terminal prints an invite code or generates a speakable 4-word passphrase, you pass it to your friends, and they join from anywhere in the world. No VPN, no port forwarding, no account registration, no central server. Everything lives inside the terminal.
 
 ```bash
-tincan host --name ahmet --room istanbul --password secret
-tincan join n73w-kuqc-uog2-... --name mehmet --password secret
+# Open a named room (generates a 4-word passphrase):
+tincan host lobby --name alice
+
+# Or open an unnamed room behind an invite code:
+tincan host --name alice --password secret
 ```
 
-## The Invite Code is Actually a Public Key
+Joining is a single command:
 
-This is my favorite part of the architecture. The code isn't some randomly generated room ID; it is literally the coordinator's public key. For peer discovery and connection, I use [iroh](https://iroh.computer): you locate the other peer using their public key, QUIC encrypts the connection end-to-end, and the key itself verifies that you are talking to the intended party. So when I say "serverless", there really is no server—just two endpoints talking directly.
+```bash
+tincan join lobby --name bob
+# or using the 63-character raw invite code:
+tincan join n73w-kuqc-uog2-... --name bob --password secret
+```
 
-NAT traversal succeeds in most cases. If it fails, traffic falls back to a relay. The relay cannot decrypt the payload; it just shuttles encrypted packets. That's also why the invite code is 52 characters long: it's a raw public key, so it cannot be shortened. It's painless for copy-pasting, but don't try reading it to someone over a phone call—trust me, I tried.
+---
 
-## Audio Does Not Pass Through the Coordinator
+## From a 63-Character Key to 4 Speakable Words
 
-There are two distinct planes in this system, and decoupling them was hands down the best architectural decision in the project.
+In the initial prototype, there was only one way into a room: the terminal printed the host's 63-character Base32 public key. Under the hood, tincan uses [iroh](https://iroh.computer) for peer-to-peer connectivity: you locate the target machine by its public key, QUIC encrypts the connection end-to-end, and the key itself cryptographically verifies the peer's identity.
 
-**The control plane is a star topology.** The participant list, channel metadata, text chat—all flow through the coordinator. The traffic footprint is minuscule, just a few hundred bytes per second.
+A 63-character string is trivial to copy and paste, but try reading it over a phone call—trust me, I tried.
 
-**The audio plane, however, is a full mesh.** Everyone in the same audio channel connects directly to each other and streams Opus audio packets as QUIC datagrams. If audio also flowed through the coordinator, the host’s home internet upload speed would dictate the audio quality for the entire room; home broadband simply cannot sustain that. In its current mesh state, a 6-person room only requires ~160 kbps upload per person.
+With v0.3.0, I introduced named rooms with derived passphrases:
 
-The trade-off, of course, is scalability: because everyone transmits to everyone in a mesh, scaling past 8+ participants requires a Selective Forwarding Unit (SFU) where a coordinator mixes and distributes audio. For now, tincan targets 2–6 participants, which is plenty for a gaming squad.
+```text
+room:        lobby
+passphrase:  chestnut-ferry-lens-moss
+```
 
-## Prototyping Before Coding
+The room's address is now derived directly from `Argon2id(passphrase, room name)`. That means all your friends need are two things you can speak out loud or scribble on a whiteboard.
 
-Going into this project, I had one core anxiety: *"What if two machines behind restrictive NATs simply fail to connect?"*
+Naturally, there is an honest architectural trade-off: in a named room, the coordinator key identifies the *passphrase*, not a specific physical machine. Anyone who holds that passphrase can technically spawn a rival room under the same name or publish their own address records. For a close circle of friends, that risk is negligible; if you require absolute certainty, you can host without a room name and share the raw 63-character public key instead.
 
-So before writing a single line of application code, I built two throwaway test probes:
-- `examples/ping.rs`: Sends datagrams between two machines at audio cadence (one packet every 20 ms) and measures whether the connection is direct or relayed, along with RTT distribution and packet loss.
-- `examples/loopback.rs`: Measures round-trip latency across the entire chain: microphone → Opus encoding → decoding → speaker.
+---
 
-Neither made it into the final binary; they existed purely to answer the question: *"Does this design hold up in the real world?"* Looking back, those two days were the most profitable investment of the entire project. If it hadn't worked, I would have scrapped the architecture on day two rather than discovering the flaw three weeks in.
+## Audio Does Not Pass Through the Coordinator: Star vs. Mesh
 
-## The Audio Pipeline and Real-World Glitches
+Decoupling the architecture into two distinct planes was the single best decision in the project:
 
-On paper, audio is trivial: capture from microphone, encode, send, decode, play. In practice, real networks get messy.
+1. **The control plane is a star topology:** Whoever opens the room acts as the coordinator. The participant roster, channel metadata, and text chat flow through the coordinator. This traffic footprint is negligible—barely a few hundred bytes per second.
+2. **The voice plane is a full mesh:** Everyone inside the same voice channel establishes direct P2P connections to each other, streaming Opus packets as QUIC datagrams.
 
-I operate with 48 kHz sampling and 20 ms frames (960 samples). Because packets arrive with varying network jitter, every peer maintains its own jitter buffer targeting 3 frames (~60 ms). That number is intentionally kept tight: increasing the buffer smooths out packet drops, but the conversation starts feeling like a walkie-talkie. A limiter runs during audio mixing so that when three people speak simultaneously, the audio signal doesn't clip into harsh distortion. Voice Activity Detection (VAD) indicates who is speaking and suppresses packet transmission during silence.
+```text
+        [alice: coordinator]
+         /        |       \          ── control (reliable stream)
+       bob      carol     dave
+         \________|_______/          ── voice (mesh, direct datagrams)
+```
 
-Another pragmatic design choice: no dynamic resampling. If your audio hardware doesn't support 48 kHz, tincan informs you explicitly and drops back to text mode. Failing fast with a clear message is far better than silently outputting garbled, crackling audio.
+If voice had been routed through the coordinator, the host's residential upload bandwidth would bottleneck the audio quality for the entire room. In a peer-to-peer mesh, a 6-person room only demands about **~160 kbps** of upload per participant.
+
+The trade-off is scalability: in a full mesh, every peer broadcasts to every other peer. Past 8–10 people, bandwidth consumption skyrockets, requiring a Selective Forwarding Unit (SFU) to mix audio into a single stream. But for small squads gaming or collaborating, 2–6 participants is the sweet spot.
+
+---
+
+## The Interface: Two Tin Cans and a String
+
+Terminal UIs often suffer from sterile, uninspired typography. With Ratatui, I wanted tincan to have genuine tactile personality.
+
+The palette is metallic: tin brown ground, brass accents, and the two shades of green that copper naturally acquires—bright patina for live state, deeper verdigris for an established link.
+
+The line traversing the middle of the terminal is the connection string:
+- When peers connect directly via P2P hole punching, the string is **taut and continuous**.
+- When traffic is forced to fall back through a relay, the string sags into a **dashed line**.
+- When audio dropouts or packet loss occur, the string **visibly frays**.
+
+My favorite touch: whenever someone speaks, a **traveling pulse** slides across that string at the exact speed of the round-trip latency (RTT). Rather than squinting at ping numbers in a corner, you literally watch network latency ripple across the wire.
+
+```text
+Shortcut Cheatsheet:
+  Tab / Shift+Tab   : Cycle through channels
+  F2                : Join / leave the voice of the viewed channel
+  F3                : Mute / unmute your microphone
+  F4                : Push-to-talk (toggle)
+  F5                : Deafen (hear nobody; also mutes microphone)
+  F6                : Audio settings (devices, input levels, noise floor)
+  ↑ / ↓             : Select a participant in the roster
+  ← / →             : Adjust that person's volume locally
+  Ctrl+K            : Silence that participant (local only)
+```
+
+In the roster, real-time volume meters track each person's speech dynamics. If a friend's microphone is blowing out your ears, select their name with the arrow keys and nudge their volume down with `←`, or silence them entirely with `Ctrl+K`. Even when silenced, their meter continues to dance subtly in dim grey, ensuring you can still see that they are speaking without being blasted by their audio.
+
+The channel you are reading and the channel you are speaking in are completely decoupled. A `>` indicator marks your active reading view, while `🔊` denotes your active voice channel. You can read `#general` while actively communicating in `#gaming`.
+
+---
+
+## Real-World Audio: Resampling and the 10 ms RNNoise Trade-Off
+
+On a whiteboard, digital audio seems simple: read PCM samples, encode with Opus, ship packets, decode, feed the DAC.
+
+In reality, audio hardware is messy. Initially, I took the lazy shortcut: "If your device isn't 48 kHz, I won't support it." But in the real world, users plug in 16 kHz Bluetooth headsets (like AirPods in call profile) or 96 kHz studio DACs. Today, tincan implements bidirectional **cubic interpolation resampling**; whatever sample rate your hardware exposes is smoothly interpolated to and from Opus's native 48 kHz.
+
+The second—and far more difficult—problem was ambient noise.
+
+A naive noise gate only checks decibel thresholds: it cuts off when you are silent, but the instant you speak, your mechanical keyboard clatter, desk fans, or street noise leak through unattenuated.
+
+To solve this, I integrated **RNNoise** (`nnnoiseless`), a lightweight recurrent neural network trained to separate human speech from stationary noise. You can hammer on clicky Blue switches while speaking, and the listener on the other end hears pristine voice with zero keyboard chatter.
+
+However, good engineering demands honesty about trade-offs: RNNoise relies on an overlap-add windowing algorithm. It cannot emit a processed frame until it inspects the succeeding frame. This imposes a **mandatory 10 ms latency penalty on the capture path**, regardless of whether noise is present.
+
+Balanced against tincan's 20 ms frames and 3-frame jitter buffer (~60 ms), 10 ms is an exceptional bargain for crystal-clear voice. But if you are on a studio condenser in an isolated booth and want absolute minimum latency, hit `n` on the `F6` audio settings screen: neural suppression switches off, and that 10 ms returns straight to your budget.
+
+---
 
 ## The Mute Key Was Sending Messages
 
-My absolute favorite bug in the project:
-Initially, I mapped audio shortcuts to `Ctrl+M` (mute) and `Ctrl+J`. It felt ergonomic. Then during early testing, every time someone tried to mute their microphone, empty messages flooded the text channel.
+My absolute favorite bug during development:
 
-The culprit? In Unix terminal escape sequences, `Ctrl+M` is byte `0x0D` and `Ctrl+J` is `0x0A`—which are literally Carriage Return (`\r`) and Line Feed (`\n`)! The terminal doesn't tell your application "the user pressed Ctrl+M"; it tells you "the user pressed Enter". There is no way to differentiate them. So the audio toggles were remapped to F2, F3, and F5. Writing terminal applications forces you to learn what keystrokes actually mean underneath.
+Early on, I mapped microphone mute to `Ctrl+M` and channel navigation to `Ctrl+J`. It felt intuitive. But during initial tests, every time someone tried to mute their mic, empty messages flooded the chat pane.
 
-For the same reason, Push-to-Talk isn't a true "hold down" key: terminals generally don't emit key-release events. In `--ptt` mode, F4 acts as an on/off toggle. Honestly, it's a known UX limitation, and the README says so upfront.
+The reason? In terminal escape sequences, `Ctrl+M` is byte `0x0D` (Carriage Return), and `Ctrl+J` is `0x0A` (Line Feed). In other words, to the terminal emulator, both keystrokes literally *are* **Enter**. The terminal doesn't announce "the user pressed Ctrl+M"; it announces "the user pressed Enter".
 
-## Passwords Never Cross the Wire
+That's why audio toggles moved to function keys (F2, F3, F5). Building terminal software forces you to respect the raw byte semantics of 1970s teletype protocols.
 
-You can password-protect a room, but the password itself is never transmitted over the network. The coordinator sends a random challenge nonce, and the client replies with `Argon2id(password, nonce)`. Because the nonce is freshly generated per handshake, an intercepted proof cannot be replayed.
+A similar constraint dictates Push-to-Talk: most terminal emulators do not emit `key-release` events. As a result, in `--ptt` mode, F4 functions as an on/off toggle rather than a hold-down key.
 
-An important distinction here: the password isn't used for transport encryption; it is strictly an **admission control** gate. Encryption is already handled by QUIC. Confusing the two leads to a false sense of security.
+---
 
-A small developer note: Argon2 was painfully slow in debug builds, causing connections to hang for seconds. The fix was telling Cargo to optimize only that specific dependency during development:
+## Passwords and P2P Transparency
 
-```toml
-[profile.dev.package.argon2]
-opt-level = 3
+Room passphrases never travel over the network in plaintext. The coordinator issues a fresh, single-use nonce for every incoming connection; the client replies with an `Argon2id`-stretched key hashing that nonce via a `BLAKE2b` MAC. Because the challenge changes on every handshake, captured handshake payloads cannot be replayed.
+
+Remember: the passphrase is an **admission control** gate, not the transport cipher. QUIC itself enforces end-to-end encryption.
+
+It's also worth discussing what "serverless" actually means:
+No tincan company servers exist, no analytics are logged, and no central database tracks rooms. However, for two endpoints behind symmetric NATs to discover each other, tincan relies on Number Zero's public iroh infrastructure (`dns.iroh.link` pkarr records and fallback relay nodes).
+
+And crucially: **On a real string, the other end knows your physical location.**
+Centralized platforms (like Discord) route all traffic through proxy servers, masking your IP address from other users. Because tincan connects participants directly via peer-to-peer mesh, everyone in a room can see each other's IP addresses. The freedom from corporate surveillance means accepting direct peer transparency among the people you invite.
+
+---
+
+## Installation and Getting Started
+
+In earlier releases, compiling Opus from source required wrestling with local C build tools. In v0.3.0, installation is seamless across major platforms:
+
+**Homebrew (macOS & Linux):**
+```bash
+brew tap bilalyazicioglu/tap && brew install tincan
 ```
 
-## 93 Tests That Never Touch the Internet
+**NPM / NPX (Zero-install instant run):**
+```bash
+npx tincan-cli host
+```
 
-There are 93 automated tests in the test suite, including end-to-end integration tests between the control plane and the audio mesh. The interesting part: these tests instantiate real iroh endpoints and real QUIC connections, but with discovery and relays disabled and loopback addresses configured manually. They execute completely offline. Audio tests don't touch physical sound cards either; they bind directly to the mesh endpoints.
+**One-Line Shell Installer:**
+```bash
+curl -fsSL https://raw.githubusercontent.com/bilalyazicioglu/tincan-cli/main/install.sh | sh
+```
 
-Having a test suite that passes on an airplane or in CI is far more reassuring than saying "well, it worked on my machine."
+*(Prebuilt standalone binaries are also published for Apple Silicon, Intel macOS, Linux x86/ARM64, and Windows on the GitHub releases page.)*
 
-## What’s Missing?
-
-To be honest, a few trade-offs remain:
-- The coordinator is a single point of failure: if the host disconnects, the room closes. Leader election was intentionally left out of the MVP scope.
-- The first second of audio handoff sometimes traverses the relay before direct P2P hole-punching settles, causing a tiny initial latency blip.
-- And as noted, 8+ participants in a full mesh isn't viable without an SFU.
-
-Even so, the core vision works: you open your terminal, type one command, send 52 characters to your friend, and talk freely without depending on anyone else's servers.
-
-Code is open source here: [github.com/bilalyazicioglu/tincan-cli](https://github.com/bilalyazicioglu/tincan-cli).
-Requires Rust 1.91+, `cmake`, and `pkg-config` (Opus compiles from source), followed by a standard `cargo build --release`.
-
+The entire codebase is open source: [github.com/bilalyazicioglu/tincan-cli](https://github.com/bilalyazicioglu/tincan-cli).
+For deeper architectural deep-dives and interface design philosophy, take a look at the repo's [Wiki](https://github.com/bilalyazicioglu/tincan-cli/tree/main/docs/wiki).

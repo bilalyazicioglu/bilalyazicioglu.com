@@ -1,82 +1,173 @@
 ---
 title: "tincan: Terminalde Sunucusuz Sesli Sohbet"
-summary: "Discord'un yaptığı işi kimsenin sunucusu olmadan yapan, terminalde çalışan bir sesli sohbet yazdım. Davet kodu peer'ın public key'i, ses ise kimsenin üzerinden geçmiyor."
+summary: "Discord'un yaptığı işi kimsenin sunucusu olmadan yapan, terminalde çalışan bir sesli sohbet yazdım. Davet kodu peer'ın public key'i, ses doğrudan uçtan uca akıyor ve arada iki teneke kutuyu bağlayan bir ip var."
 date: "2026-08-25"
 tags: ["rust", "p2p", "terminal"]
 lang: "tr"
 translationKey: "tincan-p2p-voice"
 ---
 
-Arkadaşlarla oyun oynarken sesli sohbet için hep birinin sunucusuna bağlanıyoruz. Discord kapanırsa, hesabın askıya alınırsa, ya da sadece "şu konuşma kimsenin sunucusundan geçmesin" dersen elinde pek bir şey kalmıyor. Mumble tarzı çözümler var ama onda da birinin VPS kiralayıp port açması gerekiyor. Ben de "acaba hiç sunucu olmadan olur mu" diye bakmaya başladım ve tincan çıktı ortaya.
+Arkadaşlarla oyun oynarken veya kod yazarken sesli sohbet için hep birinin sunucusuna bağlanıyoruz. Discord kapanırsa, hesabın askıya alınırsa ya da sadece "şu konuşma kimsenin sunucusundan geçmesin" dersen elinde pek bir şey kalmıyor. Mumble tarzı kendi sunucunu kurduğun çözümler var ama onda da birinin VPS kiralayıp port açması gerekiyor.
 
-Mantık şu: uygulamayı ilk açan kişi odayı kuruyor, ekrana bir davet kodu basılıyor, o kodu arkadaşlarına gönderiyorsun, onlar dünyanın herhangi bir yerinden bağlanıyor. VPN yok, port yönlendirme yok, hesap açma yok. Hepsi terminalde.
+Ben de *"acaba gerçekten hiç sunucu olmadan bu iş olur mu?"* diye kurcalamaya başladım ve ortaya **tincan** çıktı.
+
+Mantık iki çocuk arasındaki teneke kutu ve ip metaforu kadar yalın: uygulamayı ilk açan kişi odayı kuruyor, ekrana bir davet kodu basılıyor veya akılda kalıcı 4 kelimelik bir parola üretiliyor, arkadaşına gönderiyorsun ve dünyanın herhangi bir yerinden bağlanıyor. VPN yok, port yönlendirme yok, kayıt formu yok, sunucu yok. Hepsi terminalde.
 
 ```bash
-tincan host --name ahmet --room istanbul --password gizli
+# İsimli oda açmak (4 kelimelik parola üretir):
+tincan host lobby --name ahmet
+
+# Veya saf davet koduyla odayı başlatmak:
+tincan host --name ahmet --password gizli
+```
+
+Katılacak olan da tek satırla giriyor:
+
+```bash
+tincan join lobby --name mehmet
+# ya da 63 karakterlik davet koduyla:
 tincan join n73w-kuqc-uog2-... --name mehmet --password gizli
 ```
 
-## Davet kodu aslında bir public key
+---
 
-En sevdiğim kısım burası. Kod rastgele üretilmiş bir oda numarası değil, koordinatörün public key'inin ta kendisi. Bağlantı için [iroh](https://iroh.computer) kullanıyorum: karşı tarafı public key'iyle buluyorsun, QUIC bağlantıyı uçtan uca şifreliyor ve karşındakinin gerçekten o kişi olduğunu aynı anahtarla doğruluyor. Yani "sunucu yok" derken ortada gerçekten bir sunucu yok, sadece iki uç var.
+## Davet kodundan akılda kalan 4 kelimeye
 
-NAT delme çoğu durumda başarılı oluyor, olmazsa trafik bir relay üzerinden akıyor. Relay içeriği çözemiyor, sadece iletiyor. Kodun 52 karakter olmasının sebebi de bu: public key'in kendisi olduğu için kısaltılamıyor. Kopyala-yapıştır için sorun değil ama telefonda birine okutmayı deneme, ben denedim.
+İlk versiyonda bağlantı sadece tek bir şekilde kuruluyordu: ekranda koordinatörün 63 karakterlik Base32 formatındaki public key'i basılıyordu. Bağlantı için [iroh](https://iroh.computer) kullanıyorum; karşı tarafı doğrudan public key'iyle buluyorsun, QUIC bağlantıyı uçtan uca şifreliyor ve karşındakinin gerçekten o kişi olduğunu aynı anahtarla doğruluyor.
 
-## Ses koordinatörden geçmiyor
+63 karakterlik kod kopyala-yapıştır yaparken harika ama telefonda birine okutmayı denediğinde sinir krizi geçirtiyor (bizzat denedim).
 
-Burada iki ayrı düzlem var ve bunları ayırmak projenin en doğru kararıydı.
+v0.3.0 ile isimli odaları ve parola türetimini ekledim:
 
-**Kontrol düzlemi bir yıldız.** Üye listesi, kanallar, yazışma — hepsi koordinatörün üzerinden akıyor. Trafiği çok küçük, saniyede birkaç yüz bayt.
+```text
+room:        lobby
+passphrase:  chestnut-ferry-lens-moss
+```
 
-**Ses düzlemi ise mesh.** Aynı kanaldaki herkes birbirine doğrudan bağlanıyor ve Opus paketlerini QUIC datagram olarak yolluyor. Eğer sesi de koordinatörden geçirseydim odayı açan kişinin upload'ı herkesin ses kalitesini belirlerdi; ev internetiyle bu iş yürümez. Şu haliyle 6 kişilik bir odada kişi başı ~160 kbps upload yetiyor.
+Odanın adresi artık odanın adı ve bu 4 kelimelik paroladan `Argon2id` ile türetiliyor. Arkadaşına sadece odanın adını ve bu dört kelimeyi söylüyorsun, o kadar.
 
-Bunun bedeli tabii ki ölçek: mesh'te herkes herkese gönderdiği için 8+ kişide işin içine koordinatörün sesi miksleyip tek akış olarak dağıtması (SFU) girmesi gerekiyor. Şimdilik 2-6 kişi hedefliyorum, arkadaş grubu için yeterli.
+Tabii burada açık ve dürüst bir mühendislik bedeli var: İsimli bir odanın anahtarı artık o makineyi değil, parolayı temsil ediyor. Yani parolayı bilen herkes aynı isimle rakip bir oda kurup odaya katılanları karşılayabilir ya da gerçek sunucu çalışırken kendi adres kayıtlarını yayınlayabilir. Arkadaş grubu için bu risk önemsizdir; ama bunu istemiyorsan isimsiz bir oda açıp o 63 karakterlik saf public key kodunu kopyalayıp gönderiyorsun.
 
-## Önce ölçtüm, sonra yazdım
+---
 
-Projeye başlarken tek bir korkum vardı: "ya iki farklı NAT arkasındaki makine hiç bağlanamazsa?" O yüzden uygulamanın tek satırını yazmadan önce iki tane atılabilir probe yazdım. `examples/ping.rs` iki makine arasında ses temposunda (20 ms'de bir paket) datagram yollayıp bağlantının doğrudan mı relay üzerinden mi kurulduğunu, RTT dağılımını ve paket kaybını ölçüyor. `examples/loopback.rs` ise mikrofon → Opus → çözücü → hoparlör zincirinin gecikmesini ölçüyor.
+## Ses koordinatörden geçmiyor: Yıldız ve Mesh ayrımı
 
-İkisi de üründe kullanılmıyor, sadece "bu tasarım tutar mı" sorusunu cevaplamak için yazıldı. Geriye dönüp bakınca en karlı iki gün buydu. Çalışmasaydı bütün mimariyi çöpe atacaktım ve bunu 3 hafta sonra öğrenmek çok daha acı olurdu.
+Burada iki ayrı düzlem var ve bunları ayırmak projenin başından beri en kritik mimari kararıydı:
 
-## Ses zinciri ve gerçek dünyanın pislikleri
+1. **Kontrol düzlemi bir yıldız (star):** Odayı ilk kuran kişi koordinatör. Kim geldi, kim gitti, kanal listesi ve yazılı sohbet koordinatör üzerinden akıyor. Bu trafiğin boyutu saniyede birkaç yüz baytı geçmiyor.
+2. **Ses düzlemi ise tam bir örgü (mesh):** Aynı ses kanalındaki herkes birbirine doğrudan bağlanıyor ve Opus paketlerini QUIC datagram olarak doğrudan birbirine basıyor.
 
-Kağıt üzerinde ses basit: mikrofondan al, kodla, yolla, çöz, çal. Pratikte araya bir sürü şey giriyor.
+```text
+        [ahmet: koordinatör]
+         /        |       \          ── kontrol (güvenilir akış / stream)
+      mehmet    ayşe     can
+         \________|_______/          ── ses (mesh, doğrudan datagramlar)
+```
 
-48 kHz ve 20 ms'lik (960 örnek) çerçevelerle çalışıyorum. Paketler farklı gecikmelerle geldiği için her peer'ın kendi jitter tamponu var, hedefi 3 çerçeve — yani ~60 ms. Bu sayı bilerek küçük: büyütürsen kopma azalıyor ama konuşma "telsiz" gibi olmaya başlıyor. Gelen sesler mikslenirken bir limitleyici devrede, yoksa üç kişi aynı anda konuşunca sinyal kırpılıyor. Konuşma algılama (VAD) hem kimin konuştuğunu göstermek hem de sessizken paket yollamamak için var.
+Eğer sesi de koordinatörün üzerinden geçirmiş olsaydım, odayı açan kişinin ev internetinin upload bant genişliği bütün odanın ses kalitesini belirlerdi. Mesh mimarisinde 6 kişilik bir odada herkes sadece kendi sesini diğerlerine gönderiyor; bu da kişi başı yalnızca **~160 kbps** upload demek.
 
-Bir de şu var: yeniden örnekleme yapmıyorum. Cihazın 48 kHz'de çalışmıyorsa tincan bunu açıkça söyleyip yazışma moduna düşüyor. Sessizce bozuk ses üretmesindense "ben bunu yapamam" demesi daha iyi geldi.
+Bunun da bedeli belli: Mesh'te herkes herkese paket yolladığı için 8-10 kişiden sonra bant genişliği patlar. O noktada koordinatörün sesi miksleyip tek akış olarak dağıttığı bir SFU (Selective Forwarding Unit) gerekir. Ama arkadaş grubuyla oyun oynamak veya kod tartışmak için 2–6 kişi fazlasıyla yetiyor.
+
+---
+
+## Arayüz: İki teneke kutu ve aradaki gergin ip
+
+Terminal uygulaması deyince akla genelde renksiz, donuk yazılar gelir. tincan'de Ratatui ile arayüze gerçek bir kişilik kazandırmak istedim.
+
+Palet tamamen metalik: teneke kahvesi, pirinç sarısı ve bakırın paslandıkça aldığı iki yeşil tonu (aktif durumlar için parlak patina, oturan bağlantılar için koyu verdigris).
+
+Arayüzün ortasından geçen çizgi, iki kutuyu bağlayan ipin ta kendisi:
+- İki taraf birbirine doğrudan bağlandığında (P2P hole-punching tuttuğunda) ip **dümdüz ve gergin** duruyor.
+- Bağlantı doğrudan kurulamayıp aradaki relay üzerinden aktığında ip **kesik çizgiye** dönüşüyor ve sarkıyor.
+- Paket kaybı başladığında ise ip **saçaklanıp yıpranıyor**.
+
+En sevdiğim detay: Biri konuştuğu anda, o ipin üzerinde gerçek gidiş-dönüş süresi (RTT) hızında **hareket eden bir nabız (traveling pulse)** kayıyor. Yani bağlantının gecikmesini rakamlara bakıp okumak yerine, gözünle ipin üzerinde görüyorsun.
+
+```text
+Kısayol Özeti:
+  Tab / Shift+Tab   : Kanallar arasında gezin
+  F2                : Baktığın kanalın sesine gir / çık
+  F3                : Mikrofonu aç / sustur (Mute)
+  F4                : Bas-konuş (toggle)
+  F5                : Kulaklığı kapat (Deafen - kimseyi duyma, mikrofonu da kapatır)
+  F6                : Ses ayarları ekranı (mikrofon, hoparlör, gürültü eşiği)
+  ↑ / ↓             : Listedeki bir arkadaşını seç
+  ← / →             : Seçtiğin kişinin sesini sadece kendine özel kıs / aç
+  Ctrl+K            : Seçtiğin kişiyi tamamen sustur (yerel)
+```
+
+Yan taraftaki listede herkesin isminin yanında ses seviyesini gösteren sayaçlar konuşma şiddetiyle birlikte anlık olarak inip kalkıyor. Arkadaşının mikrofonu çok mu bağırıyor? Listeden üzerine gelip sol okla sesini kısıyorsun ya da `Ctrl+K` ile sadece kendi tarafında susturuyorsun. Üstelik susturduğun kişinin sayacı tamamen kaybolmuyor; hafif bir gri tonunda hareket etmeye devam ediyor, böylece konuştuğunu ama senin duymadığını fark edebiliyorsun.
+
+Yazıştığın kanal ile sesinde bulunduğun kanal da birbirinden bağımsız. `>` baktığın kanalı, `🔊` ise sesli konuştuğun kanalı gösteriyor. Genel sohbette yazışırken oyun kanalında konuşmaya devam edebiliyorsun.
+
+---
+
+## Gerçek dünyanın pislikleri: Resampling ve 10 ms'lik RNNoise bedeli
+
+Kağıt üzerinde ses boru hattı çocuk oyuncağıdır: mikrofondan al, Opus ile sıkıştır, yolla, karşıda çöz, hoparlöre ver.
+
+Pratikte ilk tosladığım yer ses donanımları oldu. Eskiden "48 kHz dışındaki cihazları desteklemiyorum" deyip işin içinden sıyrılmaya çalışmıştım. Ama gerçek dünyada insanlar 16 kHz Bluetooth kulaklıklar (özellikle AirPods mikrofon moduna geçince) ya da 96 kHz harici ses kartları kullanıyor. Artık çift yönlü **kübik interpolasyon ile yeniden örnekleme (resampling)** var; donanım ne verirse versin Opus'un 48 kHz standardına pürüzsüzce dönüştürülüyor.
+
+İkinci ve en büyük baş ağrısı ise arka plan gürültüsüydü.
+
+Normal bir gürültü kapısı (noise gate) sadece desibele bakar: konuşmadığın zaman sesi keser ama konuşmaya başladığın anda arkadaki vantilatör, klima, açık pencereden gelen sokak sesi veya mekanik klavyenin tıkırtıları konuşmanla birlikte olduğu gibi karşıya gider.
+
+tincan'e **RNNoise** (`nnnoiseless`) recurrent neural network tabanlı gürültü engellemeyi entegre ettim. Ağ, insan sesinin frekans dokusu ile sabit/tekrarlayan gürültüleri birbirinden ayırıyor. Klavyede harıl harıl kod yazarken bir yandan konuştuğunda karşı taraf klavyeyi hiç duymuyor.
+
+Fakat bunun açıkça söylenmesi gereken bir bedeli var: RNNoise, overlap-add mimarisiyle çalışır. Yani gelen ses çerçevesini hemen geri veremez; arkasından gelen çerçeveyi de görüp birleştirmesi gerekir. Bu da mikrofondan yakalama hattına **tam 10 ms sabit gecikme** ekler. Odada sıfır gürültü olsa bile o 10 ms ödenir.
+
+20 ms'lik Opus çerçeveleri ve 3 çerçevelik (~60 ms) jitter tamponu yanında bu 10 ms kabul edilebilir bir takas. Ama "ben gecikmeden tek bir milisaniye bile taviz vermek istemiyorum" dersen `F6` ayar ekranında `n` tuşuna basıyorsun; yapay zeka gürültü engelleme devreden çıkıyor ve o 10 ms anında cebine geri dönüyor.
+
+---
 
 ## Sustur tuşu mesaj gönderiyordu
 
-Favori hatam. Ses kısayollarını başta `Ctrl+M` (sustur) ve `Ctrl+J` yapmıştım, mantıklı geliyordu. Sonra test ederken mikrofonu kapatmaya çalıştıkça kanala boş mesajlar düşmeye başladı.
+Projeyi geliştirirken en çok güldüğüm bug'ı hiç unutamıyorum.
 
-Sebebi şu: terminalde `Ctrl+M` 0x0D, `Ctrl+J` 0x0A demek — yani ikisi de Enter'ın ta kendisi. Terminal sana "Ctrl+M'e bastı" demiyor, "Enter'a bastı" diyor, ayırt etmek mümkün değil. O yüzden şu an ses kısayolları F2/F3/F5. Terminal uygulaması yazarken tuşların aslında ne olduğunu bilmek gerekiyormuş, öğrendim.
+Başlangıçta ses kısayollarını `Ctrl+M` (sustur) ve `Ctrl+J` yapmıştım, klavyede elime çok rahat geliyordu. Test ederken mikrofonu her kapatmaya çalıştığımda kanala çatır çatır boş mesajlar gönderilmeye başlandı.
 
-Aynı sebepten bas-konuş da tam olarak "basılı tutma" değil: terminaller tuş bırakma olayını genelde bildirmiyor, o yüzden `--ptt` modunda F4 bir aç/kapat düğmesi gibi çalışıyor. Dürüst olmak gerekirse bu bir eksiklik, README'de de öyle yazıyor.
+Sebebi şu: Unix terminal kaçış dizilerinde `Ctrl+M` byte olarak `0x0D` (Carriage Return), `Ctrl+J` ise `0x0A` (Line Feed) demektir. Yani ikisi de işletim sistemi seviyesinde düpedüz **Enter** tuşudur. Terminal uygulamaya "kullanıcı Ctrl+M bastı" demez, "Enter geldi" der; ayırt etmenin hiçbir yolu yoktur.
 
-## Parola tel üzerinden hiç geçmiyor
+O yüzden bütün ses fonksiyonlarını F tuşlarına (F2, F3, F5) taşıdım. Terminal uygulaması yazarken klavyenin tuşlarını değil, o tuşların arkasındaki terminal byte protokolünü bilmek gerekiyormuş.
 
-Odaya parola koyabiliyorsun ama parolanın kendisi ağa hiç çıkmıyor. Koordinatör rastgele bir nonce yolluyor, istemci `Argon2id(parola, nonce)` sonucunu geri gönderiyor. Nonce her bağlantıda yenilendiği için yakalanan bir kanıt tekrar kullanılamıyor.
+Aynı kısıt bas-konuş (Push-to-Talk) için de geçerli: Çoğu modern terminal emülatörü bir tuşun bırakıldığını (`key-release`) raporlamaz, sadece basıldığını söyler. O yüzden `--ptt` modunda F4 klasik bir "basılı tut konuş" değil, "bir bas aç, bir bas kapat" şeklinde çalışır.
 
-Buradaki ince nokta şu: parola şifreleme için değil, **katılım denetimi** için. Şifrelemeyi QUIC zaten yapıyor. Bu ikisini karıştırmamak lazım, yoksa "parola koydum demek ki güvenli" gibi yanlış bir his oluşuyor.
+---
 
-Ufak bir geliştirme notu: Argon2 debug derlemede kabul edilemez derecede yavaştı, bağlanmak saniyeler sürüyordu. Çözüm Cargo'da sadece o paketi optimize etmek oldu:
+## Parola ve Ağ Gerçekleri: P2P Dürüstlüğü
 
-```toml
-[profile.dev.package.argon2]
-opt-level = 3
+Odaya koyduğun parola ağ üzerinden asla ham olarak geçmez. Koordinatör her bağlantıda istemciye taze bir rastgele nonce yollar; istemci ise bu nonce üzerinde `Argon2id` ile esnetilmiş anahtarla `BLAKE2b` MAC hesaplayıp kanıtı geri döner. Nonce her seferinde tekil olduğu için araya girip kanıtı dinleyen biri bunu tekrar kullanamaz.
+
+Ama buradaki önemli ayrım şu: Parola şifreleme için değil, **katılım denetimi (admission control)** içindir. Şifrelemeyi QUIC zaten uçtan uca kendisi halleder.
+
+Bir de "sunucusuz" kelimesinin arkasındaki gerçekliği dürüstçe konuşalım:
+tincan'in arkasında çalışan, verilerinizi toplayan veya odayı barındıran bir tincan şirketi/sunucusu yok. Ancak iki makinenin NAT arkasından birbirini bulabilmesi için iroh'un kullandığı Number Zero altyapısına (`dns.iroh.link` pkarr kayıtları ve `relay.n0.iroh.link`) ihtiyaç duyuluyor.
+
+Ve en önemlisi: **Gerçek bir ipte iki taraf da birbirinin nerede olduğunu bilir.**
+Merkezi sunuculu sistemler (Discord gibi) araya girip IP adresinizi karşı taraftan gizler. tincan'de aracı olmadığı için doğrudan P2P bağlandığınızda odadaki herkes birbirinin IP adresini görür. Yani konuşmanızı kimsenin sunucusunun kaydetmemesinin doğal bedeli, odadaki arkadaşlarınızın IP adresinizi bilmesidir.
+
+---
+
+## Kurulum ve Deneme
+
+Eski versiyonlarda Opus'u derlemek için C kütüphaneleriyle boğuşmak gerekiyordu. v0.3.0 ile bunu tamamen çözdüm:
+
+**Homebrew (macOS & Linux):**
+```bash
+brew tap bilalyazicioglu/tap && brew install tincan
 ```
 
-## Testler internete çıkmıyor
+**NPM / NPX (Hiçbir şey kurmadan doğrudan çalıştırmak için):**
+```bash
+npx tincan-cli host
+```
 
-93 test var ve bunların içinde kontrol düzlemi ile ses mesh'inin entegrasyon testleri de dahil. İlginç olan kısmı: bu testler gerçek iki iroh endpoint'i ve gerçek QUIC bağlantısı kuruyor ama relay ve keşif kapalı, adresler elle tanıtılıyor. Yani internet olmadan çalışıyorlar. Ses testleri de ses donanımı kullanmıyor, doğrudan mesh'in uçlarına bağlanıyorlar.
+**Tek Satır Shell Script:**
+```bash
+curl -fsSL https://raw.githubusercontent.com/bilalyazicioglu/tincan-cli/main/install.sh | sh
+```
 
-CI'da veya uçakta çalışan bir test paketi, "makinemde geçiyordu" demekten çok daha rahat.
+*(Ayrıca GitHub Releases sayfasında macOS Apple Silicon/Intel, Linux x86/ARM64 ve Windows için prebuilt binary'ler hazır.)*
 
-## Neler eksik
-
-Dürüst olmak gerekirse birkaç şey var. Koordinatör tek hata noktası: host çıkarsa oda dağılıyor, lider devrini bilerek MVP dışında bıraktım. Bağlantının ilk saniyesi relay üzerinden akıyor, sonra doğrudan bağlantıya geçiyor, o yüzden odaya girer girmez ufak bir gecikme hissedebiliyorsun. Ve yukarıda dediğim gibi 8+ kişi bu mimariyle olmuyor.
-
-Yine de asıl istediğim şey oldu: terminali açıp bir komut yazıyorsun, arkadaşına 52 karakter gönderiyorsun ve kimsenin sunucusuna ihtiyaç duymadan konuşuyorsunuz.
-
-Kod burada: [github.com/bilalyazicioglu/tincan-cli](https://github.com/bilalyazicioglu/tincan-cli). Rust 1.91+, `cmake` ve `pkg-config` gerekiyor (Opus kaynaktan derleniyor), gerisi `cargo build --release`.
+Kodun tamamı açık kaynak: [github.com/bilalyazicioglu/tincan-cli](https://github.com/bilalyazicioglu/tincan-cli).
+Projenin arkasındaki mimari dokümantasyonu ve arayüz tasarım notlarını reponun [Wiki](https://github.com/bilalyazicioglu/tincan-cli/tree/main/docs/wiki) bölümünde bulabilirsiniz.
