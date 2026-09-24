@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/Button";
 import { CtaBand } from "@/components/CtaBand";
 import { DecorativePlus } from "@/components/DecorativePlus";
+import { SiteChrome } from "@/components/SiteChrome";
 
 export const metadata: Metadata = {
   title: "404 — Page Not Found",
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
 
 export default function NotFound() {
   return (
-    <>
+    <SiteChrome>
       <PageHeader
         eyebrow="Error 404"
         titleLines={["404_", "NOT_FOUND"]}
@@ -57,6 +58,6 @@ export default function NotFound() {
         label="Lost or looking for something specific?"
         highlight="Get in touch."
       />
-    </>
+    </SiteChrome>
   );
 }
