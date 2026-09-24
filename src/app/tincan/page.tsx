@@ -56,17 +56,20 @@ export const metadata: Metadata = {
   },
 };
 
+// SoftwareSourceCode rather than SoftwareApplication: the latter is a Google
+// rich-result type that requires ratings or reviews, and without them Search
+// Console reports the page as having an invalid item.
 const softwareJsonLd = {
   "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
+  "@type": "SoftwareSourceCode",
   name: "tincan",
-  applicationCategory: "CommunicationApplication",
-  operatingSystem: "macOS, Linux, Windows",
   description: DESCRIPTION,
   url: `${siteConfig.url}/tincan`,
   codeRepository: REPO,
+  programmingLanguage: "Rust",
+  runtimePlatform: "macOS, Linux, Windows",
   license: "https://opensource.org/licenses/MIT",
-  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  image: `${siteConfig.url}/tincan/preview.png`,
   author: { "@id": `${siteConfig.url}/#person` },
 };
 
