@@ -14,7 +14,7 @@ export async function GET() {
   const projectLines = projects
     .map((p) => {
       const stats = p.stats.map((s) => `${s.label}: ${s.value}`).join(", ");
-      const link = p.href ? `\n- Link: ${p.href}` : "";
+      const link = p.href ? `\n- Link: ${new URL(p.href, baseUrl)}` : "";
       return `### ${p.name} (${p.category})
 ${p.description}${link}
 - Highlights: ${stats}`;

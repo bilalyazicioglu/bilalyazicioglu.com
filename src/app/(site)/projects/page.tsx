@@ -30,7 +30,9 @@ const projectsJsonLd = {
           ? "DeveloperApplication"
           : "MultimediaApplication",
       operatingSystem: "Cross-platform",
-      url: project.href ?? `${siteConfig.url}/projects`,
+      url: project.href
+        ? new URL(project.href, siteConfig.url).toString()
+        : `${siteConfig.url}/projects`,
       author: {
         "@type": "Person",
         name: siteConfig.name,

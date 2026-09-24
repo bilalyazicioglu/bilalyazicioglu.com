@@ -166,7 +166,8 @@ const open: Command = {
       }
       return {
         lines: [line(`opening ${project.href}…`, "muted")],
-        intent: { kind: "navigate", href: project.href, external: true },
+        // tincan has its own page on this site; everything else is a repository.
+        intent: { kind: "navigate", href: project.href, external: /^https?:\/\//.test(project.href) },
       };
     }
 

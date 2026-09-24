@@ -113,6 +113,38 @@ html:has(.tc) body {
   color: var(--tc-tin);
 }
 
+.tc .tc-top .tc-github {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--tc-tin) 28%, transparent);
+  border-radius: 6px;
+  color: var(--tc-tin);
+  line-height: 1;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.tc .tc-top .tc-github:hover {
+  border-color: var(--tc-brass);
+  color: var(--tc-tin);
+}
+
+.tc-github .tc-out {
+  color: var(--tc-brass);
+  transition: transform 0.15s;
+}
+
+.tc-github:hover .tc-out {
+  transform: translate(1px, -1px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tc-github:hover .tc-out {
+    transform: none;
+  }
+}
+
 /* The app's icon and its name, the way it signs itself in the README. */
 .tc .tc-top .tc-brand {
   display: inline-flex;
