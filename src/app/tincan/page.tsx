@@ -5,6 +5,7 @@ import { LiveTerminal } from "@/components/tincan/LiveTerminal";
 import { InstallTabs } from "@/components/tincan/InstallTabs";
 import { StringRail } from "@/components/tincan/StringRail";
 import { DemoLoop } from "@/components/tincan/DemoLoop";
+import { Meander } from "@/components/tincan/Meander";
 import { siteConfig } from "@/site.config";
 import "./tincan.css";
 
@@ -108,14 +109,28 @@ const STRAND_PATHS: Record<string, string[]> = {
  * Each leg draws its own stretch of the string and says, in the app's words,
  * what state it is in — the reading the header chip gives in the terminal.
  */
-function Reading({ chip, ms, strand }: { chip: string; ms: string; strand: string }) {
+function Reading({
+  chip,
+  ms,
+  strand,
+  glass,
+}: {
+  chip: string;
+  ms: string;
+  strand: string;
+  /**
+   * Let this leg's string wander behind the copy instead of running down the
+   * gutter, looping behind the element this selector names — the leg's glass.
+   */
+  glass?: string;
+}) {
   return (
     <>
-      <svg className="tc-strand" data-strand={strand} viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      {glass ? <Meander glass={glass} /> : <svg className="tc-strand" data-strand={strand} viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
         {STRAND_PATHS[strand].map((d, i) => (
           <path key={d} d={d} className={i > 0 ? "tc-fibre" : undefined} />
         ))}
-      </svg>
+      </svg>}
       <p className="tc-reading" data-strand={strand}>
         <span className="tc-chip">{chip}</span>
         <span>{ms}</span>
@@ -211,8 +226,8 @@ export default function TincanPage() {
             </p>
           </section>
 
-          <section className="tc-leg" data-strand="taut" aria-labelledby="tc-planes">
-            <Reading chip="DIRECT" ms="18ms" strand="taut" />
+          <section className="tc-leg" data-strand="taut" data-meander="" aria-labelledby="tc-planes">
+            <Reading chip="DIRECT" ms="18ms" strand="taut" glass=".tc-figure pre" />
             <h2 id="tc-planes">Voice goes straight between you.</h2>
             <p>
               Whoever opens the room keeps the roster, the channels and the chat,
