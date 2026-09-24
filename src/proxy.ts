@@ -31,6 +31,14 @@ export function proxy(request: NextRequest) {
     );
   }
 
+  // tincan.<domain> is a short address to hand out, not a second site: every
+  // path on it lands on the one page, so search engines keep a single URL and
+  // the page keeps the main domain's standing. The query string survives, so
+  // a link tagged for a campaign still says where it came from.
+  if (host === `tincan.${CANONICAL_HOST}`) {
+    return NextResponse.redirect(new URL(`/tincan${request.nextUrl.search}`, siteConfig.url), 301);
+  }
+
   // 1. Standard /admin is completely blocked and masked as 404 for public internet
   if (path === "/admin" || path.startsWith("/admin/")) {
     return new NextResponse(null, { status: 404 });
