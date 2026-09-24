@@ -541,6 +541,80 @@ html:has(.tc) body {
 .tc-strand[data-strand="frayed"] path { stroke: var(--tc-alarm); stroke-dasharray: 16 4 3 5 9 14 2 6; }
 .tc-strand .tc-fibre { stroke-width: 1.25; stroke-dasharray: none; opacity: 0.8; }
 
+/* Everything a leg says sits above its string; the string and its glow are
+   only ever seen through the gaps and through the glass. */
+.tc-leg > :is(p, h2, pre, figure, video, div) {
+  position: relative;
+  z-index: 1;
+}
+
+/* Room below the text for the wandering string's loop. */
+.tc-leg[data-meander] {
+  padding-bottom: clamp(11rem, 26vw, 15rem);
+}
+
+.tc-meander {
+  position: absolute;
+  top: 0;
+  left: calc(-1 * var(--tc-gutter));
+  overflow: visible;
+  pointer-events: none;
+}
+
+.tc-meander path {
+  fill: none;
+  stroke: var(--tc-verdigris);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+/* The glow on the wandering string: the same bead as the gutter's pulse, with
+   a wide halo of its own, so that behind the frosted panel it reads as light
+   spreading through glass rather than a line passing under it. */
+.tc-meander-glow {
+  position: absolute;
+  top: 0;
+  left: calc(-1 * var(--tc-gutter));
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.tc-meander-glow[data-on="false"] {
+  opacity: 0;
+}
+
+.tc-meander-glow::before,
+.tc-meander-glow::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.tc-meander-glow::before {
+  width: 6px;
+  height: 2.5rem;
+  margin: -1.25rem 0 0 -3px;
+  border-radius: 3px;
+  background: var(--tc-patina);
+  box-shadow: 0 0 14px 2px color-mix(in srgb, var(--tc-patina) 65%, transparent);
+}
+
+.tc-meander-glow::after {
+  width: 12rem;
+  height: 12rem;
+  margin: -6rem 0 0 -6rem;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in srgb, var(--tc-patina) 50%, transparent),
+    color-mix(in srgb, var(--tc-patina) 12%, transparent) 55%,
+    transparent
+  );
+}
+
 .tc-reading {
   display: flex;
   align-items: center;
@@ -592,6 +666,14 @@ html:has(.tc) body {
   font-family: var(--tc-cells);
   font-size: 0.8125rem;
   line-height: 1.6;
+}
+
+/* Frosted glass where the string wanders: the line behind it all but
+   disappears, and the glow scatters across it when it passes. */
+.tc-leg[data-meander] :is(.tc-shell, .tc-figure pre) {
+  background: color-mix(in srgb, var(--tc-panel) 60%, transparent);
+  -webkit-backdrop-filter: blur(14px) saturate(1.3);
+  backdrop-filter: blur(14px) saturate(1.3);
 }
 
 .tc-figure {

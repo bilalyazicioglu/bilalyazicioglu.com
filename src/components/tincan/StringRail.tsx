@@ -42,7 +42,8 @@ export function StringRail({ children }: { children: React.ReactNode }) {
       for (const leg of root.querySelectorAll<HTMLElement>(".tc-leg[data-strand]")) {
         const box = leg.getBoundingClientRect();
         if (box.top > middle || box.bottom < middle) continue;
-        here = leg.dataset.strand ?? "none";
+        // A wandering leg carries its own glow along its route (Meander).
+        here = leg.dataset.meander !== undefined ? "none" : (leg.dataset.strand ?? "none");
         if (here === "slack") {
           const gutter = pulse.parentElement?.clientWidth ?? 0;
           sag = sagAt((middle - box.top) / box.height) * gutter;
