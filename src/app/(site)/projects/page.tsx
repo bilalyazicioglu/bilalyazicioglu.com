@@ -21,15 +21,17 @@ const projectsJsonLd = {
   itemListElement: projects.map((project, index) => ({
     "@type": "ListItem",
     position: index + 1,
+    // SoftwareApplication would ask Google for ratings or reviews these projects
+    // don't have, and flag every item without them as invalid. Source code is
+    // what the open-source ones are; the rest are plain creative works.
     item: {
-      "@type": "SoftwareApplication",
+      "@type": project.category === "Open Source" ? "SoftwareSourceCode" : "CreativeWork",
       name: project.name,
       description: project.description,
-      applicationCategory:
-        project.category === "Open Source"
-          ? "DeveloperApplication"
-          : "MultimediaApplication",
-      operatingSystem: "Cross-platform",
+      ...(project.category === "Open Source" && {
+        codeRepository: project.repo ?? project.href,
+        programmingLanguage: project.stats.find((s) => s.label === "Language")?.value,
+      }),
       url: project.href
         ? new URL(project.href, siteConfig.url).toString()
         : `${siteConfig.url}/projects`,
