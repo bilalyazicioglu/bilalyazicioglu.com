@@ -1,11 +1,7 @@
 import type { Metadata } from "next";
 import { Silkscreen, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
-import { TerminalProvider } from "@/components/terminal/TerminalProvider";
 import { ThemeProvider, themeScript } from "@/components/ThemeProvider";
-import { PanelFrame } from "@/components/PanelFrame";
 import { siteConfig } from "@/site.config";
 
 const silkscreen = Silkscreen({
@@ -206,12 +202,7 @@ export default function RootLayout({
         {/* First thing in <head>, so the palette is settled before the first
             paint rather than after it. */}
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="icon" href="/icon-48.png" type="image/png" sizes="48x48" />
-        <link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192" />
-        <link rel="icon" href="/icon-512.png" type="image/png" sizes="512x512" />
-        <link rel="shortcut icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
+        {/* Icons come from `metadata.icons` above, so a page can swap them. */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -219,20 +210,10 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="bg-grid min-h-full flex flex-col bg-canvas text-ink antialiased">
-        <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-3 py-6 sm:px-6 sm:py-10">
-          <ThemeProvider>
-            <TerminalProvider>
-              <PanelFrame>
-                <div className="flex flex-1 flex-col">
-                  <Navbar />
-                  <main className="flex flex-1 flex-col">{children}</main>
-                  <Footer />
-                </div>
-              </PanelFrame>
-            </TerminalProvider>
-          </ThemeProvider>
-        </div>
+      {/* The site's frame lives in (site)/layout.tsx; the tincan showcase
+          brings its own, so the root only owns what every page shares. */}
+      <body className="min-h-full antialiased">
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );
