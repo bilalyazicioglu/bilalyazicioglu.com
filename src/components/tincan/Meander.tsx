@@ -50,6 +50,9 @@ const ROUTE: [Space, number, number][] = [
   ["open", 0.46, 0.5],
 ];
 
+/** The fastest the glow travels along the string, in px/s. */
+const MAX_SPEED = 3000;
+
 /** Where across the leg the loop's centre sits, as a share of u. */
 const LOOP_AT = 0.772;
 
@@ -169,35 +172,78 @@ export function Meander({ glass }: { glass: string }) {
   }, [glass]);
 
   // The glow rides the route at the same share of its length as the middle of
-  // the screen has travelled through the leg: scroll is what moves it, at the
-  // speed you scroll, and it turns with the line.
+  // the screen has travelled through the leg, and turns with the line.
+  //
+  // Scroll sets where the glow is going, not where it is. The route is a good
+  // deal longer than the leg is tall, so one fast flick can ask it to cover
+  // several hundred pixels of string in a single frame; placed there directly
+  // it teleports. So it has a top speed: anything slower than that it follows
+  // exactly, as it always did at reading speed, and when you fling past it
+  // runs along the string at that speed to catch up, like a pulse would.
   useEffect(() => {
     const path = pathRef.current;
     const glow = glowRef.current;
     const leg = svgRef.current?.parentElement;
     if (!layout || !path || !glow || !leg) return;
     const length = path.getTotalLength();
+    const still = window.matchMedia("(prefers-reduced-motion: reduce)");
     let frame = 0;
-    const move = () => {
-      frame = 0;
+    let last = 0;
+    let target = 0;
+    let inside = false;
+    let at: number | null = null;
+
+    const aim = () => {
       const rect = leg.getBoundingClientRect();
       const t = (window.innerHeight / 2 - rect.top) / rect.height;
-      if (t < 0 || t > 1) {
-        glow.dataset.on = "false";
-        return;
-      }
-      const at = t * length;
-      const here = path.getPointAtLength(at);
-      const ahead = path.getPointAtLength(Math.min(length, at + 1));
-      const behind = path.getPointAtLength(Math.max(0, at - 1));
+      inside = t >= 0 && t <= 1;
+      target = Math.min(1, Math.max(0, t)) * length;
+    };
+
+    const draw = (s: number) => {
+      const here = path.getPointAtLength(s);
+      const ahead = path.getPointAtLength(Math.min(length, s + 1));
+      const behind = path.getPointAtLength(Math.max(0, s - 1));
       const angle = (Math.atan2(ahead.y - behind.y, ahead.x - behind.x) * 180) / Math.PI - 90;
-      glow.dataset.on = "true";
       glow.style.transform = `translate(${here.x.toFixed(1)}px, ${here.y.toFixed(1)}px) rotate(${angle.toFixed(1)}deg)`;
     };
-    const schedule = () => {
-      if (!frame) frame = requestAnimationFrame(move);
+
+    const step = (now: number) => {
+      frame = 0;
+      aim();
+      // The first frame after a pause counts as one frame, so the glow answers
+      // the very first scroll instead of waiting a frame to start moving.
+      const dt = last ? Math.min(0.1, (now - last) / 1000) : 1 / 60;
+      last = now;
+      // Arriving from outside the leg (or asked to hold still) it starts where
+      // it should be rather than sliding in from wherever it last was.
+      if (at === null || still.matches) at = target;
+      else {
+        const gap = target - at;
+        const reach = MAX_SPEED * dt;
+        at = Math.abs(gap) <= reach ? target : at + Math.sign(gap) * reach;
+      }
+      const travelling = Math.abs(target - at) > 0.5;
+      if (!travelling) at = target;
+      // Seen while the middle of the screen is in the leg, and for as long
+      // as it is still running out to the end of the string after you left.
+      const on = inside || travelling;
+      glow.dataset.on = String(on);
+      if (on) draw(at);
+      else at = null;
+      if (travelling) frame = requestAnimationFrame(step);
+      else last = 0;
     };
-    move();
+
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(step);
+    };
+    aim();
+    if (inside) {
+      at = target;
+      draw(at);
+    }
+    glow.dataset.on = String(inside);
     window.addEventListener("scroll", schedule, { passive: true });
     window.addEventListener("resize", schedule);
     return () => {
