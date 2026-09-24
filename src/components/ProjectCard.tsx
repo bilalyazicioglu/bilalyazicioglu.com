@@ -31,11 +31,13 @@ function LockIcon() {
 
 function ArrowLink({ href }: { href?: string }) {
   if (!href) return <LockIcon />;
+  // Only a project that lives elsewhere opens a new tab; one with its own page
+  // on this site (tincan) is an ordinary link.
+  const external = /^https?:\/\//.test(href);
   return (
     <Link
       href={href}
-      target="_blank"
-      rel="noopener noreferrer"
+      {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
       aria-label="Open project"
       className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-ink text-ink transition-colors hover:bg-ink hover:text-surface"
     >
