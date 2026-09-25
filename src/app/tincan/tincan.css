@@ -713,6 +713,129 @@ html:has(.tc) body {
   background: var(--tc-panel);
 }
 
+.tc-leg-tr {
+  margin-top: 1rem;
+  padding-left: 0.85rem;
+  border-left: 2px solid var(--tc-brass);
+  color: var(--tc-zinc);
+  font-size: 0.875rem;
+}
+
+/* --- Comparison & FAQ --------------------------------------------------- */
+
+.tc-compare,
+.tc-faq {
+  max-width: calc(44rem + var(--tc-gutter));
+  margin: 0 auto;
+  padding: 3rem var(--tc-pad) 2rem calc(var(--tc-pad) + var(--tc-gutter));
+  box-sizing: content-box;
+}
+
+.tc-compare h2,
+.tc-faq h2 {
+  font-size: clamp(2.25rem, 5.5vw, 3.5rem);
+  font-weight: 700;
+  line-height: 0.95;
+  margin: 0 0 1rem;
+}
+
+.tc-table-wrap {
+  margin: 1.5rem 0 2rem;
+  overflow-x: auto;
+  border: 1px solid var(--tc-rule);
+  border-radius: 8px;
+  background: var(--tc-panel);
+}
+
+.tc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--tc-cells);
+  font-size: 0.8125rem;
+  text-align: left;
+}
+
+.tc-table th,
+.tc-table td {
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid var(--tc-rule);
+  white-space: nowrap;
+}
+
+.tc-table th {
+  background: color-mix(in srgb, var(--tc-ink) 55%, var(--tc-panel));
+  color: var(--tc-zinc);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.tc-table tr:last-child td {
+  border-bottom: none;
+}
+
+.tc-td-label {
+  color: var(--tc-tin);
+  font-weight: 600;
+}
+
+.tc-col-tincan {
+  background: color-mix(in srgb, var(--tc-patina) 8%, transparent);
+  color: var(--tc-patina);
+  font-weight: 700;
+}
+
+.tc-faq-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+.tc-faq-item {
+  padding: 1.25rem 1.4rem;
+  border: 1px solid var(--tc-rule);
+  border-radius: 8px;
+  background: var(--tc-panel);
+}
+
+.tc-faq-item h3 {
+  margin: 0 0 0.5rem;
+  color: var(--tc-tin);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.tc-faq-item p {
+  margin: 0;
+  color: var(--tc-zinc);
+  font-size: 0.8125rem;
+  line-height: 1.65;
+}
+
+.tc-faq-item code {
+  padding: 0.15rem 0.35rem;
+  border-radius: 4px;
+  background: var(--tc-ink);
+  color: var(--tc-brass);
+  font-family: var(--tc-cells);
+  font-size: 0.75rem;
+}
+
+.tc-tag-tr {
+  display: inline-block;
+  margin-right: 0.45rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--tc-brass) 20%, transparent);
+  color: var(--tc-brass);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
 /* --- Their end ----------------------------------------------------------- */
 
 .tc-end {

@@ -43,3 +43,6 @@ monitoring/geolite2/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+.playwright-mcp/
+

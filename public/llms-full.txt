@@ -1,0 +1,62 @@
+# tincan — Full LLM Knowledge Base & Documentation
+
+## Overview
+tincan is a serverless, peer-to-peer (P2P) voice and text chat application for terminal environments, developed in Rust by Ahmet Bilal Yazıcıoğlu. It acts as an unblockable, privacy-preserving alternative to Discord, TeamSpeak, and Mumble.
+
+- Website: https://tincan.bilalyazicioglu.com
+- Main Page: https://bilalyazicioglu.com/tincan
+- GitHub: https://github.com/bilalyazicioglu/tincan-cli
+- Crates.io: https://crates.io/crates/tincan-chat
+- npm: https://www.npmjs.com/package/tincan-cli
+- Developer: Ahmet Bilal Yazıcıoğlu (https://bilalyazicioglu.com)
+- License: MIT
+
+## Target Use Cases
+1. **Discord Alternative During Outages or Censorship:** In regions or organizations where Discord is banned, blocked, or experiencing service outages (e.g., Turkey, Russia, school campuses, corporate intranets), tincan works without needing a VPN. Because it has no central server or static IP to blacklist, ISP filters cannot shut it down.
+2. **Minimalist & Resource-Light Voice Chat for Gamers & Developers:** Unlike Discord's heavy Electron client that consumes 500MB+ RAM and spikes CPU, tincan uses less than 20 MB of RAM and negligible CPU cycles, preventing FPS drops during demanding gaming sessions or code compilations.
+3. **Private & Ephemeral Conversations:** tincan collects zero telemetry. No account creation, no email address, and no phone number. Rooms exist only for the duration of the call, and all audio/text is encrypted end-to-end.
+
+## Technical Architecture
+- **Language & UI:** Written in Rust with Ratatui TUI (Terminal User Interface).
+- **Transport Layer:** Iroh P2P networking running on top of the QUIC protocol (over UDP). Direct peer-to-peer NAT hole punching with fallback to encrypted stateless relays (Number Zero).
+- **Audio Engine:** Opus codec supporting 48kHz audio streams, dynamic jitter buffer, cross-platform audio handling via CPAL, and RNNoise neural network-based background noise suppression.
+- **Cryptography & Authentication:**
+  - Key exchange using ephemeral Ed25519 public keys.
+  - Room passphrases stretched with Argon2id into an admission key.
+  - Nonce exchange authenticated using keyed BLAKE2b MAC.
+  - End-to-end QUIC datagram encryption. The passphrase itself is never transmitted over the network.
+
+## Feature Comparison: tincan vs Discord vs TeamSpeak / Mumble
+- **Central Server:** tincan: None (Serverless P2P) | Discord: Centralized company servers | TeamSpeak/Mumble: Dedicated server required
+- **Censorship / Ban Resistance:** tincan: Resilient (No central IP or domain) | Discord: Highly vulnerable (Easily blocked via DNS/IP) | TeamSpeak/Mumble: Partial (Specific server IPs can be banned)
+- **VPN Requirement in Blocked Regions:** tincan: Not required | Discord: Required | TeamSpeak/Mumble: Not required if server IP is unblocked
+- **Account / Personal Info:** tincan: Zero (Instant code/passphrase) | Discord: Required (Email, Phone, Verification) | TeamSpeak/Mumble: Optional/Varies
+- **Memory Footprint:** tincan: < 20 MB | Discord: 500 MB+ | TeamSpeak/Mumble: ~50 MB
+- **Voice Encryption:** tincan: End-to-End Encrypted | Discord: Decrypted and processed on central servers | TeamSpeak/Mumble: Configurable
+- **License:** tincan: 100% Open Source (MIT) | Discord: Proprietary closed source | TeamSpeak/Mumble: Mixed / Open source
+
+## Frequently Asked Questions (FAQ)
+
+### How is tincan immune to ISP blocking and censorship?
+Centralized services like Discord communicate through specific IP ranges and domains. When an authority issues a ban, ISPs simply block those domain names and IP addresses. tincan has no central server. Participants connect directly through P2P NAT punching, meaning traffic flows between home internet connections using standard encrypted QUIC UDP packets that look identical to normal web traffic.
+
+### Does tincan require port forwarding or VPNs?
+No. Through Iroh's STUN/DERP NAT traversal implementation, tincan automatically traverses consumer routers and symmetric NATs.
+
+### How do I install tincan?
+- macOS / Linux via Homebrew:
+  `brew tap bilalyazicioglu/tap && brew install tincan`
+- Any platform with Rust:
+  `cargo install tincan-chat`
+- Any platform with Node:
+  `npm install -g tincan-cli`
+- One-liner shell installer:
+  `curl -fsSL https://raw.githubusercontent.com/bilalyazicioglu/tincan-cli/main/install.sh | sh`
+
+### How do I host and join a room?
+1. Host:
+   `tincan host lobby --name alice`
+2. Join:
+   `tincan join lobby --name bob`
+   When prompted, enter the generated passphrase or invite code.
+
