@@ -23,8 +23,8 @@ Docker Compose · Prometheus · Grafana · Loki
 Use Node.js 22 and npm; the Docker build uses the same Node.js major version.
 
 ```sh
-git clone https://github.com/bilalyazicioglu/portfolio.git
-cd portfolio
+git clone https://github.com/bilalyazicioglu/bilalyazicioglu.com.git
+cd bilalyazicioglu.com
 npm ci
 npm run dev
 ```
@@ -56,6 +56,6 @@ The application runs in Docker with separate volumes for posts and view counts. 
 
 See [deployment and publishing](docs/operations.md) for configuration, storage behavior, and update commands.
 
-## Usage rights
+## License
 
-This repository is publicly visible source for my personal website. All rights reserved unless a file states otherwise.
+[MIT](LICENSE) © 2026 Ahmet Bilal Yazıcıoğlu.

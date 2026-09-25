@@ -117,7 +117,7 @@ const personJsonLd = {
     "https://play.fiba3x3.com/players/search?q=Ahmet%20Bilal%20Yazicioglu",
     "https://www.npmjs.com/package/@arpoly/react",
     "https://github.com/bilalyazicioglu/tincan-cli",
-    "https://github.com/bilalyazicioglu/portfolio",
+    "https://github.com/bilalyazicioglu/bilalyazicioglu.com",
   ],
   memberOf: [
     {

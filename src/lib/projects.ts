@@ -86,19 +86,19 @@ export const projects: Project[] = [
   },
   {
     slug: "portfolio",
-    name: "portfolio",
+    name: "bilalyazicioglu.com",
     tag: "PF",
     category: "Open Source",
     badges: ["Live", "This site"],
     live: true,
     description:
-      "This site. A Next.js App Router portfolio and MDX blog, with a browser editor for writing posts that is reachable only over my tailnet — no login form, because the boundary is the network rather than application code. Ships as a Docker image behind nginx and Cloudflare, with Prometheus, Loki and Grafana watching it.",
-    href: "https://github.com/bilalyazicioglu/portfolio",
+      "This site. A bilingual Next.js and MDX blog with an interactive terminal and an authenticated publishing studio. Self-hosted with Docker, with Prometheus, Loki and Grafana for monitoring.",
+    href: "https://github.com/bilalyazicioglu/bilalyazicioglu.com",
     stats: [
       { label: "Stack", value: "Next.js 16 + TS" },
       { label: "Content", value: "MDX" },
       { label: "Ops", value: "Docker + Grafana" },
-      { label: "Admin", value: "Tailnet-only" },
+      { label: "Editor", value: "MDX Studio" },
     ],
   },
   {
