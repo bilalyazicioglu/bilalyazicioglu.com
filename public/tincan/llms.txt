@@ -1,0 +1,42 @@
+# tincan
+
+> tincan is serverless peer-to-peer voice and text chat for the terminal, written in Rust with Ratatui. There is no tincan server and no account: the first person opens a room, shares its name and a four-word passphrase (or a 63-character invite code), and friends join from anywhere. It is an open-source (MIT) alternative to Discord, TeamSpeak and Mumble.
+
+- Project page: https://bilalyazicioglu.com/tincan
+- Source: https://github.com/bilalyazicioglu/tincan-cli
+- crates.io: https://crates.io/crates/tincan-chat (the crate is `tincan-chat`; the command is `tincan`)
+- npm: https://www.npmjs.com/package/tincan-cli
+- Author: Ahmet Bilal Yazıcıoğlu (https://bilalyazicioglu.com)
+- Latest version: 0.3.1
+- License: MIT
+
+## Install
+
+- Homebrew (macOS, Linux): `brew tap bilalyazicioglu/tap && brew install tincan`
+- Shell script (macOS, Linux): `curl -fsSL https://raw.githubusercontent.com/bilalyazicioglu/tincan-cli/main/install.sh | sh`
+- Cargo: `cargo install tincan-chat`
+- npm: `npm install -g tincan-cli`, or run once with `npx tincan-cli host`
+
+## Use
+
+- Open a room: `tincan host lobby --name alice` (prints the room name and a generated passphrase)
+- Join it: `tincan join lobby --name bob` (asks for the passphrase)
+- Open a room behind an invite code instead: `tincan host --name alice`
+- Text only: `--no-voice`. Push-to-talk on F4: `--ptt`.
+
+## Key facts
+
+- Voice goes directly between peers as Opus (48 kHz mono, 32 kbps, 20 ms frames) in QUIC datagrams. It never passes through the host. A six-person room needs about 160 kbps of upload per person.
+- The host keeps the roster, the channels and the chat: a few hundred bytes per second.
+- Every connection is QUIC, encrypted between its two ends and verified by public key. Relays forward packets they cannot decrypt.
+- The passphrase never crosses the network: it is stretched with Argon2id into an admission key, and the guest answers a fresh nonce with a keyed BLAKE2b MAC.
+- RNNoise noise suppression runs on the microphone (adds 10 ms, can be turned off).
+- Peers find each other through iroh's discovery service and relays, run by Number Zero (n0.computer). If those went away, new connections would stop working. Self-hosted relays are issue #136.
+- Everyone in a room learns everyone else's IP address.
+
+## Optional
+
+- Full reference: https://bilalyazicioglu.com/tincan/llms-full.txt
+- Developer story (English): https://bilalyazicioglu.com/blog/tincan-serverless-voice-chat-in-terminal
+- Developer story (Turkish): https://bilalyazicioglu.com/blog/tincan-terminalde-sesli-sohbet
+- Interface design notes: https://github.com/bilalyazicioglu/tincan-cli/blob/main/docs/wiki/9-Interface-Design.md

@@ -26,8 +26,10 @@ const martian = Martian_Mono({
 });
 
 const REPO = "https://github.com/bilalyazicioglu/tincan-cli";
+const PAGE = `${siteConfig.url}/tincan`;
+const VERSION = "0.3.1";
 const DESCRIPTION =
-  "tincan is serverless peer-to-peer voice and text chat for your terminal. The unblockable, open-source Discord alternative — zero servers, no accounts, no VPN.";
+  "tincan is serverless peer-to-peer voice and text chat for your terminal: an open-source Discord alternative with no accounts, no port forwarding and no VPN.";
 
 export const metadata: Metadata = {
   title: { absolute: "tincan — Serverless P2P Voice Chat | Discord Alternative" },
@@ -37,18 +39,18 @@ export const metadata: Metadata = {
     "discord alternatifi",
     "serverless voice chat",
     "p2p voice chat",
-    "discord blocked alternative",
-    "discord engeli sesli sohbet",
     "terminal voice chat",
     "open source discord alternative",
     "ratatui",
     "rust voice chat",
     "iroh",
-    "unblockable voice chat",
-    "vpn siz discord alternatifi",
     "peer to peer chat",
   ],
-  alternates: { canonical: `${siteConfig.url}/tincan` },
+  alternates: {
+    canonical: PAGE,
+    // The same facts as plain Markdown, for language models (llmstxt.org).
+    types: { "text/markdown": "/tincan/llms.txt" },
+  },
   // The app's own icon in the tab, as it appears in the README and on npm.
   icons: {
     icon: [
@@ -60,10 +62,13 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    url: `${siteConfig.url}/tincan`,
+    url: PAGE,
+    siteName: siteConfig.name,
+    locale: "en_US",
     title: "tincan — Serverless P2P Voice Chat & Discord Alternative",
     description: DESCRIPTION,
     images: [{ url: "/tincan/preview.png", width: 1074, height: 680, alt: "The tincan terminal interface" }],
+    videos: [{ url: "/uploads/blog/tincan-demo.mp4", type: "video/mp4" }],
   },
   twitter: {
     card: "summary_large_image",
@@ -73,67 +78,139 @@ export const metadata: Metadata = {
   },
 };
 
-// SoftwareSourceCode rather than SoftwareApplication: the latter is a Google
-// rich-result type that requires ratings or reviews, and without them Search
-// Console reports the page as having an invalid item.
-const softwareJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "SoftwareSourceCode",
-  name: "tincan",
-  alternateName: ["tincan-cli", "tincan chat"],
-  description: DESCRIPTION,
-  url: `${siteConfig.url}/tincan`,
-  codeRepository: REPO,
-  programmingLanguage: "Rust",
-  runtimePlatform: "macOS, Linux, Windows",
-  license: "https://opensource.org/licenses/MIT",
-  image: `${siteConfig.url}/tincan/preview.png`,
-  author: { "@id": `${siteConfig.url}/#person` },
-};
+/**
+ * The questions are written once: the page shows them and the FAQPage data
+ * repeats them, and search engines only trust structured data that matches
+ * what is on the page. Backticks mark commands.
+ */
+const FAQ: { q: string; a: string; lang?: "tr" }[] = [
+  {
+    q: "Does tincan work when Discord is blocked?",
+    a: "Usually, yes. Blocking Discord means blocking Discord's domains and servers, and tincan has no server of its own to block. Peers find each other through iroh's public discovery service and relays, run by Number Zero, and voice goes directly between the machines over encrypted QUIC. A network that blocks those services, or all UDP traffic, stops tincan too.",
+  },
+  {
+    q: "Discord engelliyken tincan çalışır mı? VPN gerekir mi?",
+    a: "Çoğu durumda VPN gerekmez. Discord erişim engeli Discord'un alan adlarını ve sunucularını hedefler; tincan'ın ise engellenecek kendi sunucusu yok. Eşler birbirini iroh'un açık keşif servisi ve Number Zero'nun relay sunucuları üzerinden bulur, ses doğrudan iki bilgisayar arasında şifreli QUIC ile akar. Bu servisleri ya da tüm UDP trafiğini engelleyen bir ağda tincan da çalışmaz.",
+    lang: "tr",
+  },
+  {
+    q: "Do I need an account, an email address or a phone number?",
+    a: "No. There is nothing to sign up for or log in to. You open a room and share either its name and a four-word passphrase, or a 63-character invite code. Each machine is known by a public key, and no copy of the conversation is kept anywhere but on the machines having it.",
+  },
+  {
+    q: "Is tincan encrypted?",
+    a: "Every connection is QUIC, encrypted between the two machines at its ends and checked against the other side's public key. Voice goes directly from peer to peer; chat and the roster go through the host, who is one of the people in the room. Relays forward packets they cannot read, though they can see which keys are talking, when and how much. Everyone in a room learns everyone else's IP address.",
+  },
+  {
+    q: "How good is the audio, and how much bandwidth does it use?",
+    a: "Voice is Opus at 48 kHz mono and 32 kbps, sent in 20 ms frames, with RNNoise noise suppression on your microphone. Suppression adds 10 ms of delay and can be turned off on the audio settings screen. A six-person room needs about 160 kbps of upload each.",
+  },
+  {
+    q: "Can I keep it running while gaming or coding?",
+    a: "Yes. tincan is a native Rust program that lives in a terminal tab, not an Electron app. Start it with `--ptt` for push-to-talk on F4, or `--no-voice` for text chat only.",
+  },
+  {
+    q: "Does tincan run on Windows?",
+    a: "macOS and Linux are where it is used day to day. A Windows build is compiled and tested in CI but has not yet been used on a real Windows machine. Try it with `npx tincan-cli host`, or download the zip from the latest GitHub release.",
+  },
+  {
+    q: "How do I install tincan and open a room?",
+    a: "Install it with Homebrew (`brew tap bilalyazicioglu/tap && brew install tincan`), Cargo (`cargo install tincan-chat`) or npm (`npm install -g tincan-cli`). Then run `tincan host lobby` to open a room and `tincan join lobby` to join it.",
+  },
+  {
+    q: "tincan nasıl kurulur ve başlatılır?",
+    a: "macOS ve Linux'ta Homebrew ile (`brew tap bilalyazicioglu/tap && brew install tincan`), Rust kullanıyorsanız `cargo install tincan-chat` ile, Node kullanıyorsanız `npm install -g tincan-cli` ile kurabilirsiniz. Oda açmak için `tincan host lobby`, katılmak için `tincan join lobby` yazmanız yeterli.",
+    lang: "tr",
+  },
+  {
+    q: "Is tincan free?",
+    a: "Yes. tincan is open source under the MIT license, and there is no paid tier, because there is no service to pay for.",
+  },
+];
 
-const faqJsonLd = {
+function Answer({ text }: { text: string }) {
+  return (
+    <>
+      {text.split("`").map((part, i) => (i % 2 ? <code key={i}>{part}</code> : part))}
+    </>
+  );
+}
+
+// One graph, so the page, the program, the video and the questions point at
+// each other by @id. SoftwareSourceCode rather than SoftwareApplication: the
+// latter is a Google rich-result type that requires ratings or reviews, and
+// without them Search Console reports the page as having an invalid item.
+const jsonLd = {
   "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: [
+  "@graph": [
     {
-      "@type": "Question",
-      name: "Why is tincan the best Discord alternative when Discord is blocked or restricted?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "tincan operates on a serverless peer-to-peer (P2P) architecture. Unlike Discord, which relies on centralized servers that can be blocked via DNS or IP blacklists, tincan routes encrypted audio directly between peers via QUIC. There is no central server, no registration, and no single point of censorship.",
-      },
+      "@type": "WebPage",
+      "@id": `${PAGE}#webpage`,
+      url: PAGE,
+      name: "tincan — serverless peer-to-peer voice chat for the terminal",
+      description: DESCRIPTION,
+      inLanguage: "en",
+      isPartOf: { "@id": `${siteConfig.url}/#website` },
+      about: { "@id": `${PAGE}#software` },
+      mainEntity: { "@id": `${PAGE}#software` },
+      author: { "@id": `${siteConfig.url}/#person` },
+      primaryImageOfPage: `${siteConfig.url}/tincan/preview.png`,
+      video: { "@id": `${PAGE}#demo` },
+      breadcrumb: { "@id": `${PAGE}#breadcrumb` },
     },
     {
-      "@type": "Question",
-      name: "Discord engellendiğinde veya erişilemez olduğunda tincan nasıl alternatif sunar? VPN gerekir mi?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "tincan kullanmak için VPN veya sunucu kurulumu gerekmez. Sunucusuz ve eşler arası (P2P) çalışan yapısı sayesinde, iki uç doğrudan birbiriyle şifreli QUIC protokolü üzerinden iletişim kurar. Merkezi bir şirket sunucusu bulunmadığı için DNS veya IP engellemelerine takılmaz.",
-      },
+      "@type": "BreadcrumbList",
+      "@id": `${PAGE}#breadcrumb`,
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: siteConfig.url },
+        { "@type": "ListItem", position: 2, name: "Projects", item: `${siteConfig.url}/projects` },
+        { "@type": "ListItem", position: 3, name: "tincan", item: PAGE },
+      ],
     },
     {
-      "@type": "Question",
-      name: "Does tincan require an account, email, or phone number?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "No. tincan requires zero accounts, zero personal data, and no login. Users create a room and share a short invite code or passphrase. Connections are cryptographically authenticated using ephemeral Ed25519 keys.",
-      },
+      "@type": "SoftwareSourceCode",
+      "@id": `${PAGE}#software`,
+      name: "tincan",
+      alternateName: ["tincan-cli", "tincan-chat"],
+      description: DESCRIPTION,
+      url: PAGE,
+      codeRepository: REPO,
+      sameAs: [
+        REPO,
+        "https://crates.io/crates/tincan-chat",
+        "https://www.npmjs.com/package/tincan-cli",
+      ],
+      programmingLanguage: { "@type": "ComputerLanguage", name: "Rust" },
+      runtimePlatform: ["macOS", "Linux", "Windows"],
+      version: VERSION,
+      license: "https://opensource.org/licenses/MIT",
+      isAccessibleForFree: true,
+      keywords:
+        "peer-to-peer voice chat, serverless, terminal, TUI, Discord alternative, QUIC, iroh, Opus, Ratatui",
+      image: `${siteConfig.url}/tincan/preview.png`,
+      author: { "@id": `${siteConfig.url}/#person` },
     },
     {
-      "@type": "Question",
-      name: "How does tincan compare to Discord in audio latency and memory usage?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "tincan uses under 20 MB of RAM compared to Discord's 500+ MB Electron client. Audio is sent directly peer-to-peer using the Opus codec, achieving sub-20ms direct latency without passing through intermediary servers.",
-      },
+      "@type": "VideoObject",
+      "@id": `${PAGE}#demo`,
+      name: "tincan in a real terminal",
+      description:
+        "A 12-second screen recording of tincan: audio meters, the latency pulse travelling down the string, chat, and the audio settings screen.",
+      contentUrl: `${siteConfig.url}/uploads/blog/tincan-demo.mp4`,
+      thumbnailUrl: `${siteConfig.url}/tincan/demo-poster.jpg`,
+      uploadDate: "2026-09-17",
+      duration: "PT12S",
     },
     {
-      "@type": "Question",
-      name: "How do I install and start tincan?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Install tincan via Homebrew (brew tap bilalyazicioglu/tap && brew install tincan), Cargo (cargo install tincan-chat), or npm (npm install -g tincan-cli). Run 'tincan host' to create a room or 'tincan join' to enter.",
-      },
+      "@type": "FAQPage",
+      "@id": `${PAGE}#faq`,
+      isPartOf: { "@id": `${PAGE}#webpage` },
+      mainEntity: FAQ.map(({ q, a, lang }) => ({
+        "@type": "Question",
+        name: q,
+        inLanguage: lang ?? "en",
+        acceptedAnswer: { "@type": "Answer", text: a.replaceAll("`", "") },
+      })),
     },
   ],
 };
@@ -208,11 +285,7 @@ export default function TincanPage() {
     <div className={`tc ${shoulders.variable} ${martian.variable}`}>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareJsonLd) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
       <header className="tc-top">
@@ -247,12 +320,17 @@ export default function TincanPage() {
         <section className="tc-hero" aria-labelledby="tc-title">
           <div className="tc-hero-intro">
             <h1 id="tc-title">
-              <span>Two cans</span> <span>and a string.</span>
+              <span>Two cans</span> <span>and a string.</span>{" "}
+              {/* The words people search for, in the heading search engines
+                  read first, set as the line that says what the picture is. */}
+              <span className="tc-h1-says">
+                tincan: serverless <span className="tc-nowrap">peer-to-peer</span> voice chat
+                for your terminal
+              </span>
             </h1>
             <p className="tc-lead">
-              tincan is voice and text chat for your terminal, with no server in
-              the middle. Open a room, send your friends the code it prints, and
-              talk.
+              Voice and text chat with no server in the middle. Open a room, send
+              your friends the code it prints, and talk.
             </p>
           </div>
           <LiveTerminal />
@@ -400,17 +478,20 @@ export default function TincanPage() {
 
           <section className="tc-leg" data-strand="taut" aria-labelledby="tc-unblockable">
             <Reading chip="DIRECT" ms="18ms" strand="taut" />
-            <h2 id="tc-unblockable">When central servers go dark.</h2>
+            <h2 id="tc-unblockable">When Discord is blocked.</h2>
             <p>
-              When Discord is blocked, goes down, or is restricted on corporate and school networks,
-              tincan keeps the line open. Because there is no central server, there is no domain
-              or IP address for an ISP or firewall to blacklist. Encrypted audio flows directly
-              peer-to-peer between you and your friends over QUIC.
+              When Discord is blocked in your country, down for everyone, or
+              filtered on a school or office network, tincan has nothing of its
+              own to take down with it. There is no tincan domain or server
+              address for a provider to blacklist: peers find each other through
+              iroh&apos;s discovery service and talk directly over encrypted
+              QUIC. A network that blocks those services, or all UDP, stops it
+              too.
             </p>
             <p className="tc-leg-tr" lang="tr">
-              Discord erişim engeli veya ağ kısıtlamalarında VPN, hesap veya sunucu
-              kiralamadan doğrudan çalışır. Eşler arası (P2P) şifreli ses hattı, merkezi engellemelere
-              takılmaz.
+              Discord&apos;a erişim engeli olan ağlarda tincan çoğu zaman VPN,
+              hesap ya da sunucu kiralamadan çalışır: engellenecek bir tincan
+              sunucusu yok, ses iki bilgisayar arasında doğrudan ve şifreli akar.
             </p>
           </section>
 
@@ -418,19 +499,19 @@ export default function TincanPage() {
         </StringRail>
 
         <section className="tc-compare" aria-labelledby="tc-compare-title">
-          <p className="tc-reading" data-strand="taut">
-            <span className="tc-chip">COMPARISON</span>
-            <span>tincan vs Discord</span>
-          </p>
-          <h2 id="tc-compare-title">How tincan compares.</h2>
+          <h2 id="tc-compare-title">tincan, Discord and Mumble.</h2>
           <p>
-            A private, serverless Discord alternative built for low latency, zero telemetry, and zero maintenance.
+            Discord keeps everything on its servers; Mumble and TeamSpeak need
+            someone to run one. tincan has no server at all.
           </p>
           <div className="tc-table-wrap">
             <table className="tc-table">
+              <caption className="tc-sr">
+                tincan compared with Discord and with TeamSpeak or Mumble
+              </caption>
               <thead>
                 <tr>
-                  <th scope="col">Feature</th>
+                  <td />
                   <th scope="col" className="tc-col-tincan">tincan</th>
                   <th scope="col">Discord</th>
                   <th scope="col">TeamSpeak / Mumble</th>
@@ -438,46 +519,46 @@ export default function TincanPage() {
               </thead>
               <tbody>
                 <tr>
-                  <td className="tc-td-label">Architecture</td>
-                  <td className="tc-col-tincan">Serverless P2P</td>
-                  <td>Centralized Server</td>
-                  <td>Self-Hosted Server</td>
+                  <th scope="row">Where voice goes</th>
+                  <td className="tc-col-tincan">Directly between peers</td>
+                  <td>Discord&apos;s voice servers</td>
+                  <td>The server</td>
                 </tr>
                 <tr>
-                  <td className="tc-td-label">Censorship / Ban Resistant</td>
-                  <td className="tc-col-tincan">Yes (Direct QUIC)</td>
-                  <td>No (Easy DNS/IP Ban)</td>
-                  <td>Partial (Server IP can be blocked)</td>
+                  <th scope="row">Server to run or rent</th>
+                  <td className="tc-col-tincan">None</td>
+                  <td>Discord&apos;s</td>
+                  <td>Yours</td>
                 </tr>
                 <tr>
-                  <td className="tc-td-label">VPN Needed in Blocked Regions</td>
-                  <td className="tc-col-tincan">No (0 VPN)</td>
-                  <td>Yes (Mandatory)</td>
-                  <td>No</td>
+                  <th scope="row">What a network must block</th>
+                  <td className="tc-col-tincan">iroh discovery and relays, or UDP</td>
+                  <td>Discord&apos;s domains</td>
+                  <td>The server&apos;s address</td>
                 </tr>
                 <tr>
-                  <td className="tc-td-label">Account &amp; Registration</td>
-                  <td className="tc-col-tincan">None (Instant code)</td>
-                  <td>Required (Email/Phone)</td>
+                  <th scope="row">Account</th>
+                  <td className="tc-col-tincan">None</td>
+                  <td>Email or phone</td>
                   <td>Optional</td>
                 </tr>
                 <tr>
-                  <td className="tc-td-label">Memory Footprint</td>
-                  <td className="tc-col-tincan">&lt; 20 MB (Rust)</td>
-                  <td>500+ MB (Electron)</td>
-                  <td>~50 MB</td>
+                  <th scope="row">Chat history kept on</th>
+                  <td className="tc-col-tincan">The machines in the room</td>
+                  <td>Discord&apos;s servers</td>
+                  <td>The server, if enabled</td>
                 </tr>
                 <tr>
-                  <td className="tc-td-label">Voice Encryption</td>
-                  <td className="tc-col-tincan">End-to-End (QUIC + Argon2id)</td>
-                  <td>Decrypted on Server</td>
-                  <td>Configurable</td>
+                  <th scope="row">Client</th>
+                  <td className="tc-col-tincan">Native terminal app (Rust)</td>
+                  <td>Electron app</td>
+                  <td>Native desktop app</td>
                 </tr>
                 <tr>
-                  <td className="tc-td-label">Open Source License</td>
-                  <td className="tc-col-tincan">MIT (100% Open)</td>
-                  <td>Proprietary</td>
-                  <td>Mixed / Open Source</td>
+                  <th scope="row">Source</th>
+                  <td className="tc-col-tincan">Open, MIT</td>
+                  <td>Closed</td>
+                  <td>TeamSpeak closed, Mumble BSD</td>
                 </tr>
               </tbody>
             </table>
@@ -485,65 +566,21 @@ export default function TincanPage() {
         </section>
 
         <section className="tc-faq" aria-labelledby="tc-faq-title">
-          <p className="tc-reading" data-strand="taut">
-            <span className="tc-chip">FAQ</span>
-            <span>Common Questions</span>
-          </p>
-          <h2 id="tc-faq-title">Frequently Asked Questions</h2>
-          <div className="tc-faq-grid">
-            <article className="tc-faq-item">
-              <h3>Why is tincan the best Discord alternative when Discord is blocked?</h3>
-              <p>
-                Discord relies on centralized data centers that governments, ISPs, and network
-                administrators can block in seconds via DNS or IP blacklists. tincan has no central
-                servers; voice streams travel directly between participants over encrypted QUIC
-                datagrams, making it resilient against network censorship and outages.
-              </p>
-            </article>
-
-            <article className="tc-faq-item">
-              <h3 lang="tr"><span className="tc-tag-tr">TR</span>Discord yasaklıyken tincan nasıl çalışır? VPN gerekir mi?</h3>
-              <p lang="tr">
-                Hayır, VPN gerekmez. tincan tamamen sunucusuz ve eşler arası (P2P) mimariye sahiptir.
-                Arkadaşlarınızla konuşmak için tek yapmanız gereken odayı açıp size verilen davet kodunu
-                veya parola kelimelerini iletmektir. Iroh NAT delme teknolojisi sayesinde modemler
-                ve güvenlik duvarları arkasında bile doğrudan bağlantı kurulur.
-              </p>
-            </article>
-
-            <article className="tc-faq-item">
-              <h3>Does tincan require an account, email, or phone number?</h3>
-              <p>
-                None. tincan collects zero telemetry, requires no registration, and stores no chat history
-                on any cloud server. Identity is an ephemeral Ed25519 public key generated on launch.
-              </p>
-            </article>
-
-            <article className="tc-faq-item">
-              <h3>Can I run tincan in the background while gaming or coding?</h3>
-              <p>
-                Yes. Built with Rust and Ratatui, tincan runs in your terminal using under 20 MB of RAM
-                and negligible CPU, ensuring zero frame drops in games and no distraction during development.
-              </p>
-            </article>
-
-            <article className="tc-faq-item">
-              <h3>How does audio quality and latency compare to Discord?</h3>
-              <p>
-                tincan uses the high-definition Opus audio codec (up to 48kHz stereo) combined with
-                RNNoise neural noise cancellation. Because voice traverses peer-to-peer without central
-                relay hops, voice latency is direct and typically under 20ms on regional connections.
-              </p>
-            </article>
-
-            <article className="tc-faq-item">
-              <h3 lang="tr"><span className="tc-tag-tr">TR</span>tincan nasıl kurulur ve başlatılır?</h3>
-              <p lang="tr">
-                Terminalinizde tek bir komutla kurabilirsiniz: macOS ve Linux için <code>brew tap bilalyazicioglu/tap &amp;&amp; brew install tincan</code>,
-                Rust kullanıcıları için <code>cargo install tincan-chat</code> veya Node kullanıcıları için <code>npm install -g tincan-cli</code>.
-                Oda açmak için <code>tincan host</code>, odaya katılmak için <code>tincan join</code> yazmanız yeterlidir.
-              </p>
-            </article>
+          <h2 id="tc-faq-title">Questions.</h2>
+          {/* Closed until asked, and only one open at a time (`name`), so the
+              list stays the height of its questions. The answers are still in
+              the page, where search engines and find-in-page reach them. */}
+          <div className="tc-faq-list">
+            {FAQ.map(({ q, a, lang }) => (
+              <details key={q} name="tc-faq" className="tc-faq-item" lang={lang}>
+                <summary>
+                  <h3>{q}</h3>
+                </summary>
+                <p>
+                  <Answer text={a} />
+                </p>
+              </details>
+            ))}
           </div>
         </section>
 

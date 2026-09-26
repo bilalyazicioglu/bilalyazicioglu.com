@@ -217,6 +217,23 @@ html:has(.tc) body {
   display: block;
 }
 
+.tc h1 .tc-nowrap {
+  display: inline;
+  white-space: nowrap;
+}
+
+/* The plain-words line under the picture: part of the heading, set as body. */
+.tc h1 .tc-h1-says {
+  margin-top: 1.75rem;
+  font-family: var(--font-martian), monospace;
+  font-variation-settings: normal;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: 0;
+  color: var(--tc-brass);
+}
+
 .tc-lead {
   max-width: 44ch;
   margin: 0 0 2rem;
@@ -727,7 +744,7 @@ html:has(.tc) body {
 .tc-faq {
   max-width: calc(44rem + var(--tc-gutter));
   margin: 0 auto;
-  padding: 3rem var(--tc-pad) 2rem calc(var(--tc-pad) + var(--tc-gutter));
+  padding: 3rem var(--tc-pad) 0 calc(var(--tc-pad) + var(--tc-gutter));
   box-sizing: content-box;
 }
 
@@ -757,8 +774,20 @@ html:has(.tc) body {
 
 .tc-table th,
 .tc-table td {
-  padding: 0.8rem 1rem;
+  padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--tc-rule);
+  vertical-align: top;
+  line-height: 1.45;
+}
+
+/* Cells wrap on a wide screen; on a phone the table scrolls sideways
+   instead of squeezing every column to a word. */
+.tc-table {
+  min-width: 36rem;
+}
+
+.tc-table thead th,
+.tc-table thead td {
   white-space: nowrap;
 }
 
@@ -775,9 +804,13 @@ html:has(.tc) body {
   border-bottom: none;
 }
 
-.tc-td-label {
+.tc-table tbody th {
   color: var(--tc-tin);
   font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
+  background: none;
+  font-size: inherit;
 }
 
 .tc-col-tincan {
@@ -786,54 +819,96 @@ html:has(.tc) body {
   font-weight: 700;
 }
 
-.tc-faq-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.25rem;
-  margin-top: 1.5rem;
+/* Closed by default and one at a time: a row per question, the answer
+   unfolding under it. */
+.tc-faq-list {
+  margin: 1.5rem 0 3rem;
+  border-top: 1px solid var(--tc-rule);
+  interpolate-size: allow-keywords;
 }
 
 .tc-faq-item {
-  padding: 1.25rem 1.4rem;
-  border: 1px solid var(--tc-rule);
-  border-radius: 8px;
-  background: var(--tc-panel);
+  border-bottom: 1px solid var(--tc-rule);
 }
 
-.tc-faq-item h3 {
-  margin: 0 0 0.5rem;
+.tc-faq-item summary {
+  display: flex;
+  align-items: baseline;
+  gap: 0.9rem;
+  padding: 0.95rem 0.25rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.tc-faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+/* The terminal's own way of saying "there is more here". */
+.tc-faq-item summary::before {
+  content: "[+]";
+  flex: none;
+  color: var(--tc-zinc);
+  font-family: var(--tc-cells);
+  font-size: 0.8125rem;
+}
+
+.tc-faq-item[open] summary::before {
+  content: "[\2212]";
+  color: var(--tc-brass);
+}
+
+.tc-faq-item summary:hover h3,
+.tc-faq-item[open] summary h3 {
+  color: var(--tc-patina);
+}
+
+.tc-faq-item summary:focus-visible {
+  outline: 2px solid var(--tc-patina);
+  outline-offset: 2px;
+}
+
+.tc .tc-faq-item h3 {
+  margin: 0;
   color: var(--tc-tin);
+  font-family: inherit;
   font-size: 0.9375rem;
   font-weight: 700;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
 .tc-faq-item p {
   margin: 0;
+  /* Under the question, not under the [+]. */
+  padding: 0 0.25rem 1.1rem 2.625rem;
   color: var(--tc-zinc);
   font-size: 0.8125rem;
-  line-height: 1.65;
+  line-height: 1.7;
+}
+
+.tc-faq-item::details-content {
+  block-size: 0;
+  overflow: hidden;
+  transition: block-size 0.25s ease, content-visibility 0.25s allow-discrete;
+}
+
+.tc-faq-item[open]::details-content {
+  block-size: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tc-faq-item::details-content {
+    transition: none;
+  }
 }
 
 .tc-faq-item code {
-  padding: 0.15rem 0.35rem;
-  border-radius: 4px;
-  background: var(--tc-ink);
+  padding: 0.1rem 0.3rem;
+  background: var(--tc-panel);
   color: var(--tc-brass);
   font-family: var(--tc-cells);
   font-size: 0.75rem;
-}
-
-.tc-tag-tr {
-  display: inline-block;
-  margin-right: 0.45rem;
-  padding: 0.1rem 0.35rem;
-  border-radius: 3px;
-  background: color-mix(in srgb, var(--tc-brass) 20%, transparent);
-  color: var(--tc-brass);
-  font-size: 0.6875rem;
-  font-weight: 700;
-  vertical-align: middle;
+  overflow-wrap: anywhere;
 }
 
 /* --- Their end ----------------------------------------------------------- */
