@@ -3,30 +3,46 @@
 import { useId, useState } from "react";
 
 const WAYS = [
-  {
-    id: "brew",
-    label: "Homebrew",
-    command: "brew tap bilalyazicioglu/tap && brew install tincan",
-    note: "macOS and Linux.",
-  },
+  { id: "brew", label: "Homebrew", command: "brew tap bilalyazicioglu/tap && brew install tincan" },
   {
     id: "curl",
     label: "Shell",
     command: "curl -fsSL https://raw.githubusercontent.com/bilalyazicioglu/tincan-cli/main/install.sh | sh",
-    note: "A prebuilt binary into ~/.local/bin, checksum verified.",
   },
-  { id: "cargo", label: "Cargo", command: "cargo install tincan-chat", note: "The crate is tincan-chat; the command is still tincan." },
+  { id: "cargo", label: "Cargo", command: "cargo install tincan-chat" },
   // Last on purpose: the npm package is only a wrapper that fetches the same
   // prebuilt binary, and it is not the way terminal people expect to install one.
-  {
-    id: "npm",
-    label: "npm",
-    command: "npm install -g tincan-cli",
-    note: "A thin wrapper that downloads the same prebuilt binary and checks its SHA-256.",
-  },
+  { id: "npm", label: "npm", command: "npm install -g tincan-cli" },
 ] as const;
 
-export function InstallTabs() {
+/** Per language: the tab list's name, the copy button, and a note per way, in WAYS order. */
+const WORDS = {
+  en: {
+    ways: "Ways to install tincan",
+    copy: "Copy",
+    copied: "Copied",
+    notes: [
+      "macOS and Linux.",
+      "A prebuilt binary into ~/.local/bin, checksum verified.",
+      "The crate is tincan-chat; the command is still tincan.",
+      "A thin wrapper that downloads the same prebuilt binary and checks its SHA-256.",
+    ],
+  },
+  tr: {
+    ways: "tincan'ı kurmanın yolları",
+    copy: "Kopyala",
+    copied: "Kopyalandı",
+    notes: [
+      "macOS ve Linux.",
+      "Hazır derlenmiş bir binary ~/.local/bin'e iner, checksum'ı doğrulanır.",
+      "Crate'in adı tincan-chat; komut yine tincan.",
+      "Aynı hazır binary'yi indirip SHA-256'sını doğrulayan ince bir sarmalayıcı.",
+    ],
+  },
+} as const;
+
+export function InstallTabs({ lang = "en" }: { lang?: keyof typeof WORDS }) {
+  const words = WORDS[lang];
   const [active, setActive] = useState(0);
   const [copied, setCopied] = useState(false);
   const base = useId();
@@ -54,7 +70,7 @@ export function InstallTabs() {
 
   return (
     <div className="tc-install">
-      <div role="tablist" aria-label="Ways to install tincan" className="tc-install-tabs">
+      <div role="tablist" aria-label={words.ways} className="tc-install-tabs">
         {WAYS.map((w, i) => (
           <button
             key={w.id}
@@ -80,10 +96,10 @@ export function InstallTabs() {
           {way.command}
         </code>
         <button type="button" className="tc-copy" onClick={copy}>
-          {copied ? "Copied" : "Copy"}
+          {copied ? words.copied : words.copy}
         </button>
       </div>
-      <p className="tc-install-note">{way.note}</p>
+      <p className="tc-install-note">{words.notes[active]}</p>
     </div>
   );
 }

@@ -113,6 +113,24 @@ html:has(.tc) body {
   color: var(--tc-tin);
 }
 
+.tc-top-links {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+}
+
+/* The other language: a plain word, quieter than the way out to GitHub. */
+.tc .tc-top .tc-lang {
+  color: var(--tc-zinc);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--tc-zinc) 45%, transparent);
+  text-underline-offset: 0.25em;
+}
+
+.tc .tc-top .tc-lang:hover {
+  color: var(--tc-tin);
+}
+
 .tc .tc-top .tc-github {
   display: inline-flex;
   align-items: center;
@@ -728,14 +746,6 @@ html:has(.tc) body {
   border: 1px solid var(--tc-rule);
   border-radius: 10px;
   background: var(--tc-panel);
-}
-
-.tc-leg-tr {
-  margin-top: 1rem;
-  padding-left: 0.85rem;
-  border-left: 2px solid var(--tc-brass);
-  color: var(--tc-zinc);
-  font-size: 0.875rem;
 }
 
 /* --- Comparison & FAQ --------------------------------------------------- */

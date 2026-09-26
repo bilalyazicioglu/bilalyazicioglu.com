@@ -2,7 +2,7 @@
 
 > tincan is serverless peer-to-peer voice and text chat for the terminal, written in Rust with Ratatui. There is no tincan server and no account: the first person opens a room, shares its name and a four-word passphrase (or a 63-character invite code), and friends join from anywhere. It is an open-source (MIT) alternative to Discord, TeamSpeak and Mumble.
 
-- Project page: https://bilalyazicioglu.com/tincan
+- Project page: https://bilalyazicioglu.com/tincan (Turkish: https://bilalyazicioglu.com/tincan/tr)
 - Source: https://github.com/bilalyazicioglu/tincan-cli
 - crates.io: https://crates.io/crates/tincan-chat (the crate is `tincan-chat`; the command is `tincan`)
 - npm: https://www.npmjs.com/package/tincan-cli
