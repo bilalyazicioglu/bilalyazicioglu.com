@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Big_Shoulders, Martian_Mono } from "next/font/google";
 import { LiveTerminal } from "@/components/tincan/LiveTerminal";
 import { InstallTabs } from "@/components/tincan/InstallTabs";
+import { HeroField } from "@/components/tincan/HeroField";
 import { StringRail } from "@/components/tincan/StringRail";
 import { Meander } from "@/components/tincan/Meander";
 import { COPY, PAGES, REPO, type Lang } from "@/components/tincan/copy";
@@ -83,6 +84,7 @@ function graph(lang: Lang) {
     "@context": "https://schema.org",
     "@graph": [
       {
+        "@context": "https://schema.org",
         "@type": "WebPage",
         "@id": `${page}#webpage`,
         url: page,
@@ -98,6 +100,7 @@ function graph(lang: Lang) {
         breadcrumb: { "@id": `${page}#breadcrumb` },
       },
       {
+        "@context": "https://schema.org",
         "@type": "BreadcrumbList",
         "@id": `${page}#breadcrumb`,
         itemListElement: [
@@ -107,6 +110,7 @@ function graph(lang: Lang) {
         ],
       },
       {
+        "@context": "https://schema.org",
         "@type": "SoftwareSourceCode",
         "@id": software,
         name: "tincan",
@@ -129,6 +133,7 @@ function graph(lang: Lang) {
         author: { "@id": `${siteConfig.url}/#person` },
       },
       {
+        "@context": "https://schema.org",
         "@type": "VideoObject",
         "@id": `${page}#demo`,
         name: t.videoName,
@@ -140,6 +145,7 @@ function graph(lang: Lang) {
         duration: "PT12S",
       },
       {
+        "@context": "https://schema.org",
         "@type": "FAQPage",
         "@id": `${page}#faq`,
         inLanguage: lang,
@@ -292,6 +298,7 @@ export function TincanPage({ lang }: { lang: Lang }) {
 
       <main>
         <section className="tc-hero" aria-labelledby="tc-title">
+          <HeroField />
           <div className="tc-hero-intro">
             <h1 id="tc-title">
               <span>{t.hero.title[0]}</span> <span>{t.hero.title[1]}</span>{" "}

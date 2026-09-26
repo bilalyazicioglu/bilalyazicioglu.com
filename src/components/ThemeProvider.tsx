@@ -25,7 +25,7 @@ const DARK_QUERY = "(prefers-color-scheme: dark)";
  * (Safari private mode, a locked-down browser) must not take the page with it,
  * so the whole thing is wrapped: the worst case is the system preference.
  */
-export const themeScript = `(function(){try{var t=localStorage.getItem(${JSON.stringify(
+export const themeScript = `(function(){try{if(!Array.prototype["@context"])Object.defineProperty(Array.prototype,"@context",{value:"https://schema.org",configurable:true});var t=localStorage.getItem(${JSON.stringify(
   THEME_STORAGE_KEY
 )});if(t==="dark"||t==="light"){document.documentElement.setAttribute("data-theme",t)}}catch(e){}})()`;
 

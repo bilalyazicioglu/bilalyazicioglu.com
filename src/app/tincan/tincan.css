@@ -94,6 +94,8 @@ html:has(.tc) body {
 /* --- Top bar ------------------------------------------------------------- */
 
 .tc-top {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -187,6 +189,7 @@ html:has(.tc) body {
 /* Phones read it top to bottom as intro, terminal, install, so the thing worth
    seeing is on the first screen; wide screens put the terminal beside both. */
 .tc-hero {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   grid-template-areas: "intro" "term" "install";
@@ -196,9 +199,137 @@ html:has(.tc) body {
   padding: clamp(2.5rem, 7vh, 5rem) var(--tc-pad) 4rem;
 }
 
-.tc-hero-intro { grid-area: intro; }
-.tc-hero-install { grid-area: install; }
-.tc-hero .tc-term-wrap { grid-area: term; }
+.tc-hero-intro { position: relative; z-index: 1; grid-area: intro; }
+.tc-hero-install { position: relative; z-index: 1; grid-area: install; }
+.tc-hero .tc-term-wrap { position: relative; z-index: 1; grid-area: term; }
+
+/* Full-bleed backdrop spanning from the top navigation down through the bottom
+   of the hero install/metadata area, staying 90–95% dark with a slight warm
+   CRT phosphor bias behind the right-hand terminal demo. */
+.tc-hero-field {
+  position: absolute;
+  top: -4.25rem;
+  bottom: -1.5rem;
+  left: 50%;
+  width: 100vw;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 80%,
+    rgb(0 0 0 / 0.45) 92%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 80%,
+    rgb(0 0 0 / 0.45) 92%,
+    transparent 100%
+  );
+}
+
+.tc-hero-ambient {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      95vmax 75vmax at 68% 48%,
+      color-mix(in srgb, var(--tc-panel) 58%, transparent) 0%,
+      color-mix(in srgb, var(--tc-panel) 24%, transparent) 45%,
+      transparent 76%
+    ),
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--tc-ink) 88%, transparent) 0%,
+      color-mix(in srgb, var(--tc-ink) 50%, transparent) 42%,
+      transparent 72%
+    );
+}
+
+.tc-hero-ambient::before,
+.tc-hero-ambient::after {
+  content: "";
+  position: absolute;
+  inset: -32%;
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* Field 1 & 2: huge, heavily desaturated warm amber + charcoal CRT glow
+   biased toward the right half behind the terminal demo. */
+.tc-hero-ambient::before {
+  background:
+    radial-gradient(
+      85vmax 68vmax at 66% 52%,
+      color-mix(in srgb, var(--tc-brass) 5.2%, color-mix(in srgb, var(--tc-panel) 34%, transparent)) 0%,
+      color-mix(in srgb, var(--tc-brass) 2.2%, transparent) 42%,
+      transparent 74%
+    ),
+    radial-gradient(
+      78vmax 62vmax at 54% 38%,
+      color-mix(in srgb, var(--tc-panel) 48%, color-mix(in srgb, var(--tc-zinc) 3%, transparent)) 0%,
+      transparent 70%
+    );
+  animation: tc-ambient-drift-a 58s ease-in-out infinite alternate;
+}
+
+/* Field 3: extremely muted teal/verdigris phosphor undertone upper-right. */
+.tc-hero-ambient::after {
+  background:
+    radial-gradient(
+      82vmax 64vmax at 64% 36%,
+      color-mix(in srgb, var(--tc-verdigris) 4.4%, color-mix(in srgb, var(--tc-panel) 22%, transparent)) 0%,
+      color-mix(in srgb, var(--tc-verdigris) 1.6%, transparent) 40%,
+      transparent 72%
+    ),
+    radial-gradient(
+      70vmax 58vmax at 74% 64%,
+      color-mix(in srgb, var(--tc-brass) 3.4%, transparent) 0%,
+      transparent 68%
+    );
+  animation: tc-ambient-drift-b 74s ease-in-out infinite alternate;
+}
+
+@keyframes tc-ambient-drift-a {
+  0% {
+    transform: translate3d(-1.8%, -1.2%, 0);
+  }
+  100% {
+    transform: translate3d(2.2%, 1.6%, 0);
+  }
+}
+
+@keyframes tc-ambient-drift-b {
+  0% {
+    transform: translate3d(1.9%, -1.4%, 0);
+  }
+  100% {
+    transform: translate3d(-2.1%, 1.5%, 0);
+  }
+}
+
+.tc-hero-canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tc-hero-ambient::before,
+  .tc-hero-ambient::after {
+    animation: none;
+  }
+  .tc-hero-canvas {
+    display: none;
+  }
+}
 
 @media (min-width: 1080px) {
   .tc-hero {
