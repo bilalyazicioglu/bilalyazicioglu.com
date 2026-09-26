@@ -1,0 +1,88 @@
+# tincan — full reference
+
+> Serverless peer-to-peer voice and text chat for the terminal, written in Rust by Ahmet Bilal Yazıcıoğlu. Open source under the MIT license. Version 0.3.1.
+
+- Project page: https://bilalyazicioglu.com/tincan
+- Source: https://github.com/bilalyazicioglu/tincan-cli
+- crates.io: https://crates.io/crates/tincan-chat
+- npm: https://www.npmjs.com/package/tincan-cli
+- Author: Ahmet Bilal Yazıcıoğlu (https://bilalyazicioglu.com)
+
+## What it is
+
+tincan does what Discord's voice channels do without anyone's server in the middle. The first person to run it opens a room and gets a room name and a four-word passphrase, or a 63-character invite code that is the host's public key. Friends join with those from anywhere. There are no accounts, no port forwarding and no VPN. The interface is a terminal UI built with Ratatui: channels and people on the left, chat on the right, and a line between them that shows the connection.
+
+## When people use it
+
+- **Discord is blocked or down.** Where Discord is blocked by a country, an ISP, a school or an office network, the block targets Discord's domains and servers. tincan has no server of its own to block, so it usually keeps working without a VPN. It does rely on iroh's public discovery service and relays (see "What it depends on"); a network that blocks those, or all UDP, stops tincan too.
+- **Voice next to a game or a compiler.** tincan is a native program in a terminal tab rather than an Electron app. `--ptt` gives push-to-talk on F4; `--no-voice` is text only.
+- **Talking without an account.** There is nothing to sign up for, and no copy of the conversation is kept anywhere but on the machines having it.
+
+## How it works
+
+- **Control plane (star).** The host keeps the roster, the channels and the chat. The traffic is a few hundred bytes per second, over a reliable QUIC stream.
+- **Voice plane (mesh).** Everyone in a voice channel sends Opus packets directly to everyone else as QUIC datagrams. Voice never passes through the host. A six-person room needs about 160 kbps of upload per person.
+- **Connectivity.** iroh (https://iroh.computer) punches through NATs for a direct connection. When that fails, traffic goes through a relay, which forwards packets it has no key for.
+- **Audio.** Opus at 48 kHz mono, 32 kbps, 20 ms frames, a three-frame jitter buffer per peer, and RNNoise noise suppression on the microphone (10 ms of added latency; toggle with `n` on the F6 audio settings screen).
+
+## Security
+
+- Every connection is QUIC, encrypted between its two ends and checked against the other side's public key.
+- The passphrase is for admission, not encryption, and never crosses the network. Both sides stretch it with Argon2id into an admission key; the host sends a fresh nonce and the guest answers with a keyed BLAKE2b MAC of it, so a captured answer cannot be replayed.
+- A room opened by name has a coordinator key derived from Argon2id(passphrase, room name). That makes the invite speakable; it also means the passphrase is the room's address as well as its lock.
+- Relays see which two keys are talking, when and how much, never what is said.
+- Addresses are published as signed records under each key, and peers connect directly when they can, so everyone in a room learns everyone else's IP address.
+
+## What it depends on
+
+"Serverless" means there is no tincan server: no account, no room registry, and nothing this project runs. tincan uses iroh's N0 preset, which relies on services run by Number Zero (https://n0.computer): its pkarr relay and DNS for finding peers, and its relay servers for NAT traversal and fallback. If those went away, new connections would stop working. Pointing tincan at your own relay and DNS is issue #136.
+
+## tincan, Discord, TeamSpeak and Mumble
+
+| | tincan | Discord | TeamSpeak / Mumble |
+| :--- | :--- | :--- | :--- |
+| Where voice goes | Directly between peers | Discord's voice servers | The server |
+| Server to run or rent | None | Discord's | Yours |
+| What a network must block | iroh discovery and relays, or UDP | Discord's domains | The server's address |
+| Account | None | Email or phone | Optional |
+| Chat history kept on | The machines in the room | Discord's servers | The server, if enabled |
+| Client | Native terminal app (Rust) | Electron app | Native desktop app |
+| Source | Open, MIT | Closed | TeamSpeak closed, Mumble BSD |
+
+## Install
+
+- Homebrew (macOS, Linux): `brew tap bilalyazicioglu/tap && brew install tincan`
+- Shell script (macOS, Linux): `curl -fsSL https://raw.githubusercontent.com/bilalyazicioglu/tincan-cli/main/install.sh | sh` (downloads a prebuilt binary into ~/.local/bin and verifies its checksum)
+- Cargo: `cargo install tincan-chat` (the command it installs is `tincan`)
+- npm: `npm install -g tincan-cli`, or `npx tincan-cli host`
+- Windows: `npx tincan-cli host`, or `tincan-x86_64-pc-windows-msvc.zip` from the latest GitHub release. The Windows build is tested in CI but has not been used on a real Windows machine yet.
+
+Prebuilt binaries: aarch64-apple-darwin, x86_64-apple-darwin, x86_64-unknown-linux-gnu, aarch64-unknown-linux-gnu, x86_64-pc-windows-msvc.
+
+## Use
+
+- `tincan host lobby --name alice` opens a room named "lobby" and prints a generated passphrase.
+- `tincan join lobby --name bob` joins it and asks for the passphrase.
+- `tincan host --name alice --password secret` opens a room behind an invite code instead, and copies it to the clipboard.
+- `tincan join <invite-code> --name bob --password secret` joins by invite code.
+- `tincan devices` lists audio devices; `--input` and `--output` pick them by part of their name.
+- `--channels general,gaming,music` sets the channel list.
+
+Keys: Tab moves between channels, F2 joins or leaves voice, F3 mutes, F4 is push-to-talk (with `--ptt`), F5 deafens, F6 opens audio settings, F1 shows the full invite code, Ctrl+C quits.
+
+## Frequently asked questions
+
+### Does tincan work when Discord is blocked?
+Usually, yes. Blocking Discord means blocking Discord's domains and servers, and tincan has no server of its own to block. A network that blocks iroh's discovery service and relays, or all UDP traffic, stops tincan too.
+
+### Discord engelliyken tincan çalışır mı? VPN gerekir mi?
+Çoğu durumda VPN gerekmez. Discord erişim engeli Discord'un alan adlarını ve sunucularını hedefler; tincan'ın engellenecek kendi sunucusu yok. Ses iki bilgisayar arasında doğrudan ve şifreli QUIC ile akar. iroh'un keşif servisini ve relay sunucularını ya da tüm UDP trafiğini engelleyen bir ağda tincan da çalışmaz.
+
+### Is it end-to-end encrypted?
+Each QUIC connection is encrypted between its two ends. Voice goes peer to peer, so only the people in the channel can hear it. Chat goes through the host, who is one of the people in the room.
+
+### Does it need port forwarding?
+No. iroh's NAT traversal gets through home routers, and falls back to a relay when a direct path is not possible.
+
+### Is it free?
+Yes. It is MIT licensed and there is no paid tier.

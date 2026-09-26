@@ -30,6 +30,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.9,
+      images: [`${baseUrl}/tincan/preview.png`],
+      videos: [
+        {
+          title: "tincan in a real terminal",
+          description:
+            "A 12-second screen recording of tincan, serverless peer-to-peer voice chat for the terminal.",
+          thumbnail_loc: `${baseUrl}/tincan/demo-poster.jpg`,
+          content_loc: `${baseUrl}/uploads/blog/tincan-demo.mp4`,
+          duration: 12,
+        },
+      ],
     },
     {
       url: `${baseUrl}/blog`,
