@@ -85,7 +85,29 @@ const OPENING: Shot = {
   view: 0,
 };
 
-export function LiveTerminal() {
+/**
+ * The words around the terminal. The terminal itself stays in English on
+ * every page, because the app it imitates is in English.
+ */
+const WORDS = {
+  en: {
+    live: "A working imitation of the tincan interface. Type to chat; Tab changes channel, F2 joins or leaves voice, F3 mutes, F5 deafens, F1 prints the invite code, Escape lets go of the keyboard.",
+    still: "The tincan interface playing a short scene: bob joins the room, talks, and the two of them trade messages.",
+    lead: "Click the terminal and type, or press",
+    keys: { tab: "channel", talk: "talk", mute: "mute", deafen: "deafen", code: "code" },
+    esc: "gives the keyboard back.",
+  },
+  tr: {
+    live: "tincan arayüzünün çalışan bir taklidi. Yazarak sohbet et; Tab kanal değiştirir, F2 sese girer ya da çıkar, F3 mikrofonu kapatır, F5 sesi tamamen keser, F1 davet kodunu yazdırır, Escape klavyeyi bırakır.",
+    still: "Kısa bir sahne oynatan tincan arayüzü: bob odaya katılıyor, konuşuyor ve ikisi mesajlaşıyor.",
+    lead: "Terminale tıklayıp yaz ya da şunlara bas:",
+    keys: { tab: "kanal", talk: "konuş", mute: "sustur", deafen: "sağırlaştır", code: "kod" },
+    esc: "klavyeyi geri verir.",
+  },
+} as const;
+
+export function LiveTerminal({ lang = "en" }: { lang?: keyof typeof WORDS }) {
+  const words = WORDS[lang];
   const hostRef = useRef<HTMLDivElement>(null);
   const probeRef = useRef<HTMLSpanElement>(null);
   const roomRef = useRef<Room>(newRoom());
@@ -381,8 +403,7 @@ export function LiveTerminal() {
             ? {
                 tabIndex: 0,
                 role: "application",
-                "aria-label":
-                  "A working imitation of the tincan interface. Type to chat; Tab changes channel, F2 joins or leaves voice, F3 mutes, F5 deafens, F1 prints the invite code, Escape lets go of the keyboard.",
+                "aria-label": words.live,
                 "aria-describedby": "tc-term-help",
                 onKeyDown,
                 onFocus: () => setFocus(true),
@@ -390,8 +411,7 @@ export function LiveTerminal() {
               }
             : {
                 role: "img",
-                "aria-label":
-                  "The tincan interface playing a short scene: bob joins the room, talks, and the two of them trade messages.",
+                "aria-label": words.still,
               })}
           style={{ fontSize }}
         >
@@ -420,24 +440,24 @@ export function LiveTerminal() {
       </div>
       {wide && (
       <div className="tc-keys" id="tc-term-help">
-        <span className="tc-keys-lead">Click the terminal and type, or press</span>
+        <span className="tc-keys-lead">{words.lead}</span>
         <button type="button" onClick={() => act("tab")}>
-          <kbd>Tab</kbd> channel
+          <kbd>Tab</kbd> {words.keys.tab}
         </button>
         <button type="button" onClick={() => act("talk")}>
-          <kbd>F2</kbd> talk
+          <kbd>F2</kbd> {words.keys.talk}
         </button>
         <button type="button" onClick={() => act("mute")}>
-          <kbd>F3</kbd> mute
+          <kbd>F3</kbd> {words.keys.mute}
         </button>
         <button type="button" onClick={() => act("deafen")}>
-          <kbd>F5</kbd> deafen
+          <kbd>F5</kbd> {words.keys.deafen}
         </button>
         <button type="button" onClick={() => act("code")}>
-          <kbd>F1</kbd> code
+          <kbd>F1</kbd> {words.keys.code}
         </button>
         <span className="tc-keys-lead">
-          <kbd>Esc</kbd> gives the keyboard back.
+          <kbd>Esc</kbd> {words.esc}
         </span>
       </div>
       )}

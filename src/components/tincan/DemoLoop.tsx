@@ -7,7 +7,12 @@ import { useEffect, useRef } from "react";
  * at a quarter of the GIF's weight. It only plays while it is on screen, and
  * holds on its poster frame for visitors who asked for less motion.
  */
-export function DemoLoop() {
+const LABEL = {
+  en: "Screen recording of tincan: audio meters, the pulse travelling down the string, chat, and the audio settings screen.",
+  tr: "tincan'ın ekran kaydı: ses göstergeleri, ip boyunca ilerleyen nabız, sohbet ve ses ayarları ekranı.",
+} as const;
+
+export function DemoLoop({ lang = "en" }: { lang?: keyof typeof LABEL }) {
   const ref = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -48,7 +53,7 @@ export function DemoLoop() {
       playsInline
       preload="metadata"
       disablePictureInPicture
-      aria-label="Screen recording of tincan: audio meters, the pulse travelling down the string, chat, and the audio settings screen."
+      aria-label={LABEL[lang]}
     />
   );
 }

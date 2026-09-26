@@ -30,6 +30,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.9,
+      alternates: {
+        languages: { en: `${baseUrl}/tincan`, tr: `${baseUrl}/tincan/tr` },
+      },
       images: [`${baseUrl}/tincan/preview.png`],
       videos: [
         {
@@ -41,6 +44,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
           duration: 12,
         },
       ],
+    },
+    {
+      url: `${baseUrl}/tincan/tr`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.8,
+      alternates: {
+        languages: { en: `${baseUrl}/tincan`, tr: `${baseUrl}/tincan/tr` },
+      },
+      images: [`${baseUrl}/tincan/preview.png`],
     },
     {
       url: `${baseUrl}/blog`,
