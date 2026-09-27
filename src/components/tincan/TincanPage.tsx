@@ -125,7 +125,7 @@ function graph(lang: Lang) {
         ],
         programmingLanguage: { "@type": "ComputerLanguage", name: "Rust" },
         runtimePlatform: ["macOS", "Linux", "Windows"],
-        version: "0.3.1",
+        version: "0.3.2",
         license: "https://opensource.org/licenses/MIT",
         isAccessibleForFree: true,
         keywords: t.keywords.join(", "),
@@ -312,7 +312,7 @@ export function TincanPage({ lang }: { lang: Lang }) {
           <div className="tc-hero-install">
             <InstallTabs lang={lang} />
             <p className="tc-facts">
-              <a href="https://crates.io/crates/tincan-chat">v0.3.1</a>
+              <a href="https://crates.io/crates/tincan-chat">v0.3.2</a>
               <a href={`${REPO}/blob/main/LICENSE`}>{t.ui.license}</a>
               <a href="https://ratatui.rs/">{t.ui.ratatui}</a>
             </p>

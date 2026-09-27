@@ -1,6 +1,6 @@
 # tincan — full reference
 
-> Serverless peer-to-peer voice and text chat for the terminal, written in Rust by Ahmet Bilal Yazıcıoğlu. Open source under the MIT license. Version 0.3.1.
+> Serverless peer-to-peer voice and text chat for the terminal, written in Rust by Ahmet Bilal Yazıcıoğlu. Open source under the MIT license. Version 0.3.2.
 
 - Project page: https://bilalyazicioglu.com/tincan (Turkish: https://bilalyazicioglu.com/tincan/tr)
 - Source: https://github.com/bilalyazicioglu/tincan-cli
