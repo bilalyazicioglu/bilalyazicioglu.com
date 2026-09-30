@@ -1,7 +1,9 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
     const { startDefaultMetrics } = await import("@/lib/metrics");
+    const { startStarSyncScheduler } = await import("@/lib/github");
     startDefaultMetrics();
+    startStarSyncScheduler();
   }
 }
 

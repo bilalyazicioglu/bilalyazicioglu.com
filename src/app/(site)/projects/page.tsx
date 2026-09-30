@@ -6,7 +6,7 @@ import { getProjectsWithLiveStars } from "@/lib/github";
 import { projects } from "@/lib/projects";
 import { siteConfig } from "@/site.config";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Projects",

@@ -81,6 +81,7 @@ export const projects: Project[] = [
       { label: "Language", value: "Rust" },
       { label: "Transport", value: "iroh / QUIC" },
       { label: "Audio", value: "Opus mesh" },
+      { label: "Tests", value: "93" },
       { label: "Stars", value: "114" },
     ],
   },

@@ -8,7 +8,7 @@ import { getProjectsWithLiveStars } from "@/lib/github";
 import { getAllPosts } from "@/lib/blog";
 import { siteConfig } from "@/site.config";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 function formatDate(date: string) {
   return new Date(date).toLocaleDateString("en-US", {
