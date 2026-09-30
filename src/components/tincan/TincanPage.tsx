@@ -7,6 +7,7 @@ import { HeroField } from "@/components/tincan/HeroField";
 import { StringRail } from "@/components/tincan/StringRail";
 import { Meander } from "@/components/tincan/Meander";
 import { COPY, PAGES, REPO, type Lang } from "@/components/tincan/copy";
+import { getTincanStars } from "@/lib/github";
 import { siteConfig } from "@/site.config";
 import "@/app/tincan/tincan.css";
 
@@ -249,8 +250,9 @@ function Answer({ text }: { text: string }) {
   );
 }
 
-export function TincanPage({ lang }: { lang: Lang }) {
+export async function TincanPage({ lang }: { lang: Lang }) {
   const t = COPY[lang];
+  const stars = await getTincanStars();
   return (
     <div className={`tc ${shoulders.variable} ${martian.variable}`} lang={lang}>
       <script
@@ -281,6 +283,15 @@ export function TincanPage({ lang }: { lang: Lang }) {
               />
             </svg>
             <span>GitHub</span>
+            <span className="tc-github-stars" aria-label={`${stars} GitHub stars`}>
+              <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
+                <path
+                  fill="currentColor"
+                  d="M8 .75l2.14 4.34 4.79.7-3.46 3.37.82 4.77L8 11.68l-4.29 2.25.82-4.77L1.07 5.79l4.79-.7L8 .75Z"
+                />
+              </svg>
+              <span>{stars}</span>
+            </span>
             {/* Leaving the site: a box with the arrow breaking out of its corner. */}
             <svg className="tc-out" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
               <path

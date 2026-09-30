@@ -155,6 +155,17 @@ html:has(.tc) body {
   transition: transform 0.15s;
 }
 
+.tc-github-stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  padding-left: 0.5rem;
+  border-left: 1px solid color-mix(in srgb, var(--tc-tin) 22%, transparent);
+  color: var(--tc-brass);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
 .tc-github:hover .tc-out {
   transform: translate(1px, -1px);
 }

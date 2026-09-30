@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { siteConfig } from "@/site.config";
 import { getAllPosts } from "@/lib/blog";
-import { projects } from "@/lib/projects";
+import { getProjectsWithLiveStars } from "@/lib/github";
 import { education, skills } from "@/lib/resume";
 
 export const dynamic = "force-static";
@@ -9,6 +9,7 @@ export const revalidate = 3600;
 
 export async function GET() {
   const posts = getAllPosts();
+  const projects = await getProjectsWithLiveStars();
   const baseUrl = siteConfig.url;
 
   const projectLines = projects

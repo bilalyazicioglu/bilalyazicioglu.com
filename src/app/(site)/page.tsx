@@ -4,9 +4,11 @@ import { Button } from "@/components/Button";
 import { ProjectCard } from "@/components/ProjectCard";
 import { CtaBand } from "@/components/CtaBand";
 import { DecorativePlus } from "@/components/DecorativePlus";
-import { projects } from "@/lib/projects";
+import { getProjectsWithLiveStars } from "@/lib/github";
 import { getAllPosts } from "@/lib/blog";
 import { siteConfig } from "@/site.config";
+
+export const revalidate = 3600;
 
 function formatDate(date: string) {
   return new Date(date).toLocaleDateString("en-US", {
@@ -16,7 +18,8 @@ function formatDate(date: string) {
   });
 }
 
-export default function Home() {
+export default async function Home() {
+  const projects = await getProjectsWithLiveStars();
   const featuredProjects = projects.slice(0, 3);
   const recentPosts = getAllPosts().slice(0, 3);
   const [firstName, ...rest] = siteConfig.heroName.split(" ");

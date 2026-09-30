@@ -46,3 +46,6 @@ next-env.d.ts
 
 .playwright-mcp/
 
+# runtime caches
+/data/github-stars.json
+/data/*.tmp
