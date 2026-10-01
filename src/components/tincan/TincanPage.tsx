@@ -112,11 +112,18 @@ function graph(lang: Lang) {
       },
       {
         "@context": "https://schema.org",
-        "@type": "SoftwareSourceCode",
+        "@type": ["SoftwareApplication", "SoftwareSourceCode"],
         "@id": software,
         name: "tincan",
         alternateName: ["tincan-cli", "tincan-chat"],
         description: t.description,
+        applicationCategory: "CommunicationApplication",
+        operatingSystem: "macOS, Linux, Windows",
+        offers: {
+          "@type": "Offer",
+          price: "0",
+          priceCurrency: "USD",
+        },
         url: PAGES.en,
         codeRepository: REPO,
         sameAs: [
@@ -380,6 +387,20 @@ export async function TincanPage({ lang }: { lang: Lang }) {
                 ))}
               </tbody>
             </table>
+          </div>
+        </section>
+
+        <section className="tc-use-cases" aria-labelledby="tc-use-cases-title">
+          <h2 id="tc-use-cases-title">{t.useCases.title}</h2>
+          <p className="tc-lead">{t.useCases.lead}</p>
+          <div className="tc-use-cases-grid">
+            {t.useCases.items.map((item) => (
+              <article key={item.title} className="tc-use-case-card">
+                <span className="tc-chip">{item.tag}</span>
+                <h3>{item.title}</h3>
+                <p>{item.desc}</p>
+              </article>
+            ))}
           </div>
         </section>
 

@@ -893,6 +893,7 @@ html:has(.tc) body {
 /* --- Comparison & FAQ --------------------------------------------------- */
 
 .tc-compare,
+.tc-use-cases,
 .tc-faq {
   max-width: calc(44rem + var(--tc-gutter));
   margin: 0 auto;
@@ -901,6 +902,7 @@ html:has(.tc) body {
 }
 
 .tc-compare h2,
+.tc-use-cases h2,
 .tc-faq h2 {
   font-size: clamp(2.25rem, 5.5vw, 3.5rem);
   font-weight: 700;
@@ -969,6 +971,52 @@ html:has(.tc) body {
   background: color-mix(in srgb, var(--tc-patina) 8%, transparent);
   color: var(--tc-patina);
   font-weight: 700;
+}
+
+/* --- Use cases ----------------------------------------------------------- */
+
+.tc-use-cases-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+  margin: 2rem 0;
+}
+
+.tc-use-case-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border: 1px solid var(--tc-rule);
+  border-radius: 8px;
+  background: var(--tc-panel);
+  transition: border-color 0.15s ease;
+}
+
+.tc-use-case-card:hover {
+  border-color: color-mix(in srgb, var(--tc-brass) 45%, var(--tc-rule));
+}
+
+.tc-use-case-card .tc-chip {
+  align-self: flex-start;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.tc-use-case-card h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--tc-tin);
+  margin: 0;
+}
+
+.tc-use-case-card p {
+  font-size: 0.85rem;
+  line-height: 1.65;
+  color: var(--tc-zinc);
+  margin: 0;
 }
 
 /* Closed by default and one at a time: a row per question, the answer

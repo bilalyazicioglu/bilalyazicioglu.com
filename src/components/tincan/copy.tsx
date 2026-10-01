@@ -44,6 +44,11 @@ type Copy = {
   cans: [string, string];
   legs: Record<LegId, { title: string; body: ReactNode }>;
   compare: { title: string; lead: string; caption: string; rows: [string, string, string, string][] };
+  useCases: {
+    title: string;
+    lead: string;
+    items: { tag: string; title: string; desc: string }[];
+  };
   faq: { title: string; items: { q: string; a: string }[] };
   end: { title: string; lead: string; links: ReactNode };
   foot: ReactNode;
@@ -107,16 +112,17 @@ const BREW = "brew tap bilalyazicioglu/tap && brew install tincan";
 
 const en: Copy = {
   meta: {
-    title: "tincan — Serverless P2P Voice Chat | Discord Alternative",
-    ogTitle: "tincan — Serverless P2P Voice Chat & Discord Alternative",
+    title: "tincan — Serverless Peer-to-Peer Voice Chat for the Terminal",
+    ogTitle: "tincan — Serverless Peer-to-Peer Voice Chat for the Terminal",
     description:
-      "tincan is serverless peer-to-peer voice and text chat for your terminal: an open-source Discord alternative with no accounts, no port forwarding and no VPN.",
+      "tincan is serverless peer-to-peer voice and text chat for your terminal. End-to-end encrypted, zero configuration, zero server hosting costs, and no accounts required.",
     keywords: [
-      "discord alternative",
       "serverless voice chat",
-      "p2p voice chat",
       "terminal voice chat",
-      "open source discord alternative",
+      "p2p voice chat",
+      "cli voice chat",
+      "developer voice chat",
+      "open source voice chat",
       "ratatui",
       "rust voice chat",
       "iroh",
@@ -281,6 +287,32 @@ const en: Copy = {
       ["Source", "Open, MIT", "Closed", "TeamSpeak closed, Mumble BSD"],
     ],
   },
+  useCases: {
+    title: "Where tincan fits",
+    lead: "Built for engineers, minimalists, and teams who want low-latency voice without heavy background apps.",
+    items: [
+      {
+        tag: "WORKFLOW",
+        title: "Remote Pair Programming & Terminal Workflows",
+        desc: "Hop on high-quality voice directly from tmux, Alacritty, or your favorite terminal emulator. No desktop client switching, zero bloat, and minimal RAM usage.",
+      },
+      {
+        tag: "NETWORKS",
+        title: "Local LANs & Off-Grid Mesh Communication",
+        desc: "Perfect for hackathons, isolated subnets, and local networks. Direct peer-to-peer audio works with zero external server dependencies when machines can reach each other.",
+      },
+      {
+        tag: "PRIVACY",
+        title: "Zero Telemetry & End-to-End Encryption",
+        desc: "No accounts, no phone numbers, no tracking, and no proprietary servers collecting metadata. Audio packets travel directly between peers over encrypted QUIC datagrams.",
+      },
+      {
+        tag: "EFFICIENCY",
+        title: "Resource-Constrained Environments",
+        desc: "A single lightweight Rust binary running an adaptive Opus audio mesh at 48 kHz. Negligible CPU footprint, built to stay snappy even on older laptops and VPS nodes.",
+      },
+    ],
+  },
   faq: {
     title: "Questions.",
     items: [
@@ -355,20 +387,21 @@ const en: Copy = {
 
 const tr: Copy = {
   meta: {
-    title: "tincan — Sunucusuz P2P Sesli Sohbet | Discord Alternatifi",
-    ogTitle: "tincan — Sunucusuz P2P Sesli Sohbet ve Discord Alternatifi",
+    title: "tincan — Terminal İçin Sunucusuz Eşler Arası (P2P) Sesli Sohbet",
+    ogTitle: "tincan — Terminal İçin Sunucusuz Eşler Arası (P2P) Sesli Sohbet",
     description:
-      "tincan, terminal için sunucusuz, eşler arası (P2P) sesli ve yazılı sohbet: hesap, port yönlendirme ve VPN gerektirmeyen açık kaynaklı bir Discord alternatifi.",
+      "tincan, terminaliniz için sunucusuz, eşler arası (P2P) sesli ve yazılı sohbet aracıdır. Uçtan uca şifreli, sıfır yapılandırma, sıfır sunucu maliyeti ve hesapsız kullanım.",
     keywords: [
-      "discord alternatifi",
-      "discord engeli",
       "sunucusuz sesli sohbet",
       "p2p sesli sohbet",
       "terminal sesli sohbet",
-      "açık kaynak discord alternatifi",
+      "cli sesli sohbet",
+      "açık kaynak sesli sohbet",
+      "geliştirici sesli sohbet",
       "vpn'siz sesli sohbet",
-      "rust",
+      "rust sesli sohbet",
       "ratatui",
+      "iroh",
     ],
     locale: "tr_TR",
     imageAlt: "tincan'ın terminal arayüzü",
@@ -528,6 +561,32 @@ const tr: Copy = {
       ["Sohbet geçmişi nerede", "Odadaki bilgisayarlarda", "Discord'un sunucularında", "Sunucuda, açıksa"],
       ["İstemci", "Yerel terminal uygulaması (Rust)", "Electron uygulaması", "Yerel masaüstü uygulaması"],
       ["Kaynak kodu", "Açık, MIT", "Kapalı", "TeamSpeak kapalı, Mumble BSD"],
+    ],
+  },
+  useCases: {
+    title: "tincan nerelerde kullanılır?",
+    lead: "Ağır masaüstü uygulamaları yerine hafif, gecikmesiz ve terminal içi sesli iletişimi tercih eden geliştiriciler ve ekipler için tasarlandı.",
+    items: [
+      {
+        tag: "İŞ AKIŞI",
+        title: "Uzak Çift Programlama (Pair Programming) & Terminal Akışları",
+        desc: "tmux veya terminal emülatörünüzü terk etmeden doğrudan sesli kanala katılın. Sekme değiştirmeye gerek kalmadan, sıfır dikkat dağınıklığı ve minimal RAM tüketimi.",
+      },
+      {
+        tag: "AĞLAR",
+        title: "Yerel Ağlar (LAN) & Çevrimdışı İletişim",
+        desc: "Hackathon'lar, izole şirket alt ağları veya yerel ağlar için idealdir. Cihazlar birbirine erişebildiği sürece harici bir sunucuya ihtiyaç duymadan doğrudan P2P ses iletir.",
+      },
+      {
+        tag: "GİZLİLİK",
+        title: "Sıfır Telemetri & Uçtan Uca Şifreli İletişim",
+        desc: "Hesap, telefon numarası veya sizi takip eden merkezi sunucular yok. Ses ve metin trafiği şifreli QUIC datagramları üzerinden doğrudan eşler arasında akar.",
+      },
+      {
+        tag: "VERİMLİLİK",
+        title: "Düşük Kaynaklı Ortamlar",
+        desc: "48 kHz uyarlamalı Opus ses kodeği kullanan derlenmiş kompakt Rust ikilisi. Eski dizüstü bilgisayarlarda veya minimal Linux kurulumlarında bile hissedilmeyecek kadar hafif.",
+      },
     ],
   },
   faq: {
