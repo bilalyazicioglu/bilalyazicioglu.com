@@ -32,7 +32,6 @@ type Copy = {
     pageName: string;
     videoName: string;
     videoDescription: string;
-    crumbs: [string, string];
   };
   ui: {
     nav: string;
@@ -135,7 +134,6 @@ const en: Copy = {
     videoName: "tincan in a real terminal",
     videoDescription:
       "A 12-second screen recording of tincan: audio meters, the latency pulse travelling down the string, chat, and the audio settings screen.",
-    crumbs: ["Home", "Projects"],
   },
   ui: {
     nav: "tincan links",
@@ -420,7 +418,6 @@ const tr: Copy = {
     videoName: "Gerçek bir terminalde tincan",
     videoDescription:
       "tincan'ın 12 saniyelik ekran kaydı: ses göstergeleri, ip boyunca ilerleyen gecikme nabzı, sohbet ve ses ayarları ekranı.",
-    crumbs: ["Ana sayfa", "Projeler"],
   },
   ui: {
     nav: "tincan bağlantıları",

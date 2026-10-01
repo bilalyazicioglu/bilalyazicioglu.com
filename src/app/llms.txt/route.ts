@@ -66,7 +66,7 @@ ${skillLines}
 ${projectLines}
 
 ## Project Documentation for LLMs
-- [tincan](${TINCAN_URL}/tincan/llms.txt): serverless peer-to-peer voice and text chat for the terminal (full reference: ${TINCAN_URL}/tincan/llms-full.txt)
+- [tincan](${TINCAN_URL}/llms.txt): serverless peer-to-peer voice and text chat for the terminal (full reference: ${TINCAN_URL}/llms-full.txt)
 
 ## Publications & Technical Writings
 ${postLines}

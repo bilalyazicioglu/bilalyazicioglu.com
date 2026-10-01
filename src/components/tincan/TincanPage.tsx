@@ -44,7 +44,7 @@ export function tincanMetadata(lang: Lang): Metadata {
       canonical: PAGES[lang],
       languages: LANGUAGES,
       // The same facts as plain Markdown, for language models (llmstxt.org).
-      types: { "text/markdown": "/tincan/llms.txt" },
+      types: { "text/markdown": "/llms.txt" },
     },
     // The app's own icon in the tab, as it appears in the README and on npm.
     icons: {
@@ -58,13 +58,13 @@ export function tincanMetadata(lang: Lang): Metadata {
     openGraph: {
       type: "website",
       url: PAGES[lang],
-      siteName: siteConfig.name,
+      siteName: "tincan",
       locale: t.locale,
       alternateLocale: lang === "en" ? ["tr_TR"] : ["en_US"],
       title: t.ogTitle,
       description: t.description,
       images: [{ url: "/tincan/preview.png", width: 1074, height: 680, alt: t.imageAlt }],
-      videos: [{ url: "/uploads/blog/tincan-demo.mp4", type: "video/mp4" }],
+      videos: [{ url: `${TINCAN_URL}/uploads/blog/tincan-demo.mp4`, type: "video/mp4" }],
     },
     twitter: {
       card: "summary_large_image",
@@ -96,23 +96,23 @@ function graph(lang: Lang) {
         name: t.pageName,
         description: t.description,
         inLanguage: lang,
-        isPartOf: { "@id": `${siteConfig.url}/#website` },
+        isPartOf: { "@id": `${TINCAN_URL}/#website` },
         about: { "@id": software },
         mainEntity: { "@id": software },
         author: { "@id": `${siteConfig.url}/#person` },
         primaryImageOfPage: `${TINCAN_URL}/tincan/preview.png`,
         video: { "@id": `${page}#demo` },
-        breadcrumb: { "@id": `${page}#breadcrumb` },
       },
       {
+        // tincan.rs is its own site, so search engines name it "tincan"
+        // rather than after the main domain's owner.
         "@context": "https://schema.org",
-        "@type": "BreadcrumbList",
-        "@id": `${page}#breadcrumb`,
-        itemListElement: [
-          { "@type": "ListItem", position: 1, name: t.crumbs[0], item: siteConfig.url },
-          { "@type": "ListItem", position: 2, name: t.crumbs[1], item: `${siteConfig.url}/projects` },
-          { "@type": "ListItem", position: 3, name: "tincan", item: page },
-        ],
+        "@type": "WebSite",
+        "@id": `${TINCAN_URL}/#website`,
+        url: TINCAN_URL,
+        name: "tincan",
+        inLanguage: ["en", "tr"],
+        publisher: { "@id": `${siteConfig.url}/#person` },
       },
       {
         "@context": "https://schema.org",

@@ -8,6 +8,14 @@ import { TINCAN_URL, isTincanHost } from "@/lib/tincan-host";
 /** The one host every page declares as its canonical — see `siteConfig.url`. */
 const CANONICAL_HOST = new URL(siteConfig.url).host;
 
+/** tincan.rs's answers for the root files, which live under /tincan/. */
+const TINCAN_ROOT_FILES: Record<string, string> = {
+  "/favicon.ico": "/tincan/icon-48.png",
+  "/manifest.webmanifest": "/tincan/manifest.webmanifest",
+  "/llms.txt": "/tincan/llms.txt",
+  "/llms-full.txt": "/tincan/llms-full.txt",
+};
+
 export function proxy(request: NextRequest) {
   const forwardedFor = request.headers.get("x-forwarded-for") ?? "";
   const ip =
@@ -54,6 +62,13 @@ export function proxy(request: NextRequest) {
     }
     if (path.startsWith("/tincan/") || path.startsWith("/uploads/")) {
       return NextResponse.next();
+    }
+    // The root files every crawler and browser asks a domain for. Left alone
+    // they would be the main site's — its favicon beside tincan in search
+    // results, its llms.txt describing a person instead of a program.
+    const ownFile = TINCAN_ROOT_FILES[path];
+    if (ownFile) {
+      return NextResponse.rewrite(new URL(ownFile, request.url));
     }
     return NextResponse.redirect(new URL(`${path}${search}`, siteConfig.url), 301);
   }
@@ -124,6 +139,13 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher:
+  matcher: [
     "/((?!metrics|_next/static|_next/image|favicon.ico|favicon-48x48.png|icon.png|icon-48.png|icon-192.png|icon-512.png|apple-touch-icon.png|apple-icon.png|og-image.png|opengraph-image.png|robots.txt|sitemap.xml|llms.txt|manifest.webmanifest).*)",
+    // The root files skipped above, but only on tincan's domain — see
+    // TINCAN_ROOT_FILES.
+    {
+      source: "/(favicon.ico|manifest.webmanifest|llms.txt)",
+      has: [{ type: "header", key: "host", value: "tincan\\.(rs|localhost)(:\\d+)?" }],
+    },
+  ],
 };
