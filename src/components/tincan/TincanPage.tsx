@@ -362,6 +362,29 @@ export async function TincanPage({ lang }: { lang: Lang }) {
           <Can who={t.cans[1]} flipped />
         </StringRail>
 
+        <section className="tc-use-cases" aria-labelledby="tc-use-cases-title">
+          <h2 id="tc-use-cases-title">{t.useCases.title}</h2>
+          <p className="tc-lead">{t.useCases.lead}</p>
+          <div className="tc-use-cases-grid">
+            {t.useCases.items.map((item) => (
+              <details key={item.title} className="tc-use-case-card">
+                <summary className="tc-use-case-summary">
+                  <div className="tc-use-case-header">
+                    <span className="tc-chip">{item.tag}</span>
+                    <span className="tc-use-case-toggle" aria-hidden="true">
+                      +
+                    </span>
+                  </div>
+                  <h3>{item.title}</h3>
+                </summary>
+                <div className="tc-use-case-body">
+                  <p>{item.desc}</p>
+                </div>
+              </details>
+            ))}
+          </div>
+        </section>
+
         <section className="tc-compare" aria-labelledby="tc-compare-title">
           <h2 id="tc-compare-title">{t.compare.title}</h2>
           <p>{t.compare.lead}</p>
@@ -387,20 +410,6 @@ export async function TincanPage({ lang }: { lang: Lang }) {
                 ))}
               </tbody>
             </table>
-          </div>
-        </section>
-
-        <section className="tc-use-cases" aria-labelledby="tc-use-cases-title">
-          <h2 id="tc-use-cases-title">{t.useCases.title}</h2>
-          <p className="tc-lead">{t.useCases.lead}</p>
-          <div className="tc-use-cases-grid">
-            {t.useCases.items.map((item) => (
-              <article key={item.title} className="tc-use-case-card">
-                <span className="tc-chip">{item.tag}</span>
-                <h3>{item.title}</h3>
-                <p>{item.desc}</p>
-              </article>
-            ))}
           </div>
         </section>
 

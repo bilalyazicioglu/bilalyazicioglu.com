@@ -980,21 +980,48 @@ html:has(.tc) body {
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.25rem;
   margin: 2rem 0;
+  align-items: start;
 }
 
 .tc-use-case-card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  padding: 1.5rem;
   border: 1px solid var(--tc-rule);
   border-radius: 8px;
   background: var(--tc-panel);
-  transition: border-color 0.15s ease;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+  overflow: hidden;
 }
 
 .tc-use-case-card:hover {
-  border-color: color-mix(in srgb, var(--tc-brass) 45%, var(--tc-rule));
+  border-color: color-mix(in srgb, var(--tc-brass) 50%, var(--tc-rule));
+}
+
+.tc-use-case-card[open] {
+  border-color: color-mix(in srgb, var(--tc-brass) 65%, transparent);
+}
+
+.tc-use-case-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.35rem;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.tc-use-case-summary::-webkit-details-marker {
+  display: none;
+}
+
+.tc-use-case-summary::marker {
+  display: none;
+}
+
+.tc-use-case-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
 }
 
 .tc-use-case-card .tc-chip {
@@ -1004,15 +1031,49 @@ html:has(.tc) body {
   letter-spacing: 0.06em;
 }
 
+.tc-use-case-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 1px solid var(--tc-rule);
+  border-radius: 4px;
+  font-family: var(--tc-cells);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--tc-zinc);
+  transition: transform 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.tc-use-case-card:hover .tc-use-case-toggle {
+  color: var(--tc-brass);
+  border-color: color-mix(in srgb, var(--tc-brass) 40%, var(--tc-rule));
+}
+
+.tc-use-case-card[open] .tc-use-case-toggle {
+  transform: rotate(45deg);
+  color: var(--tc-brass);
+  border-color: var(--tc-brass);
+}
+
 .tc-use-case-card h3 {
-  font-size: 1.05rem;
+  font-size: 1rem;
   font-weight: 700;
   line-height: 1.35;
   color: var(--tc-tin);
   margin: 0;
 }
 
-.tc-use-case-card p {
+.tc-use-case-body {
+  padding: 0 1.35rem 1.35rem;
+  border-top: 1px dashed color-mix(in srgb, var(--tc-rule) 80%, transparent);
+  margin-top: 0.25rem;
+  padding-top: 1rem;
+}
+
+.tc-use-case-body p {
   font-size: 0.85rem;
   line-height: 1.65;
   color: var(--tc-zinc);
