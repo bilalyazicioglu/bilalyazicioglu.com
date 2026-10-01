@@ -357,6 +357,10 @@ const en: Copy = {
         q: "Is tincan free?",
         a: "Yes. tincan is open source under the MIT license, and there is no paid tier, because there is no service to pay for.",
       },
+      {
+        q: "Why is it tincan-chat on crates.io and tincan-cli on npm?",
+        a: "Because tincan was already taken on both. It is one program: the command is tincan everywhere, and it installs as tincan from Homebrew, tincan-chat from crates.io and tincan-cli from npm. The source is bilalyazicioglu/tincan-cli on GitHub and the site is tincan.rs. It has nothing to do with the Tin Can API (xAPI) used in e-learning.",
+      },
     ],
   },
   end: {
@@ -641,6 +645,10 @@ const tr: Copy = {
       {
         q: "tincan ücretsiz mi?",
         a: "Evet. tincan MIT lisanslı açık kaynak bir proje ve ücretli bir sürümü yok, çünkü parası ödenecek bir servis yok.",
+      },
+      {
+        q: "Neden crates.io'da tincan-chat, npm'de tincan-cli?",
+        a: "Çünkü tincan adı ikisinde de alınmıştı. Program tek: komut her yerde tincan; Homebrew'dan tincan, crates.io'dan tincan-chat, npm'den tincan-cli olarak kurulur. Kaynak kodu GitHub'da bilalyazicioglu/tincan-cli, sitesi tincan.rs. E-öğrenmede kullanılan Tin Can API (xAPI) ile ilgisi yok.",
       },
     ],
   },

@@ -135,6 +135,7 @@ function graph(lang: Lang) {
           REPO,
           "https://crates.io/crates/tincan-chat",
           "https://www.npmjs.com/package/tincan-cli",
+          "https://github.com/bilalyazicioglu/homebrew-tap",
         ],
         programmingLanguage: { "@type": "ComputerLanguage", name: "Rust" },
         runtimePlatform: ["macOS", "Linux", "Windows"],
