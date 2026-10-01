@@ -425,6 +425,10 @@ export function LiveTerminal({ lang = "en" }: { lang?: keyof typeof WORDS }) {
                   <span
                     key={i}
                     className={`i-${run.ink}${run.bold ? " b" : ""}${run.panel && !run.ink.startsWith("chip") ? " p" : ""}`}
+                    // Exactly as many cells as characters. A phone's monospace
+                    // face often lacks ● ▸ ▁▃▅, and the wider face it borrows
+                    // them from would otherwise push the rest of the row over.
+                    style={{ width: `${[...run.text].length}ch` }}
                   >
                     {run.text}
                   </span>
