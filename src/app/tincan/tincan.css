@@ -6,7 +6,17 @@
    has chosen it on the site, the way TINCAN_THEME=light is opt-in.
    --------------------------------------------------------------------------- */
 
-html:has(.tc) {
+/* The tokens double as the dark set for anything that stands for a terminal:
+   a terminal is dark whatever the page around it is, the way tincan's own
+   default is. */
+html:has(.tc),
+html[data-theme="light"] :is(
+  .tc-window,
+  .tc-install-panel,
+  .tc-install-tabs [aria-selected="true"],
+  .tc-shell,
+  .tc-figure pre
+) {
   --tc-ink: #14100c;
   --tc-panel: #211a14;
   --tc-tin: #dcd5cb;
@@ -18,6 +28,12 @@ html:has(.tc) {
   --tc-dim: color-mix(in srgb, var(--tc-zinc) 62%, var(--tc-ink));
   --tc-rule: color-mix(in srgb, var(--tc-tin) 12%, transparent);
   color-scheme: dark;
+  /* Inherited colour is resolved where it was set, against the light set, so
+     a dark surface names its own. */
+  color: var(--tc-tin);
+}
+
+html:has(.tc) {
   background: var(--tc-ink);
 }
 
@@ -179,6 +195,8 @@ html:has(.tc) body {
 /* The app's icon and its name, the way it signs itself in the README. */
 .tc .tc-top .tc-brand {
   display: inline-flex;
+  flex: none;
+  white-space: nowrap;
   align-items: center;
   gap: 0.6rem;
   color: var(--tc-tin);
@@ -853,6 +871,12 @@ html:has(.tc) body {
   backdrop-filter: blur(14px) saturate(1.3);
 }
 
+/* On the light page the glass is dark, and too clear a dark glass turns the
+   cream behind it to mud. */
+html[data-theme="light"] .tc-leg[data-meander] :is(.tc-shell, .tc-figure pre) {
+  background: color-mix(in srgb, var(--tc-panel) 94%, transparent);
+}
+
 .tc-figure {
   margin: 0 0 1rem;
 }
@@ -1221,6 +1245,23 @@ html:has(.tc) body {
     --tc-gutter: 3rem;
     --tc-can-size: 0.8125rem;
     font-size: 0.875rem;
+  }
+  /* The logo, the other language and the stars, without the word GitHub the
+     icon already says, fit one row on the narrowest phones. */
+  .tc-top-links {
+    gap: 0.8rem;
+  }
+  .tc-github-label {
+    display: none;
+  }
+  .tc-github-stars {
+    padding-left: 0.4rem;
+  }
+  /* The whole command in view, wrapped at its spaces, rather than a strip to
+     scroll sideways through. */
+  .tc-install-panel code {
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
   .tc-window-bar {
     font-size: 0.6875rem;
