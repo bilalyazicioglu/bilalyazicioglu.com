@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { DemoLoop } from "@/components/tincan/DemoLoop";
 import { siteConfig } from "@/site.config";
+import { TINCAN_URL } from "@/lib/tincan-host";
 
 /**
  * Everything the tincan page says, once per language. The page's shape lives
@@ -14,8 +15,8 @@ export type Lang = "en" | "tr";
 export const REPO = "https://github.com/bilalyazicioglu/tincan-cli";
 
 export const PAGES: Record<Lang, string> = {
-  en: `${siteConfig.url}/tincan`,
-  tr: `${siteConfig.url}/tincan/tr`,
+  en: TINCAN_URL,
+  tr: `${TINCAN_URL}/tr`,
 };
 
 type LegId = "open" | "planes" | "secret" | "relay" | "limits" | "real" | "blocked";
@@ -103,8 +104,8 @@ const Fray = () => <span className="tc-glyph i-alarm">┆</span>;
 
 const N0 = <a href="https://n0.computer">Number Zero</a>;
 const ISSUE = <a href={`${REPO}/issues/136`}>issue #136</a>;
-const STORY_EN = "/blog/tincan-serverless-voice-chat-in-terminal";
-const STORY_TR = "/blog/tincan-terminalde-sesli-sohbet";
+const STORY_EN = `${siteConfig.url}/blog/tincan-serverless-voice-chat-in-terminal`;
+const STORY_TR = `${siteConfig.url}/blog/tincan-terminalde-sesli-sohbet`;
 const DESIGN_NOTES = `${REPO}/blob/main/docs/wiki/9-Interface-Design.md`;
 const BREW = "brew tap bilalyazicioglu/tap && brew install tincan";
 
@@ -138,7 +139,7 @@ const en: Copy = {
   },
   ui: {
     nav: "tincan links",
-    other: { href: "/tincan/tr", lang: "tr", label: "Türkçe" },
+    other: { href: "/tr", lang: "tr", label: "Türkçe" },
     leaving: "(opens github.com)",
     license: "MIT licensed",
     ratatui: "Built with Ratatui",
@@ -388,7 +389,7 @@ const en: Copy = {
   },
   foot: (
     <>
-      tincan is MIT licensed and made by <Link href="/">{siteConfig.heroName}</Link>.
+      tincan is MIT licensed and made by <a href={siteConfig.url}>{siteConfig.heroName}</a>.
     </>
   ),
 };
@@ -423,7 +424,7 @@ const tr: Copy = {
   },
   ui: {
     nav: "tincan bağlantıları",
-    other: { href: "/tincan", lang: "en", label: "English" },
+    other: { href: "/", lang: "en", label: "English" },
     leaving: "(github.com'u açar)",
     license: "MIT lisanslı",
     ratatui: "Ratatui ile yapıldı",
@@ -676,7 +677,7 @@ const tr: Copy = {
   },
   foot: (
     <>
-      tincan MIT lisanslıdır; <Link href="/">{siteConfig.heroName}</Link> tarafından yapıldı.
+      tincan MIT lisanslıdır; <a href={siteConfig.url}>{siteConfig.heroName}</a> tarafından yapıldı.
     </>
   ),
 };

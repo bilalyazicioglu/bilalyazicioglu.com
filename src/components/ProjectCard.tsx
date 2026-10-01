@@ -32,7 +32,7 @@ function LockIcon() {
 function ArrowLink({ href }: { href?: string }) {
   if (!href) return <LockIcon />;
   // Only a project that lives elsewhere opens a new tab; one with its own page
-  // on this site (tincan) is an ordinary link.
+  // on this site is an ordinary link.
   const external = /^https?:\/\//.test(href);
   return (
     <Link

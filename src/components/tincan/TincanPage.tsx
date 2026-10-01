@@ -9,6 +9,7 @@ import { Meander } from "@/components/tincan/Meander";
 import { COPY, PAGES, REPO, type Lang } from "@/components/tincan/copy";
 import { getTincanStars } from "@/lib/github";
 import { siteConfig } from "@/site.config";
+import { TINCAN_URL } from "@/lib/tincan-host";
 import "@/app/tincan/tincan.css";
 
 // Big Shoulders is the lettering stamped on a can; Martian Mono is the
@@ -33,6 +34,9 @@ const LANGUAGES = { en: PAGES.en, tr: PAGES.tr, "x-default": PAGES.en };
 export function tincanMetadata(lang: Lang): Metadata {
   const t = COPY[lang].meta;
   return {
+    // The page is served at tincan.rs, so its relative URLs resolve there
+    // rather than against the root layout's main domain.
+    metadataBase: new URL(TINCAN_URL),
     title: { absolute: t.title },
     description: t.description,
     keywords: t.keywords,
@@ -96,7 +100,7 @@ function graph(lang: Lang) {
         about: { "@id": software },
         mainEntity: { "@id": software },
         author: { "@id": `${siteConfig.url}/#person` },
-        primaryImageOfPage: `${siteConfig.url}/tincan/preview.png`,
+        primaryImageOfPage: `${TINCAN_URL}/tincan/preview.png`,
         video: { "@id": `${page}#demo` },
         breadcrumb: { "@id": `${page}#breadcrumb` },
       },
@@ -137,7 +141,7 @@ function graph(lang: Lang) {
         license: "https://opensource.org/licenses/MIT",
         isAccessibleForFree: true,
         keywords: t.keywords.join(", "),
-        image: `${siteConfig.url}/tincan/preview.png`,
+        image: `${TINCAN_URL}/tincan/preview.png`,
         author: { "@id": `${siteConfig.url}/#person` },
       },
       {
@@ -147,8 +151,8 @@ function graph(lang: Lang) {
         name: t.videoName,
         description: t.videoDescription,
         inLanguage: lang,
-        contentUrl: `${siteConfig.url}/uploads/blog/tincan-demo.mp4`,
-        thumbnailUrl: `${siteConfig.url}/tincan/demo-poster.jpg`,
+        contentUrl: `${TINCAN_URL}/uploads/blog/tincan-demo.mp4`,
+        thumbnailUrl: `${TINCAN_URL}/tincan/demo-poster.jpg`,
         uploadDate: "2026-09-17",
         duration: "PT12S",
       },

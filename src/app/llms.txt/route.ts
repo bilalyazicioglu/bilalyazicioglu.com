@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { siteConfig } from "@/site.config";
+import { TINCAN_URL } from "@/lib/tincan-host";
 import { getAllPosts } from "@/lib/blog";
 import { getProjectsWithLiveStars } from "@/lib/github";
 import { education, skills } from "@/lib/resume";
@@ -65,7 +66,7 @@ ${skillLines}
 ${projectLines}
 
 ## Project Documentation for LLMs
-- [tincan](${baseUrl}/tincan/llms.txt): serverless peer-to-peer voice and text chat for the terminal (full reference: ${baseUrl}/tincan/llms-full.txt)
+- [tincan](${TINCAN_URL}/tincan/llms.txt): serverless peer-to-peer voice and text chat for the terminal (full reference: ${TINCAN_URL}/tincan/llms-full.txt)
 
 ## Publications & Technical Writings
 ${postLines}

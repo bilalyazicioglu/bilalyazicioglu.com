@@ -75,7 +75,7 @@ export const projects: Project[] = [
     live: true,
     description:
       "Serverless voice chat that lives in the terminal. Whoever starts it becomes the room's coordinator and hands out an invite code — friends join from anywhere with no VPN, no port forwarding and no account. Control traffic goes through the coordinator, but audio is a direct peer-to-peer mesh of QUIC datagrams, so the host's uplink never becomes the bottleneck.",
-    href: "/tincan",
+    href: "https://tincan.rs",
     repo: "https://github.com/bilalyazicioglu/tincan-cli",
     stats: [
       { label: "Language", value: "Rust" },

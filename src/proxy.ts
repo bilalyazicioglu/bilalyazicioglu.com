@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { isAdminRequestAllowed, isSessionAuthorized } from "@/lib/admin-gate";
 import { getAdminConfig, timingSafeCompare } from "@/lib/admin-auth";
 import { siteConfig } from "@/site.config";
+import { TINCAN_URL, isTincanHost } from "@/lib/tincan-host";
 
 /** The one host every page declares as its canonical — see `siteConfig.url`. */
 const CANONICAL_HOST = new URL(siteConfig.url).host;
@@ -31,12 +32,36 @@ export function proxy(request: NextRequest) {
     );
   }
 
-  // tincan.<domain> is a short address to hand out, not a second site: every
-  // path on it lands on the one page, so search engines keep a single URL and
-  // the page keeps the main domain's standing. The query string survives, so
-  // a link tagged for a campaign still says where it came from.
+  // tincan lives at tincan.rs. The domain shows only the tincan page and the
+  // files it loads; anything else on it belongs to the main site and goes
+  // there. Every other address for the page — tincan.<domain>, /tincan on
+  // the main domain — 301s to tincan.rs, so search engines keep one URL per
+  // language. Query strings survive, so a link tagged for a campaign still
+  // says where it came from.
+  const search = request.nextUrl.search;
+  if (host === `www.${new URL(TINCAN_URL).host}`) {
+    return NextResponse.redirect(new URL(`${path}${search}`, TINCAN_URL), 301);
+  }
+  if (isTincanHost(host)) {
+    if (path === "/") {
+      return NextResponse.rewrite(new URL(`/tincan${search}`, request.url));
+    }
+    if (path === "/tr") {
+      return NextResponse.rewrite(new URL(`/tincan/tr${search}`, request.url));
+    }
+    if (path === "/tincan" || path === "/tincan/tr") {
+      return NextResponse.redirect(new URL(`${path.slice("/tincan".length) || "/"}${search}`, TINCAN_URL), 301);
+    }
+    if (path.startsWith("/tincan/") || path.startsWith("/uploads/")) {
+      return NextResponse.next();
+    }
+    return NextResponse.redirect(new URL(`${path}${search}`, siteConfig.url), 301);
+  }
   if (host === `tincan.${CANONICAL_HOST}`) {
-    return NextResponse.redirect(new URL(`/tincan${request.nextUrl.search}`, siteConfig.url), 301);
+    return NextResponse.redirect(new URL(`/${search}`, TINCAN_URL), 301);
+  }
+  if (host === CANONICAL_HOST && (path === "/tincan" || path === "/tincan/tr")) {
+    return NextResponse.redirect(new URL(`${path.slice("/tincan".length) || "/"}${search}`, TINCAN_URL), 301);
   }
 
   // 1. Standard /admin is completely blocked and masked as 404 for public internet
