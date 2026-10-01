@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CHANNELS, INVITE, clock, draw, newRoom, say, type Room, type Run } from "./sim";
+import { Cells } from "@/components/tincan/Cells";
 
 /**
  * The room on the page: plays a short scene on its own (bob picks up, talks,
@@ -430,7 +431,7 @@ export function LiveTerminal({ lang = "en" }: { lang?: keyof typeof WORDS }) {
                     // them from would otherwise push the rest of the row over.
                     style={{ width: `${[...run.text].length}ch` }}
                   >
-                    {run.text}
+                    <Cells text={run.text} />
                   </span>
                 ))}
                 {"\n"}

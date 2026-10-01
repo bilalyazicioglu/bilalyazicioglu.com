@@ -575,6 +575,15 @@ html:has(.tc) body {
   vertical-align: top;
 }
 
+/* One character cell, for glyphs the face may draw wider or narrower than
+   its digits — see Cells.tsx. Centred, so a too-wide glyph spills evenly. */
+.tc .tc-cell {
+  display: inline-flex;
+  justify-content: center;
+  width: 1ch;
+  vertical-align: top;
+}
+
 .tc-probe {
   position: absolute;
   visibility: hidden;

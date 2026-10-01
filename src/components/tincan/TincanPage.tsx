@@ -6,6 +6,7 @@ import { InstallTabs } from "@/components/tincan/InstallTabs";
 import { HeroField } from "@/components/tincan/HeroField";
 import { StringRail } from "@/components/tincan/StringRail";
 import { Meander } from "@/components/tincan/Meander";
+import { Cells } from "@/components/tincan/Cells";
 import { COPY, PAGES, REPO, type Lang } from "@/components/tincan/copy";
 import { getTincanStars } from "@/lib/github";
 import { siteConfig } from "@/site.config";
@@ -183,7 +184,7 @@ function Can({ who, flipped = false }: { who: string; flipped?: boolean }) {
       <pre aria-hidden="true">
         {lines.map((line, i) => (
           <span key={i} className={line.includes("( o )") ? "i-brass" : undefined}>
-            {line}
+            <Cells text={line} />
             {"\n"}
           </span>
         ))}
