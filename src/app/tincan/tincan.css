@@ -205,6 +205,7 @@ html:has(.tc) body {
   font-weight: 800;
   font-variation-settings: "opsz" 72;
   line-height: 1;
+  cursor: pointer;
 }
 
 .tc-brand img {
@@ -912,7 +913,8 @@ html[data-theme="light"] .tc-leg[data-meander] :is(.tc-shell, .tc-figure pre) {
 }
 
 .tc-swatch--control { background: var(--tc-zinc); }
-.tc-swatch--voice { background: var(--tc-patina); }
+.tc-swatch--voice { background: var(--tc-brass); }
+.tc-swatch--direct { background: var(--tc-verdigris); }
 
 .tc-video {
   display: block;
@@ -921,6 +923,394 @@ html[data-theme="light"] .tc-leg[data-meander] :is(.tc-shell, .tc-figure pre) {
   border: 1px solid var(--tc-rule);
   border-radius: 10px;
   background: var(--tc-panel);
+}
+
+/* --- Interactive P2P Mesh Visualizer ------------------------------------ */
+
+.tc-mesh-wrap {
+  margin: 1.5rem 0 1.75rem;
+  border: 1px solid var(--tc-rule);
+  border-radius: 8px;
+  background: var(--tc-panel);
+  font-family: var(--tc-cells);
+  overflow: hidden;
+}
+
+.tc-leg[data-meander] .tc-mesh-wrap {
+  background: color-mix(in srgb, var(--tc-panel) 75%, transparent);
+  -webkit-backdrop-filter: blur(14px) saturate(1.3);
+  backdrop-filter: blur(14px) saturate(1.3);
+}
+
+html[data-theme="light"] .tc-leg[data-meander] .tc-mesh-wrap {
+  background: color-mix(in srgb, var(--tc-panel) 94%, transparent);
+}
+
+.tc-mesh-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1.15rem;
+  border-bottom: 1px solid var(--tc-rule);
+  background: color-mix(in srgb, var(--tc-ink) 45%, var(--tc-panel));
+  font-size: 0.75rem;
+}
+
+.tc-mesh-toolbar-label {
+  color: var(--tc-zinc);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+}
+
+.tc-mesh-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.tc-mesh-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid var(--tc-rule);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--tc-zinc);
+  font-family: var(--tc-cells);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.tc-mesh-tab:hover {
+  border-color: color-mix(in srgb, var(--tc-brass) 50%, var(--tc-rule));
+  color: var(--tc-tin);
+}
+
+.tc-mesh-tab--speaking {
+  border-color: var(--tc-brass);
+  background: color-mix(in srgb, var(--tc-brass) 12%, transparent);
+  color: var(--tc-brass);
+  font-weight: 700;
+}
+
+.tc-mesh-tab-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--tc-zinc);
+}
+
+.tc-mesh-tab--speaking .tc-mesh-tab-dot {
+  background: var(--tc-brass);
+  box-shadow: 0 0 6px var(--tc-brass);
+}
+
+.tc-mesh-tab-role {
+  color: var(--tc-zinc);
+  font-size: 0.6875rem;
+  font-weight: 400;
+}
+
+.tc-mesh-tab--speaking .tc-mesh-tab-role {
+  color: color-mix(in srgb, var(--tc-brass) 75%, transparent);
+}
+
+.tc-mesh-canvas-wrap {
+  position: relative;
+  width: 100%;
+  padding: 1.25rem 0.5rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.tc-mesh-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 540px;
+}
+
+.tc-mesh-svg--desktop {
+  display: block;
+}
+
+.tc-mesh-svg--mobile {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .tc-mesh-svg--desktop {
+    display: none;
+  }
+  .tc-mesh-svg--mobile {
+    display: block;
+    max-width: 270px;
+    margin: 0 auto;
+  }
+}
+
+/* Links & Paths */
+.tc-mesh-link--base {
+  stroke: color-mix(in srgb, var(--tc-verdigris) 35%, var(--tc-rule));
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+}
+
+.tc-mesh-link--active {
+  stroke: var(--tc-verdigris);
+  stroke-width: 1.8;
+  fill: none;
+}
+
+.tc-mesh-curve-label {
+  fill: var(--tc-zinc);
+  font-family: var(--tc-cells);
+  font-size: 9px;
+  letter-spacing: 0.03em;
+}
+
+/* Packets */
+.tc-mesh-packet--lead {
+  fill: var(--tc-brass);
+  filter: drop-shadow(0 0 4px var(--tc-brass));
+}
+
+.tc-mesh-packet--trail {
+  fill: var(--tc-brass);
+  opacity: 0.6;
+}
+
+/* Pulses */
+@keyframes tcMeshArrival {
+  0% {
+    r: 22px;
+    opacity: 0.85;
+    stroke: var(--tc-patina);
+  }
+  100% {
+    r: 36px;
+    opacity: 0;
+    stroke: var(--tc-patina);
+  }
+}
+
+@keyframes tcMeshSpeaking {
+  0% {
+    r: 22px;
+    opacity: 0.95;
+    stroke: var(--tc-brass);
+  }
+  100% {
+    r: 38px;
+    opacity: 0;
+    stroke: var(--tc-brass);
+  }
+}
+
+.tc-mesh-pulse-arrival {
+  fill: none;
+  stroke: var(--tc-patina);
+  stroke-width: 1.5;
+  animation: tcMeshArrival 1.3s cubic-bezier(0.1, 0.8, 0.3, 1) infinite;
+  pointer-events: none;
+}
+
+.tc-mesh-pulse-speaking {
+  fill: none;
+  stroke: var(--tc-brass);
+  stroke-width: 1.5;
+  animation: tcMeshSpeaking 1.3s cubic-bezier(0.1, 0.8, 0.3, 1) infinite;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tc-mesh-packet-group,
+  .tc-mesh-pulse-arrival,
+  .tc-mesh-pulse-speaking {
+    animation: none;
+    display: none;
+  }
+}
+
+/* Node Elements */
+.tc-mesh-node {
+  cursor: pointer;
+  user-select: none;
+}
+
+.tc-mesh-node-box {
+  fill: var(--tc-panel);
+  stroke: var(--tc-rule);
+  stroke-width: 1;
+  transition: stroke 0.15s ease, filter 0.15s ease;
+}
+
+.tc-mesh-node:hover .tc-mesh-node-box {
+  stroke: color-mix(in srgb, var(--tc-brass) 50%, var(--tc-rule));
+}
+
+.tc-mesh-node--speaking .tc-mesh-node-box {
+  stroke: var(--tc-brass);
+  stroke-width: 1.5;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--tc-brass) 25%, transparent));
+}
+
+.tc-mesh-node .i-dot-brass {
+  fill: var(--tc-brass);
+}
+
+.tc-mesh-node .i-dot-patina {
+  fill: var(--tc-verdigris);
+}
+
+.tc-mesh-node-title {
+  fill: var(--tc-tin);
+  font-family: var(--tc-cells);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.tc-mesh-node-role {
+  fill: var(--tc-zinc);
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.tc-mesh-node-status {
+  fill: var(--tc-zinc);
+  font-family: var(--tc-cells);
+  font-size: 10px;
+}
+
+.tc-mesh-node--speaking .tc-mesh-node-status {
+  fill: var(--tc-brass);
+  font-weight: 700;
+}
+
+/* Log Terminal */
+.tc-mesh-log {
+  border-top: 1px dashed color-mix(in srgb, var(--tc-rule) 85%, transparent);
+  background: color-mix(in srgb, var(--tc-ink) 60%, var(--tc-panel));
+  padding: 0.85rem 1.15rem;
+  font-size: 0.75rem;
+  line-height: 1.6;
+}
+
+.tc-mesh-log-header {
+  color: var(--tc-zinc);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.4rem;
+  text-transform: uppercase;
+}
+
+.tc-mesh-log-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.tc-mesh-log-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 0.75rem;
+}
+
+.tc-mesh-tag-voice {
+  color: var(--tc-brass);
+  font-weight: 700;
+}
+
+.tc-mesh-tag-host {
+  color: var(--tc-zinc);
+  font-weight: 700;
+}
+
+.tc-mesh-log-route {
+  color: var(--tc-tin);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tc-mesh-log-detail {
+  color: var(--tc-zinc);
+}
+
+.tc-mesh-log-host-relay {
+  color: var(--tc-zinc);
+  white-space: nowrap;
+}
+
+.tc-mesh-log-row--host .tc-mesh-log-detail {
+  color: color-mix(in srgb, var(--tc-zinc) 85%, transparent);
+}
+
+/* Legend (Desktop only) */
+.tc-mesh-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  padding: 0.75rem 1.15rem;
+  border-top: 1px solid var(--tc-rule);
+  color: var(--tc-zinc);
+  font-size: 0.75rem;
+}
+
+/* Responsive log toggles and mobile spacing */
+@media (max-width: 640px) {
+  .tc-mesh-toolbar {
+    padding: 0.55rem 0.75rem;
+    font-size: 0.7rem;
+    gap: 0.5rem;
+  }
+  .tc-mesh-tabs {
+    gap: 0.35rem;
+  }
+  .tc-mesh-tab {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.7rem;
+  }
+  .tc-mesh-canvas-wrap {
+    padding: 0.5rem 0.25rem;
+  }
+  .tc-mesh-log {
+    padding: 0.55rem 0.75rem;
+    font-size: 0.72rem;
+    line-height: 1.5;
+  }
+  .tc-mesh-log-header {
+    margin-bottom: 0.3rem;
+    font-size: 0.65rem;
+  }
+  .tc-mesh-log-body--desktop {
+    display: none;
+  }
+  .tc-mesh-log-body--mobile {
+    display: flex;
+    gap: 0.2rem;
+  }
+  .tc-mesh-legend {
+    display: none;
+  }
+}
+
+@media (min-width: 641px) {
+  .tc-mesh-log-body--mobile {
+    display: none;
+  }
+  .tc-mesh-log-body--desktop {
+    display: flex;
+  }
 }
 
 /* --- Comparison & FAQ --------------------------------------------------- */

@@ -7,6 +7,7 @@ import { HeroField } from "@/components/tincan/HeroField";
 import { StringRail } from "@/components/tincan/StringRail";
 import { Meander } from "@/components/tincan/Meander";
 import { Cells } from "@/components/tincan/Cells";
+import { TincanBrand } from "@/components/tincan/TincanBrand";
 import { COPY, PAGES, REPO, type Lang } from "@/components/tincan/copy";
 import { getTincanStars } from "@/lib/github";
 import { siteConfig } from "@/site.config";
@@ -246,7 +247,7 @@ function Reading({
 const LEGS = [
   { id: "open", strand: "taut", chip: "DIRECT", ms: "18ms" },
   // The second stretch wanders behind the copy and its glass panel.
-  { id: "planes", strand: "taut", chip: "DIRECT", ms: "18ms", glass: ".tc-figure pre" },
+  { id: "planes", strand: "taut", chip: "DIRECT", ms: "18ms", glass: ".tc-mesh-wrap, .tc-figure pre" },
   { id: "secret", strand: "taut", chip: "DIRECT", ms: "18ms" },
   { id: "relay", strand: "slack", chip: "RELAY", ms: "84ms" },
   { id: "limits", strand: "frayed", chip: "CHOPPY", ms: "84ms" },
@@ -274,11 +275,7 @@ export async function TincanPage({ lang }: { lang: Lang }) {
       />
 
       <header className="tc-top">
-        <a href="#tc-title" className="tc-brand">
-          {/* eslint-disable-next-line @next/next/no-img-element -- a fixed 32px mark; nothing for next/image to optimise */}
-          <img src="/tincan/logo-224.png" alt="" width={32} height={32} />
-          <span>tincan</span>
-        </a>
+        <TincanBrand lang={lang} />
         <nav className="tc-top-links" aria-label={t.ui.nav}>
           <Link
             href={t.ui.other.href}

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { DemoLoop } from "@/components/tincan/DemoLoop";
+import { MeshVisualizer } from "@/components/tincan/MeshVisualizer";
 import { siteConfig } from "@/site.config";
 import { TINCAN_URL } from "@/lib/tincan-host";
 
@@ -71,31 +72,6 @@ function RoomShell() {
   );
 }
 
-function PlanesFigure({ control, voice }: { control: string; voice: string }) {
-  return (
-    <figure className="tc-figure">
-      <pre aria-hidden="true">
-        {"        "}
-        <span className="i-tin">alice</span>
-        <span className="i-zinc"> (host)</span>
-        {"\n"}
-        <span className="i-zinc">{"        /    |    \\"}</span>
-        {"\n"}
-        <span className="i-tin">{"     bob   carol   dave"}</span>
-        {"\n"}
-        <span className="i-patina">{"        \\____|____/"}</span>
-      </pre>
-      <figcaption>
-        <span>
-          <i className="tc-swatch tc-swatch--control" /> {control}
-        </span>
-        <span>
-          <i className="tc-swatch tc-swatch--voice" /> {voice}
-        </span>
-      </figcaption>
-    </figure>
-  );
-}
 
 const Taut = () => <span className="tc-glyph i-verdigris">│</span>;
 const Sag = () => <span className="tc-glyph i-brass">╎</span>;
@@ -183,7 +159,7 @@ const en: Copy = {
             else as QUIC datagrams, so the host&apos;s connection is never the
             bottleneck.
           </p>
-          <PlanesFigure control="roster and chat, through the host" voice="voice, peer to peer" />
+          <MeshVisualizer lang="en" />
           <p className="tc-aside">A six-person room needs about 160 kbps of upload each.</p>
         </>
       ),
@@ -470,7 +446,7 @@ const tr: Copy = {
             Opus paketlerini QUIC datagramları olarak doğrudan diğer herkese gönderir,
             bu yüzden host&apos;un bağlantısı hiçbir zaman darboğaz olmaz.
           </p>
-          <PlanesFigure control="liste ve sohbet, host üzerinden" voice="ses, eşten eşe" />
+          <MeshVisualizer lang="tr" />
           <p className="tc-aside">Altı kişilik bir oda, kişi başı yaklaşık 160 kbps yükleme ister.</p>
         </>
       ),

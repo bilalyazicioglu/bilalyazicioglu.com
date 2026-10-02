@@ -31,20 +31,20 @@ const ROUTE: [Space, number, number][] = [
   // A diagonal behind the glass, where the glow scatters.
   ["panel", 0.1, 0.45],
   ["panel", 0.5, 0.56],
-  ["panel", 0.88, 0.7],
+  ["panel", 0.82, 0.75],
   // Turned behind the glass, so it leaves already heading for the loop.
-  ["panel", 0.81, 1.2],
+  ["panel", 0.78, 0.98],
   // Out in the open, a cursive loop: down its left side, round the bottom,
   // up the right, and back over the top across its own path, heading home.
-  ["loop", 0.2, -2.5],
-  ["loop", -0.3, -1.2],
-  ["loop", -0.98, -0.15],
-  ["loop", -0.62, 0.8],
-  ["loop", 0.3, 0.97],
-  ["loop", 0.97, 0.25],
-  ["loop", 0.72, -0.72],
-  ["loop", -0.15, -0.99],
-  ["loop", -1.5, -0.55],
+  ["loop", -0.1, -1.3],
+  ["loop", -0.7, -0.7],
+  ["loop", -0.98, 0.0],
+  ["loop", -0.6, 0.82],
+  ["loop", 0.25, 0.98],
+  ["loop", 0.95, 0.3],
+  ["loop", 0.75, -0.65],
+  ["loop", -0.1, -0.98],
+  ["loop", -1.4, -0.6],
   // Out of the loop and away towards the gutter; the last stretch home is
   // drawn by `homeward`, not the spline.
   ["open", 0.46, 0.5],
