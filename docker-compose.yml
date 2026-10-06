@@ -115,12 +115,18 @@ services:
       - docker-socket-proxy
     networks:
       - monitoring
+      - docker-api
 
   # Promtail only needs to list containers to find the blog's log file; it
   # reads the file itself from the read-only mount above. The raw Docker socket
   # would hand it — and anyone who took it over — root on the host, so it goes
   # through this proxy, which answers read-only container and network lookups
   # and refuses everything else.
+  #
+  # Read-only still includes container inspect, i.e. every container's
+  # environment and so every secret in .env. The proxy therefore sits alone on
+  # docker-api with Promtail, out of reach of the internet-facing blog and
+  # cloudflared on the monitoring network.
   docker-socket-proxy:
     image: tecnativa/docker-socket-proxy:v0.5.0
     restart: unless-stopped
@@ -131,7 +137,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
-      - monitoring
+      - docker-api
     expose:
       - "2375"
 
@@ -151,6 +157,9 @@ services:
 
 networks:
   monitoring:
+  # Promtail ↔ docker-socket-proxy only; internal, so no route out either.
+  docker-api:
+    internal: true
 
 volumes:
   prometheus-data:
