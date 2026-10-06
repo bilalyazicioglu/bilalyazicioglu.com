@@ -6,11 +6,10 @@ import { projects, type Project } from "./projects";
 const TINCAN_REPO = "bilalyazicioglu/tincan-cli";
 export const TINCAN_FALLBACK_STARS = 126;
 
-/** Turkey is permanently on UTC+3 (Europe/Istanbul). */
-const ISTANBUL_OFFSET_MS = 3 * 60 * 60 * 1000;
-const DAY_MS = 24 * 60 * 60 * 1000;
-const THIRTY_MINUTES_MS = 30 * 60 * 1000;
-const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
+/** Check and refresh stars every 1 hour. */
+export const STAR_SYNC_INTERVAL_MS = 60 * 60 * 1000;
+/** On network or API failure, retry after 10 minutes. */
+export const STAR_RETRY_INTERVAL_MS = 10 * 60 * 1000;
 const FETCH_TIMEOUT_MS = 5000;
 
 type StarCacheData = {
@@ -163,51 +162,23 @@ function fetchRepoStarsHttps(repo: string): Promise<number | null> {
 }
 
 /**
- * Computes schedule boundaries in Europe/Istanbul (UTC+3):
- * - Daily check target: 09:00 Istanbul time.
- * - On failure between 09:00 and 12:00: retry every 30 minutes.
- * - On failure between 12:00 and 24:00: retry every 2 hours (capped at midnight;
- *   if next retry crosses 00:00, wait until 09:00).
- * - Between 00:00 and 09:00: 0 requests (wait until 09:00).
+ * Computes whether the star cache is stale (older than 1 hour or never fetched)
+ * and determines the delay in milliseconds until the next scheduled check.
  */
-export function getScheduleInfo(nowMs: number) {
-  const istDate = new Date(nowMs + ISTANBUL_OFFSET_MS);
-  const year = istDate.getUTCFullYear();
-  const month = istDate.getUTCMonth();
-  const day = istDate.getUTCDate();
-  const istHour = istDate.getUTCHours();
-
-  const todayNineAmMs =
-    Date.UTC(year, month, day, 9, 0, 0, 0) - ISTANBUL_OFFSET_MS;
-  const tomorrowNineAmMs = todayNineAmMs + DAY_MS;
-  const todayMidnightEndMs =
-    Date.UTC(year, month, day + 1, 0, 0, 0, 0) - ISTANBUL_OFFSET_MS;
-
-  const nextNineAmMs = nowMs < todayNineAmMs ? todayNineAmMs : tomorrowNineAmMs;
-
-  let retryDelayMs: number;
-  if (istHour < 9) {
-    // 00:00 - 08:59 -> 0 requests until 09:00
-    retryDelayMs = Math.max(1000, todayNineAmMs - nowMs);
-  } else if (istHour < 12) {
-    // 09:00 - 11:59 -> retry in 30 minutes
-    retryDelayMs = THIRTY_MINUTES_MS;
-  } else {
-    // 12:00 - 23:59 -> retry in 2 hours, unless that crosses 00:00 midnight
-    const candidateMs = nowMs + TWO_HOURS_MS;
-    if (candidateMs >= todayMidnightEndMs) {
-      retryDelayMs = Math.max(1000, tomorrowNineAmMs - nowMs);
-    } else {
-      retryDelayMs = TWO_HOURS_MS;
-    }
+export function getScheduleDelay(nowMs: number, lastUpdatedMs: number): {
+  isStale: boolean;
+  nextDelayMs: number;
+} {
+  if (lastUpdatedMs <= 0) {
+    return { isStale: true, nextDelayMs: 0 };
   }
-
+  const age = nowMs - lastUpdatedMs;
+  if (age >= STAR_SYNC_INTERVAL_MS) {
+    return { isStale: true, nextDelayMs: 0 };
+  }
   return {
-    istHour,
-    todayNineAmMs,
-    nextNineAmMs,
-    nextDailyDelayMs: Math.max(1000, nextNineAmMs - nowMs),
-    retryDelayMs,
+    isStale: false,
+    nextDelayMs: Math.max(1000, STAR_SYNC_INTERVAL_MS - age),
   };
 }
 
@@ -238,8 +209,6 @@ async function runSyncCycle(): Promise<void> {
       const liveStars = await fetchRepoStarsHttps(TINCAN_REPO);
 
       const now = Date.now();
-      const schedule = getScheduleInfo(now);
-
       if (liveStars !== null) {
         const updated: StarCacheData = {
           stars: liveStars,
@@ -247,10 +216,10 @@ async function runSyncCycle(): Promise<void> {
         };
         state.cache = updated;
         saveDiskCacheAtomic(filePath, updated);
-        scheduleNextRun(schedule.nextDailyDelayMs);
+        scheduleNextRun(STAR_SYNC_INTERVAL_MS);
       } else {
-        // Keep current.stars untouched so it stays on the last active number
-        scheduleNextRun(schedule.retryDelayMs);
+        // Keep current.stars untouched so it stays on the last active number; retry in 10 minutes
+        scheduleNextRun(STAR_RETRY_INTERVAL_MS);
       }
     } finally {
       state.inflight = null;
@@ -274,9 +243,9 @@ function scheduleNextRun(delayMs: number): void {
 }
 
 /**
- * Starts the background daily 09:00 scheduler once per server process.
- * If the cache has never been fetched or missed today's 09:00 window (and it is
- * not between 00:00 and 09:00), performs an immediate sync.
+ * Starts the background 1-hour star sync scheduler once per server process.
+ * If the cache is stale (older than 1 hour or never fetched), triggers an immediate background sync.
+ * Otherwise, schedules the next run after the remaining time until the 1-hour mark.
  */
 export function startStarSyncScheduler(): void {
   const state = getState();
@@ -287,15 +256,12 @@ export function startStarSyncScheduler(): void {
 
   const current = ensureLoaded();
   const now = Date.now();
-  const { istHour, todayNineAmMs, nextDailyDelayMs } = getScheduleInfo(now);
+  const { isStale, nextDelayMs } = getScheduleDelay(now, current.updatedAt);
 
-  const neverFetched = current.updatedAt === 0;
-  const missedTodayNineAm = istHour >= 9 && current.updatedAt < todayNineAmMs;
-
-  if (neverFetched || missedTodayNineAm) {
+  if (isStale) {
     void runSyncCycle();
   } else {
-    scheduleNextRun(nextDailyDelayMs);
+    scheduleNextRun(nextDelayMs);
   }
 }
 
