@@ -5,9 +5,11 @@ on:
     branches: [main]
   pull_request:
 
+# A newer push to a PR makes the older run pointless; on main, every commit
+# runs to completion so a deploy is never cancelled halfway through.
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -45,3 +47,20 @@ jobs:
           push: false
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  # Runs on the homeserver itself, through a self-hosted runner labelled
+  # "homeserver", and only once every check above has passed for a push to
+  # main — never for pull requests, which may come from forks.
+  deploy:
+    name: Deploy to homeserver
+    needs: [check, docker]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, homeserver]
+    timeout-minutes: 20
+    # One deploy at a time; a newer commit waits rather than cutting in.
+    concurrency:
+      group: deploy
+      cancel-in-progress: false
+    steps:
+      - name: Deploy the commit CI tested
+        run: "$HOME/portfolio/scripts/deploy.sh ${{ github.sha }}"

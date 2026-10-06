@@ -43,6 +43,12 @@ It pulls `main`, rebuilds the blog image with the commit's SHA, subject and time
 
 The checked-in Compose file binds the application to `127.0.0.1:3000`. Configure the reverse proxy for your environment. A proxy running in another container needs a suitable container-network configuration; the host's loopback address is not that container's loopback address.
 
+### Automatic deploys
+
+Every push to `main` that passes CI is deployed by the `deploy` job in `.github/workflows/ci.yml`. It runs on the server through a self-hosted GitHub Actions runner labelled `homeserver`, which calls `scripts/deploy.sh <sha>` with the exact commit CI tested. Pull requests never reach the runner. Because the repository is public, *Settings → Actions → General → Fork pull request workflows* must require approval for all external contributors.
+
+To set up the runner, open *Settings → Actions → Runners → New self-hosted runner* (Linux x64) on GitHub and follow its download and `config.sh` steps on the server, adding `--labels homeserver` to `config.sh`. Then install it as a service with `sudo ./svc.sh install <user> && sudo ./svc.sh start`. The runner's user needs to own the checkout at `~/portfolio` and to run `docker` without `sudo`.
+
 ## Persistent data
 
 | Data | Location | Persistence in the supplied Compose file |
