@@ -15,6 +15,7 @@ For local development, copy `.env.example` to `.env.local`. For Docker Compose, 
 | `BLOG_DIR_PATH` | Optional content directory override; Compose sets `/app/content/blog` |
 | `ADMIN_TAILNET_HOST` | Expected hostname for the optional Tailnet access path |
 | `ADMIN_TAILSCALE_LOGIN` | Optional allowed Tailnet login identity |
+| `PROMETHEUS_URL` | Where `/infra` reads metrics; defaults to `http://prometheus:9090` on the Compose network |
 
 Generate a session secret with:
 
@@ -32,12 +33,13 @@ The application also supports a Tailnet access path. Its host and identity check
 
 ## Deploy or update the application
 
-After configuring `.env`:
+After configuring `.env`, run the deploy script on the server:
 
 ```sh
-git pull --ff-only
-docker compose up -d --build blog
+scripts/deploy.sh
 ```
+
+It pulls `main`, rebuilds the blog image with the commit's SHA, subject and time baked in (shown on `/infra`), recreates the exporters if their configuration changed, reloads Prometheus's config, and then waits until `/api/infra` reports the new commit. If that check fails, it prints the last log lines and exits non-zero. A plain `docker compose up -d --build blog` still works, but `/infra` then shows no commit.
 
 The checked-in Compose file binds the application to `127.0.0.1:3000`. Configure the reverse proxy for your environment. A proxy running in another container needs a suitable container-network configuration; the host's loopback address is not that container's loopback address.
 
@@ -65,4 +67,6 @@ docker compose up -d --build
 - Prometheus: `http://localhost:9090`
 - Loki: `http://localhost:3100`
 
-These ports bind to loopback in the supplied Compose file. Node Exporter and Promtail use host mounts intended for a Linux Docker host; review the Compose configuration before running the full monitoring stack on another platform.
+These ports bind to loopback in the supplied Compose file.
+
+The public `/infra` page reads from Prometheus over the Compose network, never from the browser. It sends only fixed queries, caches live values for 5 seconds and history for 60, and deliberately leaves out hostnames, IPs, ports, versions, kernel version and host uptime. A service shows as *unknown* until Prometheus has a scrape target for it. Node Exporter and Promtail use host mounts intended for a Linux Docker host; review the Compose configuration before running the full monitoring stack on another platform.

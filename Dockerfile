@@ -39,5 +39,15 @@ ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 ENV BLOG_DIR_PATH=/app/content/blog
 
+# Which commit this image was built from, for /infra. .git is not in the build
+# context, so scripts/deploy.sh passes these in. Declared last so a new commit
+# only invalidates this layer, never the npm install or the Next.js build.
+ARG GIT_SHA=""
+ARG GIT_SUBJECT=""
+ARG GIT_COMMIT_TIME=""
+ENV GIT_SHA=$GIT_SHA \
+    GIT_SUBJECT=$GIT_SUBJECT \
+    GIT_COMMIT_TIME=$GIT_COMMIT_TIME
+
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["node", "server.js"]

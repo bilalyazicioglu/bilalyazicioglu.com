@@ -4,6 +4,8 @@ import { isAdminRequestAllowed, isSessionAuthorized } from "@/lib/admin-gate";
 import { getAdminConfig, timingSafeCompare } from "@/lib/admin-auth";
 import { siteConfig } from "@/site.config";
 import { TINCAN_URL, isTincanHost } from "@/lib/tincan-host";
+import { httpRequests } from "@/lib/metrics";
+import { INFRA_API_PATH } from "@/lib/infra-types";
 
 /** The one host every page declares as its canonical — see `siteConfig.url`. */
 const CANONICAL_HOST = new URL(siteConfig.url).host;
@@ -29,10 +31,17 @@ export function proxy(request: NextRequest) {
 
   console.log(`[access] ip=${ip} method=${method} path=${path} ua=${ua}`);
 
+  const host = (request.headers.get("host") ?? "").toLowerCase().split(":")[0];
+
+  // /infra polls its own API every few seconds; counting that would make an
+  // open tab look like traffic on the very page that reports it.
+  if (path !== INFRA_API_PATH) {
+    httpRequests.inc({ site: isTincanHost(host) ? "tincan" : "main" });
+  }
+
   // A page must live at exactly one address. www and the apex serve the same
   // app, so send www to the apex instead of letting search engines collect two
   // copies of every URL. Tailnet hostnames are untouched — they never match.
-  const host = (request.headers.get("host") ?? "").toLowerCase().split(":")[0];
   if (host === `www.${CANONICAL_HOST}`) {
     return NextResponse.redirect(
       new URL(`${request.nextUrl.pathname}${request.nextUrl.search}`, siteConfig.url),

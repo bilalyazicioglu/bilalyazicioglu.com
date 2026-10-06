@@ -68,6 +68,7 @@ const PAGES = [
   { name: "about", href: "/about", about: "Who I am, CV, experience" },
   { name: "projects", href: "/projects", about: "Everything I have shipped" },
   { name: "blog", href: "/blog", about: "Writing" },
+  { name: "infra", href: "/infra", about: "Live stats from the machine serving this site" },
 ];
 
 const line = (text: string, tone?: LineTone): OutputLine => ({ text, tone });

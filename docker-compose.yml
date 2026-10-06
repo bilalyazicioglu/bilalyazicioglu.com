@@ -4,6 +4,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      # Set by scripts/deploy.sh; empty when building by hand, and /infra then
+      # shows no commit rather than a wrong one.
+      args:
+        GIT_SHA: ${GIT_SHA:-}
+        GIT_SUBJECT: ${GIT_SUBJECT:-}
+        GIT_COMMIT_TIME: ${GIT_COMMIT_TIME:-}
     # Nothing should be able to talk to this port directly: the admin gate
     # trusts headers that only a reverse proxy or `tailscale serve` can be
     # relied on to set, so whoever can connect can forge their way into /admin.
@@ -38,6 +44,8 @@ services:
     image: prom/node-exporter:v1.8.2
     command:
       - --path.rootfs=/host
+      # CPU model for /infra (node_cpu_info).
+      - --collector.cpu.info
     pid: host
     restart: unless-stopped
     volumes:

@@ -6,6 +6,7 @@ import {
 } from "next/experimental/testing/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createSessionToken } from "@/lib/admin-auth";
+import { httpRequests } from "@/lib/metrics";
 import { config, proxy } from "./proxy";
 
 function run(url: string, headers: Record<string, string> = {}) {
@@ -127,6 +128,25 @@ describe("admin surface", () => {
       "cf-connecting-ip": "203.0.113.7",
     });
     expect(res.status).toBe(404);
+  });
+});
+
+describe("request counter", () => {
+  const count = async (site: string) =>
+    (await httpRequests.get()).values.find((v) => v.labels.site === site)?.value ?? 0;
+
+  it("counts requests per site", async () => {
+    const [main, tincan] = [await count("main"), await count("tincan")];
+    run("https://bilalyazicioglu.com/blog");
+    run("https://tincan.rs/");
+    expect(await count("main")).toBe(main + 1);
+    expect(await count("tincan")).toBe(tincan + 1);
+  });
+
+  it("does not count /infra polling its own API", async () => {
+    const before = await count("main");
+    run("https://bilalyazicioglu.com/api/infra");
+    expect(await count("main")).toBe(before);
   });
 });
 

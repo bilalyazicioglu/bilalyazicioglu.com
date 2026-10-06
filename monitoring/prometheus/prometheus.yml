@@ -11,3 +11,20 @@ scrape_configs:
   - job_name: node
     static_configs:
       - targets: ["node-exporter:9100"]
+
+  # Scraped so /infra can show each service as up or down.
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: grafana
+    static_configs:
+      - targets: ["grafana:3000"]
+
+  - job_name: loki
+    static_configs:
+      - targets: ["loki:3100"]
+
+  - job_name: promtail
+    static_configs:
+      - targets: ["promtail:9080"]

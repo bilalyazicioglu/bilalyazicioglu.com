@@ -38,6 +38,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 0.8,
     },
+    {
+      url: `${baseUrl}/infra`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.5,
+    },
   ];
 
   // Dynamic blog post pages
