@@ -11,7 +11,8 @@ clients:
 scrape_configs:
   - job_name: docker
     docker_sd_configs:
-      - host: unix:///var/run/docker.sock
+      # Through the read-only proxy in docker-compose.yml, never the raw socket.
+      - host: tcp://docker-socket-proxy:2375
         refresh_interval: 5s
     relabel_configs:
       # SADECE blog konteynerinin loglarını al (Diğer eski konteynerleri yoksay)

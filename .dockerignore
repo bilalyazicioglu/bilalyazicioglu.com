@@ -7,5 +7,4 @@ docker-compose.yml
 npm-debug.log
 README.md
 monitoring
-promtail-config.yml
 scripts

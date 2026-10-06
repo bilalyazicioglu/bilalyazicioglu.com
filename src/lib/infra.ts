@@ -8,8 +8,9 @@
  * seconds, history and specs for a minute — so a thousand open tabs cost
  * Prometheus the same as one. Failures are cached too, for the same reason.
  *
- * Deliberately absent: hostnames, IPs, ports, image versions, kernel version
- * and host uptime. The last two say how long ago the machine was patched.
+ * Deliberately absent: hostnames, IPs, ports, kernel version and host uptime.
+ * The last two say how long ago the machine was patched. Image versions are
+ * left off the page too, though the public repo pins them anyway.
  */
 
 import type { InfraData, Series, ServiceStatus } from "./infra-types";

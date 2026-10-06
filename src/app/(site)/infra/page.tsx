@@ -30,8 +30,8 @@ export default async function InfraPage() {
     <>
       <PageHeader eyebrow="Infrastructure · live" titleLines={["THIS_", "MACHINE"]} backHref="/" backLabel="Back to home">
         <p className="max-w-xl text-sm leading-relaxed text-ink/70">
-          This site isn&apos;t on a cloud platform. It runs in Docker on a small server in my room in
-          Istanbul. The server dials out to Cloudflare through a tunnel, so visitors never connect to
+          This site isn&apos;t on a cloud platform. It runs in Docker on a small server in my homelab
+          in Istanbul. The server dials out to Cloudflare through a tunnel, so visitors never connect to
           it directly. Everything below is read live from the Prometheus that watches it.
         </p>
       </PageHeader>
@@ -48,10 +48,11 @@ export default async function InfraPage() {
       <section className="px-4 py-8 sm:px-6">
         <p className="mb-3 font-ui text-xs font-bold uppercase tracking-wider text-accent">Left out on purpose</p>
         <p className="max-w-2xl text-sm leading-relaxed text-ink/70">
-          No IP addresses, hostnames, ports or software versions, and no host uptime or kernel
-          version: together they would tell anyone how long ago the machine was patched. The numbers
-          come from fixed queries cached for a few seconds, so this page can&apos;t be used to ask
-          Prometheus anything else, or to load it.
+          No IP addresses, hostnames or ports, and no host uptime or kernel version: together they
+          would tell anyone how long ago the machine was patched. The code and its pinned versions are
+          public anyway — the commit above links to them — so hiding those would only be obscurity.
+          The numbers come from fixed queries cached for a few seconds, so this page can&apos;t be used
+          to ask Prometheus anything else, or to load it.
         </p>
       </section>
     </>

@@ -15,6 +15,8 @@ For local development, copy `.env.example` to `.env.local`. For Docker Compose, 
 | `BLOG_DIR_PATH` | Optional content directory override; Compose sets `/app/content/blog` |
 | `ADMIN_TAILNET_HOST` | Expected hostname for the optional Tailnet access path |
 | `ADMIN_TAILSCALE_LOGIN` | Optional allowed Tailnet login identity |
+| `CLOUDFLARE_TUNNEL_TOKEN` | Token for the `cloudflared` service; required by Compose |
+| `GRAFANA_ADMIN_PASSWORD` | Grafana admin password; required by Compose, with no default |
 | `PROMETHEUS_URL` | Where `/infra` reads metrics; defaults to `http://prometheus:9090` on the Compose network |
 
 Generate a session secret with:
@@ -41,7 +43,9 @@ scripts/deploy.sh
 
 It pulls `main`, rebuilds the blog image with the commit's SHA, subject and time baked in (shown on `/infra`), recreates the exporters if their configuration changed, reloads Prometheus's config, and then waits until `/api/infra` reports the new commit. If that check fails, it prints the last log lines and exits non-zero. A plain `docker compose up -d --build blog` still works, but `/infra` then shows no commit.
 
-The checked-in Compose file binds the application to `127.0.0.1:3000`. Configure the reverse proxy for your environment. A proxy running in another container needs a suitable container-network configuration; the host's loopback address is not that container's loopback address.
+Public traffic reaches the app through the `cloudflared` service, which dials out to Cloudflare and talks to the app over the Compose network; tunnel routes in the Cloudflare dashboard point at `http://blog:3000`. The app's port is bound to `127.0.0.1:3000` only, for `tailscale serve` on the host. Do not publish it more widely, including from a `docker-compose.override.yml`: the admin gate trusts headers that anyone who can reach the port could forge.
+
+Promtail discovers containers through `docker-socket-proxy`, which allows only read-only container and network lookups, rather than through the Docker socket itself.
 
 ### Automatic deploys
 

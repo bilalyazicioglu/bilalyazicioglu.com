@@ -10,15 +10,14 @@ services:
         GIT_SHA: ${GIT_SHA:-}
         GIT_SUBJECT: ${GIT_SUBJECT:-}
         GIT_COMMIT_TIME: ${GIT_COMMIT_TIME:-}
-    # Nothing should be able to talk to this port directly: the admin gate
-    # trusts headers that only a reverse proxy or `tailscale serve` can be
-    # relied on to set, so whoever can connect can forge their way into /admin.
+    # Nothing else should be able to talk to this port: the admin gate trusts
+    # headers that only cloudflared or `tailscale serve` can be relied on to
+    # set, so whoever can connect can forge their way into /admin.
     #
-    # Loopback is the right default, but it assumes the proxy runs on this same
-    # host. On the homeserver it does not — public traffic arrives through a
-    # cloudflared *container*, which cannot see the host's loopback — so that
-    # host widens the binding from a git-ignored docker-compose.override.yml.
-    # Change it there. Editing this file on a server aborts the next `git pull`.
+    # Public traffic arrives through the cloudflared service below, over the
+    # compose network (http://blog:3000). This loopback binding exists only for
+    # `tailscale serve` on the host. Never widen it — not here, and not from a
+    # docker-compose.override.yml on the server.
     ports:
       - "127.0.0.1:3000:3000"
     environment:
@@ -81,7 +80,9 @@ services:
       - "127.0.0.1:3001:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      # No fallback: a missing password stops compose rather than starting
+      # Grafana as admin/admin.
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:?set GRAFANA_ADMIN_PASSWORD in .env}
       - GF_USERS_ALLOW_SIGN_UP=false
     volumes:
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
@@ -106,10 +107,45 @@ services:
     restart: unless-stopped
     command: -config.file=/etc/promtail/config.yml
     volumes:
-      - ./promtail-config.yml:/etc/promtail/config.yml:ro
+      # A directory, like Prometheus's, so a pulled config change is visible.
+      - ./monitoring/promtail:/etc/promtail:ro
       - ./monitoring/geolite2:/data/geolite2:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
-      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - docker-socket-proxy
+    networks:
+      - monitoring
+
+  # Promtail only needs to list containers to find the blog's log file; it
+  # reads the file itself from the read-only mount above. The raw Docker socket
+  # would hand it — and anyone who took it over — root on the host, so it goes
+  # through this proxy, which answers read-only container and network lookups
+  # and refuses everything else.
+  docker-socket-proxy:
+    image: tecnativa/docker-socket-proxy:v0.5.0
+    restart: unless-stopped
+    environment:
+      - CONTAINERS=1
+      - NETWORKS=1
+      - POST=0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - monitoring
+    expose:
+      - "2375"
+
+  # The public door. It dials out to Cloudflare, so the host needs no open
+  # port; tunnel routes (Zero Trust dashboard, tunnel "portfolio") point at
+  # http://blog:3000 on this network.
+  cloudflared:
+    image: cloudflare/cloudflared:2026.10.0
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN:?set CLOUDFLARE_TUNNEL_TOKEN in .env}
+    depends_on:
+      - blog
     networks:
       - monitoring
 

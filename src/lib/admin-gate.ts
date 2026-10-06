@@ -6,17 +6,16 @@
  * themselves; this module only tells apart the two callers that are supposed to
  * be the only ones able to connect at all:
  *
- *   1. the public door — a reverse proxy fronted by Cloudflare
- *   2. `tailscale serve`, reachable only from inside the tailnet
+ *   1. the public door — the cloudflared container, over the compose network
+ *   2. `tailscale serve` on the host, through the loopback-only port binding
  *
  * Anything arriving through (1) is treated as anonymous and gets a 404 for
  * admin routes.
  *
  * That holds only as far as the deployment keeps the container port out of
- * reach (see docker-compose.yml). Where the port is published more widely — as
- * it is on the homeserver, whose cloudflared runs in a container and so cannot
- * use the host's loopback — everyone on that network can pose as (2), and this
- * gate is doing less than it looks.
+ * reach (see docker-compose.yml). If the port is ever published beyond
+ * loopback, everyone on that network can pose as (2), and this gate is doing
+ * less than it looks.
  *
  * It fails closed: if the expected configuration is missing in production,
  * admin access is denied rather than granted.
@@ -27,7 +26,7 @@ import { isValidAdminSessionFromCookies } from "./admin-auth";
 type HeaderSource = { get(name: string): string | null };
 type CookieSource = { get(name: string): { value: string } | undefined };
 
-/** Injected by `tailscale serve` for tailnet requests; stripped by nginx on the public path. */
+/** Injected by `tailscale serve` for tailnet requests; cloudflared never sets it. */
 const IDENTITY_HEADER = "tailscale-user-login";
 
 /** Present on every request Cloudflare proxies. Its presence means "came from the public door". */

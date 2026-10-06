@@ -32,9 +32,10 @@ main() {
   # "deploy" silently ships stale code.
   docker compose up -d --build blog
 
-  # Recreate exporters whose command changed, then have Prometheus re-read its
-  # config file (a bind mount, so compose doesn't notice edits to it).
-  docker compose up -d node-exporter prometheus
+  # Bring the rest of the stack in line with docker-compose.yml: start new
+  # services, recreate changed ones. Then have Prometheus re-read its config,
+  # whose edits compose can't see.
+  docker compose up -d
   docker compose kill -s SIGHUP prometheus >/dev/null
 
   echo "waiting for ${GIT_SHA:0:7} to serve..."

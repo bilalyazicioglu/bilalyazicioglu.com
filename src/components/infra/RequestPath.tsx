@@ -7,7 +7,7 @@ export function RequestPath({ colo }: { colo: string | null }) {
     { name: "You", detail: "browser" },
     { name: "Cloudflare", detail: colo ? `edge · ${colo}` : "edge" },
     { name: "Tunnel", detail: "dialled out from home" },
-    { name: "Homeserver", detail: "Istanbul · my room" },
+    { name: "Homeserver", detail: "homelab · Istanbul" },
     { name: "Docker", detail: "compose network" },
     { name: "Next.js", detail: "rendered this page" },
   ];
