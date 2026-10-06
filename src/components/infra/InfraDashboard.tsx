@@ -150,7 +150,7 @@ export function InfraDashboard({ initial }: { initial: InfraData }) {
           <Tile
             label="Memory"
             value={live.memoryPercent === null ? "—" : pct(live.memoryPercent)}
-            note={specs.memoryBytes === null ? undefined : `of ${formatBytes(specs.memoryBytes)}`}
+            note={specs.memoryBytes === null ? undefined : `of ${formatBytes(specs.memoryBytes)} usable`}
             meter={live.memoryPercent}
             history={history?.memory}
             format={pct}
@@ -179,9 +179,11 @@ export function InfraDashboard({ initial }: { initial: InfraData }) {
           <dl className="grid grid-cols-[110px_1fr] gap-x-4 gap-y-3">
             {[
               ["CPU", specs.cpuModel ? `${specs.cpuModel}${specs.cores ? ` · ${specs.cores} threads` : ""}` : null],
-              ["Memory", specs.memoryBytes === null ? null : formatBytes(specs.memoryBytes)],
+              // What Linux can use — the integrated GPU's share of RAM is not in it.
+              ["Memory", specs.memoryBytes === null ? null : `${formatBytes(specs.memoryBytes)} usable`],
+              // The root filesystem, which can be smaller than the physical disk.
               [
-                "Disk",
+                "Root volume",
                 specs.diskBytes === null
                   ? null
                   : `${formatBytes(specs.diskBytes)}${live.diskPercent === null ? "" : ` · ${pct(live.diskPercent)} used`}`,
