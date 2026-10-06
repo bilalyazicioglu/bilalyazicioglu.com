@@ -1,5 +1,7 @@
 # bilalyazicioglu.com
 
+[![CI](https://github.com/bilalyazicioglu/bilalyazicioglu.com/actions/workflows/ci.yml/badge.svg)](https://github.com/bilalyazicioglu/bilalyazicioglu.com/actions/workflows/ci.yml)
+
 My personal website, bilingual technical blog, and interactive terminal.
 
 [Visit the website](https://www.bilalyazicioglu.com)
@@ -37,6 +39,8 @@ Open [localhost:3000](http://localhost:3000). The public site runs without an en
 | `npm run build` | Create a production build |
 | `npm start` | Serve the production build |
 | `npm run lint` | Run ESLint |
+| `npm run typecheck` | Generate route types and run the TypeScript compiler |
+| `npm test` | Run the Vitest suite once (`npm run test:watch` to watch) |
 
 ## Structure
 
