@@ -13,7 +13,9 @@ set -euo pipefail
 # merge below rewrites this very file, and bash would otherwise go on reading
 # the new version from the middle.
 main() {
-  cd "$(git rev-parse --show-toplevel)"
+  # Work from the checkout this script lives in, not from the caller's
+  # directory: the GitHub runner starts in its own work folder.
+  cd "$(dirname "$(readlink -f "$0")")/.."
 
   if [ $# -gt 0 ]; then
     # Fast-forward to the tested commit, not to whatever main is by now: a

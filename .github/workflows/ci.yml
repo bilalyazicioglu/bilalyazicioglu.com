@@ -5,10 +5,11 @@ on:
     branches: [main]
   pull_request:
 
-# A newer push to a PR makes the older run pointless; on main, every commit
-# runs to completion so a deploy is never cancelled halfway through.
+# A newer push to a PR makes the older run pointless, so PR runs share a group
+# and cancel each other. Pushes to main get a group per commit: they never
+# wait on each other, and the deploy job below serialises itself.
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ${{ github.event_name == 'pull_request' && format('ci-pr-{0}', github.ref) || format('ci-{0}', github.sha) }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
@@ -63,4 +64,5 @@ jobs:
       cancel-in-progress: false
     steps:
       - name: Deploy the commit CI tested
-        run: "$HOME/portfolio/scripts/deploy.sh ${{ github.sha }}"
+        working-directory: /home/bilal/portfolio
+        run: scripts/deploy.sh ${{ github.sha }}
