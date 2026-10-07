@@ -91,8 +91,10 @@ export const leadership: LeadershipItem[] = [
 ];
 
 export const skills = {
-  "Programming Languages": ["Java", "Go", "Rust", "Python", "C"],
-  "Frameworks & Databases": ["Spring Boot", "REST APIs", "PostgreSQL", "MySQL"],
-  "Tools & DevOps": ["Docker", "Git", "GitHub Actions", "Linux (Bash)"],
-  "Spoken Languages": ["Turkish (Native)", "English (B2–C1)", "Spanish (A1–A2)"],
+  Languages: ["Rust", "Go", "Java", "Python", "C", "SQL", "TypeScript", "JavaScript"],
+  "Systems & Networking": ["Linux", "TCP/IP", "DNS", "HTTP/TLS", "QUIC", "P2P Networking", "SSH"],
+  "Infrastructure & Observability": ["Docker", "GitHub Actions", "Nginx", "Cloudflare", "Tailscale", "Prometheus", "Grafana", "Loki"],
+  "Backend & Data": ["Spring Boot", "Node.js/Express", "REST APIs", "PostgreSQL", "MySQL", "MongoDB", "Redis"],
+  Web: ["React", "Next.js", "Three.js"],
+  "Spoken Languages": ["Turkish (Native)", "English (Proficient)", "Spanish (Elementary)"],
 };

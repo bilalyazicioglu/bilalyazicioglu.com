@@ -70,7 +70,7 @@
 
 % --- SUMMARY ---
 \section{Summary}
-\small Computer Engineering student at Marmara University, completed an Erasmus+ exchange at Universidad de Oviedo. I build systems end to end and ship them: a multi-tenant AR platform with an SDK published on npm, a peer-to-peer voice chat in \textbf{Rust}, and a self-hosted \textbf{Next.js} site behind my own Docker, monitoring and CI/CD stack. Comfortable across \textbf{Java, Go, Rust, TypeScript and Python}, with tests and observability as standard parts of the work.
+\small Computer Engineering student focused on systems, infrastructure, and backend engineering. I build and operate software end to end, from a peer-to-peer voice and text system in \textbf{Rust/QUIC} to self-hosted \textbf{Docker/Nginx} services with CI/CD and observability. Comfortable with \textbf{Linux}, networking, \textbf{Rust}, \textbf{Go}, containers, and monitoring, with hands-on experience shipping and maintaining open-source and backend systems.
 
 % --- EDUCATION ---
 \section{Education}
@@ -82,24 +82,24 @@
 % --- PROJECTS ---
 \section{Selected Projects}
   \resumeSubHeadingListStart
-    \resumeProject{ARpoly --- Augmented Reality API Platform}
-      {Node.js, Express, MongoDB/GridFS, Redis + BullMQ, React, Three.js, Swift, Python}{2026}
+    \resumeProject{tincan --- Serverless P2P Voice \& Text Chat (150+ GitHub Stars)}
+      {Rust, iroh/QUIC, Opus, ratatui \textbullet\ \href{https://tincan.rs}{\underline{tincan.rs}} \textbullet\ \href{https://github.com/bilalyazicioglu/tincan-cli}{\underline{GitHub}}}{2026}
       \resumeItemListStart
-        \resumeItem{Multi-tenant REST platform that turns a phone video of an object into a real-scale 3D model (GLB + USDZ), so customers view products in AR with no app install. 280+ automated tests, GitHub Actions CI/CD to GHCR, Prometheus/Grafana.}
-        \resumeItem{Client SDK published on npm as \href{https://www.npmjs.com/package/@arpoly/react}{\underline{@arpoly/react}} (Apache-2.0); reconstruction is pluggable behind one interface, wrapping Apple's PhotogrammetrySession and a CUDA Gaussian-splat service.}
-      \resumeItemListEnd
-
-    \resumeProject{tincan --- Serverless Terminal Voice Chat}
-      {Rust, iroh/QUIC, Opus, ratatui \textbullet\ \href{https://github.com/bilalyazicioglu/tincan-cli}{\underline{github.com/bilalyazicioglu/tincan-cli}}}{2026}
-      \resumeItemListStart
-        \resumeItem{Terminal voice chat with no central server: the host generates an invite code and peers join from anywhere, with no port forwarding, VPN or accounts.}
-        \resumeItem{Audio travels as a peer-to-peer mesh of QUIC datagrams (Opus, per-peer jitter buffering) behind an Argon2id handshake. 93 automated tests, including integration tests over real QUIC endpoints.}
+        \resumeItem{Built and maintain an open-source terminal communication system with no central voice server, distributed through Homebrew, npm, Cargo, and prebuilt binaries.}
+        \resumeItem{Designed a coordinator-based room protocol and direct peer audio mesh over QUIC datagrams, with Opus audio, jitter buffering, encrypted handshakes, relay fallback, and 93 automated/integration tests.}
       \resumeItemListEnd
 
     \resumeProject{Personal Portfolio \& Monitoring Stack}
-      {Next.js, TypeScript, MDX, Docker, Nginx, Prometheus/Loki/Grafana \textbullet\ \href{https://bilalyazicioglu.com}{\underline{bilalyazicioglu.com}}}{2026}
+      {Next.js, TypeScript, Docker, Nginx, Cloudflare, Tailscale, Prometheus/Loki/Grafana \textbullet\ \href{https://bilalyazicioglu.com}{\underline{bilalyazicioglu.com}}}{2026}
       \resumeItemListStart
-        \resumeItem{Self-hosted in Docker behind Nginx and Cloudflare, with metrics and logs on Grafana dashboards. The in-browser MDX editor is reachable only over a private Tailscale network, so the admin boundary is the network itself, not a login form.}
+        \resumeItem{Self-host and operate a containerized web stack behind Nginx and Cloudflare Tunnel, with private Tailscale access, CI/CD, and Prometheus/Loki/Grafana for metrics, logs, and operational monitoring.}
+      \resumeItemListEnd
+
+    \resumeProject{ARpoly --- Augmented Reality API Platform}
+      {Node.js, Express, MongoDB/GridFS, Redis + BullMQ, React, Three.js, Swift, Python}{2026}
+      \resumeItemListStart
+        \resumeItem{Built a multi-tenant REST platform that turns phone video into 3D models (GLB + USDZ), with 280+ automated tests, GitHub Actions CI/CD to GHCR, and Prometheus/Grafana monitoring.}
+        \resumeItem{Published the \href{https://www.npmjs.com/package/@arpoly/react}{\underline{@arpoly/react}} client SDK; designed a modular backend around Apple PhotogrammetrySession and CUDA Gaussian splatting.}
       \resumeItemListEnd
   \resumeSubHeadingListEnd
 
@@ -122,13 +122,13 @@
 \section{Skills}
   \begin{itemize}[leftmargin=0.15in, label={}, topsep=5pt]
     \small{\item{
-      \textbf{Languages}{: Java, Go, Rust, Python, C, SQL, TypeScript, JavaScript} \\ \vspace{3pt}
+      \textbf{Languages}{: Rust, Go, Java, Python, C, SQL, TypeScript, JavaScript} \\ \vspace{3pt}
+      \textbf{Systems \& Networking}{: Linux, TCP/IP, DNS, HTTP/TLS, QUIC, P2P Networking, SSH} \\ \vspace{3pt}
+      \textbf{Infrastructure \& Observability}{: Docker, GitHub Actions, Nginx, Cloudflare, Tailscale, Prometheus, Grafana, Loki} \\ \vspace{3pt}
       \textbf{Backend \& Data}{: Spring Boot, Node.js/Express, REST APIs, PostgreSQL, MySQL, MongoDB, Redis} \\ \vspace{3pt}
-      \textbf{Frontend \& DevOps}{: React, Next.js, Three.js, Tailwind CSS, Docker, GitHub Actions, Nginx, Cloudflare, Prometheus/Grafana/Loki} \\ \vspace{3pt}
-      \textbf{Spoken}{: Turkish (Native), English (Proficient), Spanish (Elementary)}
+      \textbf{Web}{: React, Next.js, Three.js \hspace{2em} \textbf{Spoken}{: Turkish (Native), English (Proficient), Spanish (Elementary)}}
     }}
   \end{itemize}
-
 % --- LEADERSHIP & ACTIVITIES ---
 \section{Leadership \& Activities}
   \begin{itemize}[leftmargin=0.15in, label={}, topsep=5pt]
