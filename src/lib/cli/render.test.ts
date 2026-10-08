@@ -134,8 +134,15 @@ describe("pages", () => {
     expect(text).toContain("ARpoly");
     expect(text).toContain("an AMD Ryzen 3 3200U");
     expect(text).toContain("cpu 12%  ·  mem 41%  ·  47°C  ·  6.5 req/min");
-    expect(text).toContain("build c4ea4b2 fix(ci): run deploys from the checkout · committed 3h 0m ago");
+    expect(text).toContain("build c4ea4b2 · committed 3h 0m ago\n        fix(ci): run deploys from the checkout\n");
     expect(text).toContain("curl bilalyazicioglu.com/infra");
+  });
+
+  it("keeps a long commit message inside 80 columns", () => {
+    const subject = "feat(cli): a commit message that goes on and on well past where any terminal would wrap it";
+    const long = { ...infra, deploy: { ...infra.deploy, subject } };
+    expect(widest(renderHome({ projects, posts, infra: long }, color))).toBeLessThanOrEqual(80);
+    expect(widest(renderInfra(long, { ...color, colo: null }))).toBeLessThanOrEqual(80);
   });
 
   it("home still renders, without numbers, when Prometheus is down", () => {

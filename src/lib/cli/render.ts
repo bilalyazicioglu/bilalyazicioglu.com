@@ -153,7 +153,9 @@ function buildLine(p: Palette, infra: InfraData, now: number): string | null {
   const { sha, subject, committedAt } = infra.deploy;
   if (!sha) return null;
   const when = committedAt === null ? "" : p.dim(` · committed ${ago(committedAt * 1000, now)}`);
-  return `${INDENT}build ${p.accent(sha.slice(0, 7))}${subject ? ` ${subject}` : ""}${when}`;
+  const head = `${INDENT}build ${p.accent(sha.slice(0, 7))}${when}`;
+  // The subject gets its own line: commit messages run long.
+  return subject ? `${head}\n${INDENT}      ${truncate(subject, WIDTH - 6)}` : head;
 }
 
 /** Cut to `width` columns, with an ellipsis when something was cut. */
@@ -300,7 +302,12 @@ export function renderInfra(infra: InfraData, { color, now, colo }: RenderOption
   lines.push(...heading(p, "Running build"));
   lines.push(
     ...facts([
-      ["commit", deploy.sha ? `${p.accent(deploy.sha.slice(0, 7))}${deploy.subject ? ` ${deploy.subject}` : ""}` : null],
+      [
+        "commit",
+        deploy.sha
+          ? `${p.accent(deploy.sha.slice(0, 7))}${deploy.subject ? ` ${truncate(deploy.subject, WIDTH - 13 - 8)}` : ""}`
+          : null,
+      ],
       // The link to the exact source that is running, under the commit it names.
       ...(deploy.sha ? [["", p.dim(bare(`${REPO}/commit/${deploy.sha}`))] as [string, string]] : []),
       ["committed", deploy.committedAt === null ? null : ago(deploy.committedAt * 1000, now)],
