@@ -131,6 +131,47 @@ describe("admin surface", () => {
   });
 });
 
+describe("terminal edition", () => {
+  const curl = { "user-agent": "curl/8.7.1", accept: "*/*" };
+
+  it.each([
+    ["https://bilalyazicioglu.com/", "https://bilalyazicioglu.com/cli"],
+    ["https://bilalyazicioglu.com/infra", "https://bilalyazicioglu.com/cli/infra"],
+    ["https://bilalyazicioglu.com/projects", "https://bilalyazicioglu.com/cli/projects"],
+    ["https://bilalyazicioglu.com/blog?plain", "https://bilalyazicioglu.com/cli/blog?plain"],
+    ["https://tincan.rs/", "https://tincan.rs/cli/tincan"],
+  ])("serves curl %s from %s", (from, to) => {
+    expect(getRewrittenUrl(run(from, curl))).toBe(to);
+  });
+
+  it("leaves browsers on the real pages", () => {
+    const browser = { "user-agent": "Mozilla/5.0 (Macintosh) Safari/605.1.15" };
+    expect(passesThrough(run("https://bilalyazicioglu.com/", browser))).toBe(true);
+    expect(getRewrittenUrl(run("https://tincan.rs/", browser))).toBe("https://tincan.rs/tincan");
+  });
+
+  it("gives curl the HTML when it asks for HTML", () => {
+    const res = run("https://bilalyazicioglu.com/", { ...curl, accept: "text/html" });
+    expect(passesThrough(res)).toBe(true);
+  });
+
+  it("only takes over pages that have a text version", () => {
+    expect(passesThrough(run("https://bilalyazicioglu.com/about", curl))).toBe(true);
+    expect(passesThrough(run("https://bilalyazicioglu.com/blog/xteink-x4", curl))).toBe(true);
+    expect(getRewrittenUrl(run("https://tincan.rs/tr", curl))).toBe("https://tincan.rs/tincan/tr");
+  });
+
+  it("still redirects www first, so curl -L lands on the text version", () => {
+    const res = run("https://www.bilalyazicioglu.com/", curl);
+    expect(res.status).toBe(301);
+    expect(getRedirectUrl(res)).toBe("https://bilalyazicioglu.com/");
+  });
+
+  it("keeps the admin surface hidden from curl too", () => {
+    expect(run("https://bilalyazicioglu.com/admin", curl).status).toBe(404);
+  });
+});
+
 describe("request counter", () => {
   const count = async (site: string) =>
     (await httpRequests.get()).values.find((v) => v.labels.site === site)?.value ?? 0;

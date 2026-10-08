@@ -218,6 +218,11 @@ export async function getInfra(): Promise<InfraData> {
   };
 }
 
+/** cf-ray ends in the IATA code of the Cloudflare data centre, e.g. "…-IST". */
+export function cloudflareColo(ray: string | null): string | null {
+  return ray?.match(/-([A-Z]{3})$/)?.[1] ?? null;
+}
+
 /** Test hook: forget cached answers. */
 export function resetInfraCache() {
   delete globalForInfra.__infraCache;

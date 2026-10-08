@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { PageHeader } from "@/components/PageHeader";
 import { InfraDashboard } from "@/components/infra/InfraDashboard";
 import { RequestPath } from "@/components/infra/RequestPath";
-import { getInfra } from "@/lib/infra";
+import { cloudflareColo, getInfra } from "@/lib/infra";
 import { siteConfig } from "@/site.config";
 
 export const dynamic = "force-dynamic";
@@ -16,11 +16,6 @@ export const metadata: Metadata = {
     canonical: `${siteConfig.url}/infra`,
   },
 };
-
-/** cf-ray ends in the IATA code of the Cloudflare data centre, e.g. "…-IST". */
-function cloudflareColo(ray: string | null): string | null {
-  return ray?.match(/-([A-Z]{3})$/)?.[1] ?? null;
-}
 
 export default async function InfraPage() {
   const [data, requestHeaders] = await Promise.all([getInfra(), headers()]);

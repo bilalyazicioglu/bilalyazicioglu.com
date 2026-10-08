@@ -6,6 +6,7 @@ import { siteConfig } from "@/site.config";
 import { TINCAN_URL, isTincanHost } from "@/lib/tincan-host";
 import { httpRequests } from "@/lib/metrics";
 import { INFRA_API_PATH } from "@/lib/infra-types";
+import { CLI_PAGES, CLI_TINCAN_PAGE, wantsText } from "@/lib/cli/client";
 
 /** The one host every page declares as its canonical — see `siteConfig.url`. */
 const CANONICAL_HOST = new URL(siteConfig.url).host;
@@ -60,6 +61,9 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL(`${path}${search}`, TINCAN_URL), 301);
   }
   if (isTincanHost(host)) {
+    if (path === "/" && wantsText(request.headers)) {
+      return NextResponse.rewrite(new URL(`${CLI_TINCAN_PAGE}${search}`, request.url));
+    }
     if (path === "/") {
       return NextResponse.rewrite(new URL(`/tincan${search}`, request.url));
     }
@@ -86,6 +90,12 @@ export function proxy(request: NextRequest) {
   }
   if (host === CANONICAL_HOST && (path === "/tincan" || path === "/tincan/tr")) {
     return NextResponse.redirect(new URL(`${path.slice("/tincan".length) || "/"}${search}`, TINCAN_URL), 301);
+  }
+
+  // `curl bilalyazicioglu.com` gets the terminal edition — see lib/cli/client.ts.
+  const cliPage = CLI_PAGES[path];
+  if (cliPage && wantsText(request.headers)) {
+    return NextResponse.rewrite(new URL(`${cliPage}${search}`, request.url));
   }
 
   // 1. Standard /admin is completely blocked and masked as 404 for public internet

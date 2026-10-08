@@ -12,6 +12,8 @@ export type Project = {
   category: ProjectCategory;
   badges: string[];
   description: string;
+  /** One or two sentences for tight spaces, like the terminal edition's home page. */
+  short?: string;
   href?: string;
   /** The source repository, when `href` points somewhere else (a project page). */
   repo?: string;
@@ -36,6 +38,8 @@ export const projects: Project[] = [
     tag: "AR",
     category: "Private",
     badges: ["Featured", "Live"],
+    short:
+      "Film an object with a phone; get a real-scale 3D model anyone can place on their table in AR, no app install. A multi-tenant API and React SDK, plus m3nu, a cafe-menu product built on top.",
     description:
       "One product in two halves. The platform is a sector-agnostic AR service: someone films an object with an ordinary phone camera, the server reconstructs it into a real-scale 3D model (GLB + USDZ) and hands it to the OS AR viewer, so a 30 cm pizza shows up 30 cm wide on the customer's own table — no app install, and no camera permission to view. It is sold as a multi-tenant REST API plus @arpoly/react, the client SDK published on npm. The other half is m3nu, the cafe vertical running on top of it: menus, categories, QR links and table orders with split payment, talking to the platform over HTTP with an API key exactly as an outside customer would — which is the point, because anything m3nu needs that a third party could not have is a bug in the platform.",
     href: "https://arpoly.com",
@@ -56,6 +60,8 @@ export const projects: Project[] = [
     category: "Open Source",
     badges: ["Live", "Team project"],
     live: true,
+    short:
+      "A full-stack strategy game: React, a Node.js users service and a Rust game engine, shipped through CI/CD. I wrote the game logic and the bots.",
     description:
       "A full-stack strategy game built for my Software Architecture course — React frontend, Node.js users service, and a Rust game engine, with bots, leaderboards, and a full CI/CD pipeline to production. I worked on game logic & bots.",
     href: "https://github.com/Arquisoft/yovi_en1b",
@@ -73,6 +79,8 @@ export const projects: Project[] = [
     category: "Open Source",
     badges: ["Live", "CLI", "P2P"],
     live: true,
+    short:
+      "Serverless voice chat in the terminal. No VPN, no port forwarding, no account: audio is a direct peer-to-peer mesh of QUIC datagrams.",
     description:
       "Serverless voice chat that lives in the terminal. Whoever starts it becomes the room's coordinator and hands out an invite code — friends join from anywhere with no VPN, no port forwarding and no account. Control traffic goes through the coordinator, but audio is a direct peer-to-peer mesh of QUIC datagrams, so the host's uplink never becomes the bottleneck.",
     href: "https://tincan.rs",

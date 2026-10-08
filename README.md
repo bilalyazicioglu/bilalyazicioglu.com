@@ -11,6 +11,8 @@ My personal website, bilingual technical blog, and interactive terminal.
 - Projects, writing, and a little more about me.
 - Turkish and English MDX posts, paired through translation metadata.
 - An interactive terminal for exploring the site.
+- A terminal edition: `curl bilalyazicioglu.com` (also `/infra`, `/projects`, `/blog`, and `curl tincan.rs`).
+- [/infra](https://bilalyazicioglu.com/infra): live numbers from the homeserver the site runs on.
 - A publishing studio with a live preview and image uploads.
 - Docker deployment and monitoring configuration.
 
