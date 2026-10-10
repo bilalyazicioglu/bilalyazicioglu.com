@@ -19,6 +19,7 @@ const infra: InfraData = {
   online: true,
   live: {
     cpuPercent: 12.4,
+    appCpuPercent: 0.6,
     memoryPercent: 41,
     loadPerCore: 0.31,
     temperatureC: 47,
@@ -155,6 +156,8 @@ describe("pages", () => {
   it("infra shows numbers, sparklines, services and the request path", () => {
     const text = pages.infra(plain);
     expect(text).toMatch(/cpu\s+12%\s+[▁-█]{49}/);
+    // The host figure includes the rest of the homelab; the site's share sits beside it.
+    expect(text).toMatch(/cpu\s+12%.*\n\s+this site\s+0\.6%\n/);
     expect(text).toContain("● up       Next.js app");
     expect(text).toContain("● down     Loki");
     expect(text).toContain("○ unknown  Grafana");

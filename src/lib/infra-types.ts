@@ -26,7 +26,10 @@ export type InfraData = {
   /** Whether Prometheus answered. Everything below it is null when it did not. */
   online: boolean;
   live: {
+    /** Whole machine, which runs more than this site. */
     cpuPercent: number | null;
+    /** This site's process alone, as a share of the whole machine. */
+    appCpuPercent: number | null;
     memoryPercent: number | null;
     loadPerCore: number | null;
     temperatureC: number | null;

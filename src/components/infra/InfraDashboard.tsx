@@ -12,6 +12,21 @@ const REPO = `https://github.com/${siteConfig.githubUsername}/bilalyazicioglu.co
 const pct = (v: number) => `${formatNumber(v)}%`;
 const celsius = (v: number) => `${formatNumber(v)}°C`;
 const perMinute = (v: number) => `${formatNumber(v, v < 10 ? 1 : 0)}/min`;
+/** Small shares get a decimal: "0.4%" says more than a rounded "0%". */
+const share = (v: number) => `${formatNumber(v, v < 10 ? 1 : 0)}%`;
+
+/**
+ * The CPU tile is the whole machine, and the machine runs more than this site,
+ * so the site's own share sits right under it — a spike to 90% shows at a
+ * glance whether the blog had anything to do with it.
+ */
+function cpuNote(app: number | null, load: number | null): string | undefined {
+  const parts = [
+    app === null ? null : `this site ${share(app)}`,
+    load === null ? null : `load ${formatNumber(load, 2)} per core`,
+  ].filter(Boolean);
+  return parts.length ? parts.join(" · ") : undefined;
+}
 
 /** Polls while the tab is visible; a hidden tab costs the server nothing. */
 function useLiveInfra(initial: InfraData) {
@@ -141,7 +156,7 @@ export function InfraDashboard({ initial }: { initial: InfraData }) {
           <Tile
             label="CPU"
             value={live.cpuPercent === null ? "—" : pct(live.cpuPercent)}
-            note={live.loadPerCore === null ? undefined : `load ${formatNumber(live.loadPerCore, 2)} per core`}
+            note={cpuNote(live.appCpuPercent, live.loadPerCore)}
             meter={live.cpuPercent}
             history={history?.cpu}
             format={pct}

@@ -33,6 +33,10 @@ const ROOT_FS = 'mountpoint="/",fstype!="rootfs"';
 const LIVE_QUERIES = {
   cpuPercent: CPU,
   memoryPercent: MEMORY,
+  // This site's own share of the same machine, on the same 0–100 scale: the
+  // host figure includes everything else the homelab runs, and on its own it
+  // reads as if the blog were the load.
+  appCpuPercent: '100 * sum(rate(process_cpu_seconds_total{job="blog"}[1m])) / count(node_cpu_seconds_total{mode="idle"})',
   loadPerCore: 'sum(node_load1) / count(node_cpu_seconds_total{mode="idle"})',
   temperatureC: TEMPERATURE,
   diskPercent: `100 * (1 - sum(node_filesystem_avail_bytes{${ROOT_FS}}) / sum(node_filesystem_size_bytes{${ROOT_FS}}))`,
@@ -196,6 +200,7 @@ export async function getInfra(): Promise<InfraData> {
     online: live !== null,
     live: {
       cpuPercent: live?.cpuPercent ?? null,
+      appCpuPercent: live?.appCpuPercent ?? null,
       memoryPercent: live?.memoryPercent ?? null,
       loadPerCore: live?.loadPerCore ?? null,
       temperatureC: live?.temperatureC ?? null,

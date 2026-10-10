@@ -37,6 +37,7 @@ function healthyHost(query: string, path: string): unknown {
     return vector(4, { model_name: "AMD Ryzen 3 3200U with Radeon Vega Mobile Gfx" });
   }
   if (query === "node_os_info") return vector(1, { name: "Ubuntu", version_id: "24.04.1" });
+  if (query.includes("process_cpu_seconds_total")) return vector(0.8);
   if (query.includes("node_cpu_seconds_total") && query.startsWith("100")) return vector(12.5);
   if (query.startsWith("count(node_cpu_seconds_total")) return vector(4);
   if (query.includes("MemTotal_bytes)") && !query.startsWith("100")) return vector(16 * 1024 ** 3);
@@ -62,6 +63,7 @@ describe("getInfra", () => {
 
     expect(data.online).toBe(true);
     expect(data.live.cpuPercent).toBe(12.5);
+    expect(data.live.appCpuPercent).toBe(0.8);
     expect(data.specs).toMatchObject({ cpuModel: "AMD Ryzen 3 3200U", cores: 4, os: "Ubuntu 24.04" });
     expect(data.services.find((s) => s.id === "loki")?.up).toBe(false);
     expect(data.services.find((s) => s.id === "blog")?.up).toBe(true);
@@ -106,6 +108,7 @@ describe("getInfra", () => {
 
     expect(data.online).toBe(false);
     expect(data.live.cpuPercent).toBeNull();
+    expect(data.live.appCpuPercent).toBeNull();
     expect(data.live.appMemoryBytes).toBeGreaterThan(0);
     expect(data.history).toBeNull();
     expect(data.services.every((s) => s.up === null)).toBe(true);

@@ -255,6 +255,8 @@ export function renderInfra(infra: InfraData, { color, now, colo }: RenderOption
     series ? p.accent(sparkline(series, { max, every: 2 })) : "";
   const rows: [string, string, string][] = [
     ["cpu", value(live.cpuPercent, pct), spark(history?.cpu, 100)],
+    // The host runs more than this site; its own share goes right under the total.
+    ["  this site", value(live.appCpuPercent, (n) => `${formatNumber(n, n < 10 ? 1 : 0)}%`), ""],
     ["memory", value(live.memoryPercent, pct), spark(history?.memory, 100)],
     ["temperature", value(live.temperatureC, (n) => `${formatNumber(n)}°C`), spark(history?.temperature)],
     [
@@ -268,7 +270,7 @@ export function renderInfra(infra: InfraData, { color, now, colo }: RenderOption
     lines.push(...heading(p, "Right now"));
     if (history) lines.push(`${INDENT}${" ".repeat(22)}${p.dim("last 24 hours →")}`);
     for (const [label, current, chart] of rows) {
-      lines.push(`${INDENT}${p.dim(pad(label, 13))}${p.bold(pad(current, 9))}${chart}`);
+      lines.push(`${INDENT}${p.dim(pad(label, 13))}${p.bold(chart ? pad(current, 9) : current)}${chart}`);
     }
   }
   const notes = [
