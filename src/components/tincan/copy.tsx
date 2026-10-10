@@ -14,6 +14,7 @@ import { TINCAN_URL } from "@/lib/tincan-host";
 export type Lang = "en" | "tr";
 
 export const REPO = "https://github.com/bilalyazicioglu/tincan-cli";
+export const TINCAN_VERSION = "0.3.4";
 
 export const PAGES: Record<Lang, string> = {
   en: TINCAN_URL,

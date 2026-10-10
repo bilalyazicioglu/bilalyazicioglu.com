@@ -8,7 +8,7 @@ import { StringRail } from "@/components/tincan/StringRail";
 import { Meander } from "@/components/tincan/Meander";
 import { Cells } from "@/components/tincan/Cells";
 import { TincanBrand } from "@/components/tincan/TincanBrand";
-import { COPY, PAGES, REPO, type Lang } from "@/components/tincan/copy";
+import { COPY, PAGES, REPO, TINCAN_VERSION, type Lang } from "@/components/tincan/copy";
 import { getTincanStars } from "@/lib/github";
 import { siteConfig } from "@/site.config";
 import { TINCAN_URL } from "@/lib/tincan-host";
@@ -140,7 +140,7 @@ function graph(lang: Lang) {
         ],
         programmingLanguage: { "@type": "ComputerLanguage", name: "Rust" },
         runtimePlatform: ["macOS", "Linux", "Windows"],
-        version: "0.3.3",
+        version: TINCAN_VERSION,
         license: "https://opensource.org/licenses/MIT",
         isAccessibleForFree: true,
         keywords: t.keywords.join(", "),
@@ -333,7 +333,7 @@ export async function TincanPage({ lang }: { lang: Lang }) {
           <div className="tc-hero-install">
             <InstallTabs lang={lang} />
             <p className="tc-facts">
-              <a href="https://crates.io/crates/tincan-chat">v0.3.3</a>
+              <a href="https://crates.io/crates/tincan-chat">v{TINCAN_VERSION}</a>
               <a href={`${REPO}/blob/main/LICENSE`}>{t.ui.license}</a>
               <a href="https://ratatui.rs/">{t.ui.ratatui}</a>
             </p>
