@@ -8,7 +8,7 @@
 - npm: https://www.npmjs.com/package/tincan-cli
 - Names: one program, installed as `tincan` from Homebrew, `tincan-chat` from crates.io and `tincan-cli` from npm; the command is `tincan` everywhere. Unrelated to the Tin Can API (xAPI) used in e-learning.
 - Author: Ahmet Bilal Yazıcıoğlu (https://bilalyazicioglu.com)
-- Latest version: 0.3.3
+- Latest version: 0.3.4
 - License: MIT
 
 ## Install
