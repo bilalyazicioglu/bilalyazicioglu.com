@@ -33,24 +33,24 @@ export type Project = {
  */
 export const projects: Project[] = [
   {
-    slug: "arpoly",
-    name: "ARpoly",
-    tag: "AR",
-    category: "Private",
-    badges: ["Featured", "Live"],
-    short:
-      "Film an object with a phone; get a real-scale 3D model anyone can place on their table in AR, no app install. A multi-tenant API and React SDK, plus m3nu, a cafe-menu product built on top.",
-    description:
-      "One product in two halves. The platform is a sector-agnostic AR service: someone films an object with an ordinary phone camera, the server reconstructs it into a real-scale 3D model (GLB + USDZ) and hands it to the OS AR viewer, so a 30 cm pizza shows up 30 cm wide on the customer's own table — no app install, and no camera permission to view. It is sold as a multi-tenant REST API plus @arpoly/react, the client SDK published on npm. The other half is m3nu, the cafe vertical running on top of it: menus, categories, QR links and table orders with split payment, talking to the platform over HTTP with an API key exactly as an outside customer would — which is the point, because anything m3nu needs that a third party could not have is a bug in the platform.",
-    href: "https://arpoly.com",
+    slug: "tincan",
+    name: "tincan",
+    tag: "TC",
+    category: "Open Source",
+    badges: ["Featured", "Live", "CLI", "P2P"],
     featured: true,
     live: true,
-    private: true,
+    short:
+      "Serverless voice chat in the terminal. No VPN, no port forwarding, no account: audio is a direct peer-to-peer mesh of QUIC datagrams.",
+    description:
+      "Serverless voice chat that lives in the terminal. Whoever starts it becomes the room's coordinator and hands out an invite code — friends join from anywhere with no VPN, no port forwarding and no account. Control traffic goes through the coordinator, but audio is a direct peer-to-peer mesh of QUIC datagrams, so the host's uplink never becomes the bottleneck.",
+    href: "https://tincan.rs",
+    repo: "https://github.com/bilalyazicioglu/tincan-cli",
     stats: [
-      { label: "Platform", value: "Node + MongoDB" },
-      { label: "Vertical", value: "m3nu (cafes)" },
-      { label: "SDK", value: "@arpoly/react" },
-      { label: "Tests", value: "280+" },
+      { label: "Language", value: "Rust" },
+      { label: "Transport", value: "iroh / QUIC" },
+      { label: "Audio", value: "Opus mesh" },
+      { label: "Stars", value: "126" },
     ],
   },
   {
@@ -73,23 +73,23 @@ export const projects: Project[] = [
     ],
   },
   {
-    slug: "tincan",
-    name: "tincan",
-    tag: "TC",
-    category: "Open Source",
-    badges: ["Live", "CLI", "P2P"],
-    live: true,
+    slug: "arpoly",
+    name: "ARpoly",
+    tag: "AR",
+    category: "Private",
+    badges: ["Live"],
     short:
-      "Serverless voice chat in the terminal. No VPN, no port forwarding, no account: audio is a direct peer-to-peer mesh of QUIC datagrams.",
+      "Film an object with a phone; get a real-scale 3D model anyone can place on their table in AR, no app install. A multi-tenant API and React SDK, plus m3nu, a cafe-menu product built on top.",
     description:
-      "Serverless voice chat that lives in the terminal. Whoever starts it becomes the room's coordinator and hands out an invite code — friends join from anywhere with no VPN, no port forwarding and no account. Control traffic goes through the coordinator, but audio is a direct peer-to-peer mesh of QUIC datagrams, so the host's uplink never becomes the bottleneck.",
-    href: "https://tincan.rs",
-    repo: "https://github.com/bilalyazicioglu/tincan-cli",
+      "One product in two halves. The platform is a sector-agnostic AR service: someone films an object with an ordinary phone camera, the server reconstructs it into a real-scale 3D model (GLB + USDZ) and hands it to the OS AR viewer, so a 30 cm pizza shows up 30 cm wide on the customer's own table — no app install, and no camera permission to view. It is sold as a multi-tenant REST API plus @arpoly/react, the client SDK published on npm. The other half is m3nu, the cafe vertical running on top of it: menus, categories, QR links and table orders with split payment, talking to the platform over HTTP with an API key exactly as an outside customer would — which is the point, because anything m3nu needs that a third party could not have is a bug in the platform.",
+    href: "https://arpoly.com",
+    live: true,
+    private: true,
     stats: [
-      { label: "Language", value: "Rust" },
-      { label: "Transport", value: "iroh / QUIC" },
-      { label: "Audio", value: "Opus mesh" },
-      { label: "Stars", value: "126" },
+      { label: "Platform", value: "Node + MongoDB" },
+      { label: "Vertical", value: "m3nu (cafes)" },
+      { label: "SDK", value: "@arpoly/react" },
+      { label: "Tests", value: "280+" },
     ],
   },
   {

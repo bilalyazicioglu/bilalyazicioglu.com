@@ -130,7 +130,7 @@ export default async function Home() {
             about
           </Link>
           (7),{" "}
-          <a href={`mailto:${siteConfig.email}`} className={manLink}>
+          <a href={`mailto:${siteConfig.email}`} className={`${manLink} break-all`}>
             {siteConfig.email}
           </a>
         </p>
