@@ -37,7 +37,7 @@ export function ViewCounter({
   const label = count === 1 ? "1 view" : `${count} views`;
 
   return (
-    <span className="font-ui text-[11px] uppercase tracking-wider text-muted">
+    <span className="tabular-nums">
       {label}
     </span>
   );

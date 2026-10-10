@@ -1,41 +1,41 @@
-import Link from "next/link";
+import { ManPrompt, ManSection, ManTitle } from "@/components/Man";
 
+/**
+ * The top of every inner page: the command that "opened" it, the man page's
+ * title line, then NAME — which holds the page's <h1> — and an optional
+ * DESCRIPTION. Pages add their own sections below.
+ */
 export function PageHeader({
-  eyebrow,
-  titleLines,
-  backHref,
-  backLabel,
+  name,
+  section,
+  kind,
+  summary,
+  command = `man ${section} ${name}`,
   children,
 }: {
-  eyebrow?: string;
-  titleLines: string[];
-  backHref?: string;
-  backLabel?: string;
+  name: string;
+  section: number;
+  kind: string;
+  /** One line under NAME, after the page's name. */
+  summary: string;
+  command?: string;
+  /** DESCRIPTION, when the page has one. */
   children?: React.ReactNode;
 }) {
   return (
-    <div className="border-b-[1.5px] border-ink px-4 py-8 sm:px-6 sm:py-10">
-      {backHref && (
-        <Link
-          href={backHref}
-          className="mb-6 inline-flex items-center gap-1.5 font-ui text-xs font-bold uppercase tracking-wider text-ink/60 hover:text-accent"
-        >
-          ← {backLabel ?? "Back"}
-        </Link>
+    <>
+      <ManPrompt command={command} />
+      <ManTitle name={name} section={section} kind={kind} />
+      <ManSection title="NAME">
+        <h1 className="font-normal">
+          {name}, {summary}
+        </h1>
+      </ManSection>
+      {children && (
+        <ManSection title="DESCRIPTION">
+          <div className="max-w-[64ch]">{children}</div>
+        </ManSection>
       )}
-      {eyebrow && (
-        <p className="mb-2 font-ui text-xs font-bold uppercase tracking-wider text-accent">
-          {eyebrow}
-        </p>
-      )}
-      <h1 className="font-display text-4xl leading-[1.15] sm:text-6xl">
-        {titleLines.map((line) => (
-          <span key={line} className="block">
-            {line}
-          </span>
-        ))}
-      </h1>
-      {children && <div className="mt-6">{children}</div>}
-    </div>
+    </>
   );
 }

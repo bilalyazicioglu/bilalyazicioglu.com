@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/PageHeader";
 import { ProjectsExplorer } from "@/components/ProjectsExplorer";
-import { CtaBand } from "@/components/CtaBand";
 import { getProjectsWithLiveStars } from "@/lib/github";
 import { projects } from "@/lib/projects";
 import { siteConfig } from "@/site.config";
@@ -51,27 +50,15 @@ export default async function ProjectsPage() {
   const liveProjects = await getProjectsWithLiveStars();
 
   return (
-    <>
+    <div className="font-ui text-[15px] leading-[1.75]">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(projectsJsonLd) }}
       />
-      <PageHeader
-        eyebrow={`Projects [${String(liveProjects.length).padStart(2, "0")}]`}
-        titleLines={["PRO_", "JECTS"]}
-        backHref="/"
-        backLabel="Back to home"
-      >
-        <p className="max-w-lg text-sm leading-relaxed text-ink/70">
-          Products, open source libraries, and experiments I&apos;ve built
-          and shipped. Filter by category or search by name.
-        </p>
+      <PageHeader name="projects" section={1} kind="User Commands" summary="everything I have built and shipped">
+        <p>Products, open source libraries and experiments. Filter by category or search by name.</p>
       </PageHeader>
       <ProjectsExplorer projects={liveProjects} />
-      <CtaBand
-        label="Have something in mind?"
-        highlight="Let's build it together."
-      />
-    </>
+    </div>
   );
 }

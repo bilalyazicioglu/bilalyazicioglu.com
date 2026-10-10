@@ -99,26 +99,6 @@ body {
   font-family: var(--font-body);
 }
 
-/* Project card copy scrolls inside a fixed-height box, so one long description
-   cannot stretch a whole row of cards. 13rem ≈ nine lines at this size. The
-   scrollbar is kept visible on purpose: it is the only hint there is more. */
-.card-copy {
-  max-height: 13rem;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--color-ink) 25%, transparent) transparent;
-}
-
-.card-copy::-webkit-scrollbar {
-  width: 6px;
-}
-
-.card-copy::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--color-ink) 22%, transparent);
-  border-radius: 3px;
-}
-
 /* The terminal should arrive the way a window does, not blink into existence.
    Short enough that it never delays typing, and skipped entirely when the
    visitor has asked for less motion. */

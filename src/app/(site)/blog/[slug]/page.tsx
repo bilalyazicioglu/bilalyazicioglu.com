@@ -4,7 +4,7 @@ import Link from "next/link";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import { getAllSlugs, getPostBySlug, getPostTranslation } from "@/lib/blog";
 import { getViewCount } from "@/lib/views";
-import { CtaBand } from "@/components/CtaBand";
+import { ManPrompt } from "@/components/Man";
 import { ViewCounter } from "@/components/ViewCounter";
 
 import { siteConfig } from "@/site.config";
@@ -49,14 +49,6 @@ export async function generateMetadata({
   } catch {
     return {};
   }
-}
-
-function formatDate(date: string) {
-  return new Date(date).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
 }
 
 export default async function BlogPostPage({
@@ -114,73 +106,48 @@ export default async function BlogPostPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(blogPostingJsonLd) }}
       />
-      <div className="border-b-[1.5px] border-ink px-4 py-8 sm:px-6 sm:py-10">
-        <Link
-          href="/blog"
-          className="mb-6 inline-flex items-center gap-1.5 font-ui text-xs font-bold uppercase tracking-wider text-ink/60 hover:text-accent"
-        >
-          ← Back to blog
-        </Link>
-        <div className="mb-4 flex flex-wrap items-center gap-3">
-          <span className="font-ui text-[11px] uppercase tracking-wider text-muted">
-            {formatDate(post.date)}
-          </span>
-          <span className="text-ink/20">/</span>
-          <span className="font-ui text-[11px] uppercase tracking-wider text-muted">
-            {post.readingTime}
-          </span>
-          <span className="text-ink/20">/</span>
+      <header className="font-ui">
+        <ManPrompt command={`cat ${slug}.mdx`} />
+        <p className="mt-6 flex flex-wrap gap-x-4 text-[13px] text-muted">
+          <Link href="/blog" className="text-accent underline-offset-[3px] hover:underline">
+            ← blog
+          </Link>
+          <time dateTime={post.date} className="tabular-nums">
+            {post.date.slice(0, 10)}
+          </time>
+          <span>{post.readingTime}</span>
           <ViewCounter slug={slug} initialViews={initialViews} />
-          <span className="rounded-full border border-accent px-2 py-0.5 font-ui text-[10px] font-bold uppercase tracking-wider text-accent">
-            {post.lang}
-          </span>
-        </div>
-        <h1 className="font-ui text-2xl font-bold tracking-tight text-ink sm:text-4xl leading-tight">
+          <span>{post.lang}</span>
+        </p>
+        <h1 lang={post.lang} className="mt-3 text-balance font-body text-[1.75rem] font-bold leading-tight sm:text-[2.125rem]">
           {post.title}
         </h1>
-        <div className="mt-5 flex flex-wrap gap-2">
-          {post.tags.map((tag) => (
-            <span
-              key={tag}
-              className="rounded-full border border-ink/15 px-2.5 py-0.5 font-ui text-[10px] uppercase tracking-wider text-ink/50"
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {translation && !translation.draft && (
-        <div
-          lang={post.lang === "tr" ? "en" : "tr"}
-          className="mx-4 mt-6 border-[1.5px] border-accent/40 bg-accent/5 p-4 sm:mx-6"
-        >
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2 font-ui text-xs text-ink">
-              <span className="text-base">🌐</span>
-              <span className="font-bold">
-                {post.lang === "tr"
-                  ? "This article is also available in English:"
-                  : "Bu yazı Türkçe olarak da mevcuttur:"}
-              </span>
-            </div>
-            <Link
-              href={`/blog/${translation.slug}`}
-              className="border border-accent bg-accent px-3 py-1 font-ui text-[11px] font-bold uppercase tracking-wider text-accent-ink transition-opacity hover:opacity-90"
-            >
-              {post.lang === "tr" ? "Read in English →" : "Türkçe Oku →"}
+        {post.tags.length > 0 && (
+          <p className="mt-3 text-[13px] text-muted">{post.tags.map((tag) => `#${tag}`).join(" ")}</p>
+        )}
+        {translation && !translation.draft && (
+          <p lang={post.lang === "tr" ? "en" : "tr"} className="mt-4 text-[13.5px] text-muted">
+            {post.lang === "tr" ? "Also in English: " : "Bu yazı Türkçe olarak da var: "}
+            <Link href={`/blog/${translation.slug}`} className="text-accent underline-offset-[3px] hover:underline">
+              {translation.title}
             </Link>
-          </div>
-        </div>
-      )}
+          </p>
+        )}
+      </header>
 
       {/* The document is `lang="en"`; a Turkish post has to say so itself, or a
           screen reader reads it with English phonetics. */}
-      <article lang={post.lang} className="prose-post px-4 py-10 sm:px-6">
+      <article lang={post.lang} className="prose-post mt-8 border-t border-ink/15 pt-2">
         <MDXRemote source={post.content} />
       </article>
 
-      <CtaBand label="Have thoughts on this?" highlight="Send me a note." />
+      <p className="mt-12 font-ui text-[13.5px] text-muted">
+        Thoughts on this? Write to{" "}
+        <a href={`mailto:${siteConfig.email}`} className="text-accent underline-offset-[3px] hover:underline">
+          {siteConfig.email}
+        </a>
+        .
+      </p>
     </>
   );
 }

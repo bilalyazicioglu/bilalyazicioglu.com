@@ -23,8 +23,8 @@ export default async function InfraPage() {
 
   return (
     <>
-      <PageHeader eyebrow="Infrastructure · live" titleLines={["THIS_", "MACHINE"]} backHref="/" backLabel="Back to home">
-        <p className="max-w-xl text-sm leading-relaxed text-ink/70">
+      <PageHeader name="infra" section={8} kind="System Administration" summary="the machine answering this request">
+        <p>
           This site isn&apos;t on a cloud platform. It runs in Docker on a small server in my homelab
           in Istanbul. The server dials out to Cloudflare through a tunnel, so visitors never connect to
           it directly. Everything below is read live from the Prometheus that watches it.
