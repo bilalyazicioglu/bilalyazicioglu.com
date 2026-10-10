@@ -1,156 +1,142 @@
-import Image from "next/image";
 import Link from "next/link";
-import { Button } from "@/components/Button";
-import { ProjectCard } from "@/components/ProjectCard";
-import { CtaBand } from "@/components/CtaBand";
-import { DecorativePlus } from "@/components/DecorativePlus";
+import { ManPrompt, ManRows, ManSection, ManTitle, manLink } from "@/components/Man";
 import { HeroPrompt } from "@/components/terminal/HeroPrompt";
+import { formatNumber } from "@/components/infra/format";
+import { firstSentence, oneLanguage } from "@/lib/cli/render";
 import { getProjectsWithLiveStars } from "@/lib/github";
 import { getAllPosts } from "@/lib/blog";
+import { getInfra } from "@/lib/infra";
 import { siteConfig } from "@/site.config";
 
 export const dynamic = "force-dynamic";
 
-function formatDate(date: string) {
-  return new Date(date).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+/** "cpu 6%, memory 46%, 48°C", or nothing when Prometheus is not answering. */
+function vitals(live: Awaited<ReturnType<typeof getInfra>>["live"]): string | null {
+  const parts = [
+    live.cpuPercent === null ? null : `cpu ${formatNumber(live.cpuPercent)}%`,
+    live.memoryPercent === null ? null : `memory ${formatNumber(live.memoryPercent)}%`,
+    live.temperatureC === null ? null : `${formatNumber(live.temperatureC)}°C`,
+  ].filter(Boolean);
+  return parts.length ? parts.join(", ") : null;
 }
 
 export default async function Home() {
-  const projects = await getProjectsWithLiveStars();
-  const featuredProjects = projects.slice(0, 3);
-  const recentPosts = getAllPosts().slice(0, 3);
-  const [firstName, ...rest] = siteConfig.heroName.split(" ");
-  const lastName = rest.join(" ");
+  const [projects, infra] = await Promise.all([getProjectsWithLiveStars(), getInfra()]);
+  const featured = projects.slice(0, 3);
+  const posts = oneLanguage(getAllPosts()).slice(0, 5);
+  const status = vitals(infra.live);
+  const github = siteConfig.socials.find((s) => s.label === "GitHub")?.href;
+  const linkedin = siteConfig.socials.find((s) => s.label === "LinkedIn")?.href;
 
   return (
-    <>
-      {/* Hero */}
-      <section className="grid gap-8 border-b-[1.5px] border-ink px-4 py-10 sm:px-6 sm:py-14 lg:grid-cols-[1fr_auto] lg:items-center">
-        <div>
-          <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-ink/20 px-3 py-1 font-ui text-[11px] font-bold uppercase tracking-wider">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-            {siteConfig.availability}
-          </span>
+    <div className="font-ui text-[15px] leading-[1.75]">
+      <ManPrompt command="man bilal" />
+      <ManTitle name="bilal" section={1} kind="User Commands" />
 
-          <h1 className="font-display text-4xl leading-[1.15] sm:text-6xl">
-            <span className="block">{firstName}_</span>
-            {lastName && <span className="block">{lastName}</span>}
-          </h1>
+      <ManSection title="NAME">
+        <h1 className="font-normal">
+          {siteConfig.name}, {siteConfig.role.toLowerCase()} in {siteConfig.location.split(",")[0]}
+        </h1>
+      </ManSection>
 
-          <p className="mt-5 font-ui text-sm font-bold uppercase tracking-wider text-accent">
-            {siteConfig.role} · {siteConfig.location}
-          </p>
+      <ManSection title="DESCRIPTION">
+        <p className="max-w-[64ch]">{siteConfig.bio}</p>
+        <p className="mt-2 text-muted">{siteConfig.availability}.</p>
+      </ManSection>
 
-          <p className="mt-4 max-w-xl text-base leading-relaxed text-ink/70">
-            {siteConfig.bio}
-          </p>
-
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Button href="/projects" variant="primary">
-              View projects
-            </Button>
-            <Button href="/blog" variant="outline">
-              Read the blog
-            </Button>
-            <Button href={siteConfig.resumeUrl} variant="ghost" external>
-              Download CV ↓
-            </Button>
-          </div>
-
-          <HeroPrompt />
-        </div>
-
-        <div className="relative mx-auto flex h-40 w-40 shrink-0 items-center justify-center rounded-2xl border-[1.5px] border-ink bg-canvas/50 p-2 sm:h-48 sm:w-48">
-          <Image
-            src={siteConfig.heroAvatarUrl}
-            alt={siteConfig.name}
-            width={192}
-            height={192}
-            priority
-            className="h-full w-full rounded-xl object-cover"
-          />
-        </div>
-      </section>
-
-      {/* Selected work */}
-      <section className="border-b-[1.5px] border-ink px-4 py-10 sm:px-6 sm:py-12">
-        <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="mb-2 font-ui text-xs font-bold uppercase tracking-wider text-accent">
-              Selected work
-            </p>
-            <h2 className="font-display text-3xl sm:text-4xl">PRO_JECTS</h2>
-          </div>
-          <Link
-            href="/projects"
-            className="font-ui text-xs font-bold uppercase tracking-wider text-ink/60 hover:text-accent"
-          >
-            View all →
-          </Link>
-        </div>
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {featuredProjects.map((project) => (
-            <ProjectCard
-              key={project.slug}
-              project={{ ...project, featured: false }}
-            />
-          ))}
-        </div>
-      </section>
-
-      {/* Latest writing */}
-      <section className="px-4 py-10 sm:px-6 sm:py-12">
-        <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="mb-2 font-ui text-xs font-bold uppercase tracking-wider text-accent">
-              From the blog
-            </p>
-            <h2 className="font-display text-3xl sm:text-4xl">WRIT_INGS</h2>
-          </div>
-          <Link
-            href="/blog"
-            className="font-ui text-xs font-bold uppercase tracking-wider text-ink/60 hover:text-accent"
-          >
-            View all →
-          </Link>
-        </div>
-
-        <ul className="flex flex-col divide-y divide-ink/10 border-y border-ink/10">
-          {recentPosts.map((post) => (
-            <li key={post.slug}>
-              <Link
-                href={`/blog/${post.slug}`}
-                className="group flex flex-col gap-1.5 py-5 sm:flex-row sm:items-center sm:justify-between sm:gap-6"
-              >
-                <div>
-                  <span className="font-ui text-[11px] uppercase tracking-wider text-muted">
-                    {formatDate(post.date)}
-                  </span>
-                  <h3 className="font-ui text-base font-bold group-hover:text-accent">
-                    {post.title}
-                  </h3>
-                </div>
-                <span className="font-ui text-[11px] uppercase tracking-wider text-ink/40 group-hover:text-ink">
-                  {post.readingTime}
+      <ManSection title="PROJECTS">
+        <ManRows stack className="gap-y-0.5 sm:gap-y-2">
+          {featured.map((project) => {
+            const stars = project.stats.find((s) => s.label === "Stars")?.value;
+            const external = project.href && /^https?:\/\//.test(project.href);
+            return (
+              <div key={project.slug} className="contents">
+                {project.href ? (
+                  <Link
+                    href={project.href}
+                    {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                    className={`${manLink} lowercase`}
+                  >
+                    {project.name}
+                  </Link>
+                ) : (
+                  <span className="lowercase">{project.name}</span>
+                )}
+                <span className="mb-2 sm:mb-0">
+                  {project.short ?? firstSentence(project.description)}
+                  {stars && <span className="whitespace-nowrap text-muted"> ★ {stars}</span>}
                 </span>
+              </div>
+            );
+          })}
+        </ManRows>
+        <p className="mt-2 text-muted">
+          and {projects.length - featured.length} more in{" "}
+          <Link href="/projects" className={manLink}>
+            projects
+          </Link>
+        </p>
+      </ManSection>
+
+      <ManSection title="WRITING">
+        <ManRows>
+          {posts.map((post) => (
+            <div key={post.slug} className="contents">
+              <time dateTime={post.date} className="tabular-nums text-muted">
+                {post.date.slice(0, 10)}
+              </time>
+              <Link href={`/blog/${post.slug}`} lang={post.lang} className={manLink}>
+                {post.title}
               </Link>
-            </li>
+            </div>
           ))}
-        </ul>
+        </ManRows>
+      </ManSection>
 
-        <div className="mt-8 flex justify-center">
-          <DecorativePlus />
-        </div>
-      </section>
+      <ManSection title="HOST">
+        <p className="max-w-[64ch]">
+          Rendered a moment ago by {infra.specs.cpuModel ? `an ${infra.specs.cpuModel}` : "a small machine"} in a
+          homelab in Istanbul{status ? `: ${status}.` : "."}{" "}
+          <Link href="/infra" className={manLink}>
+            infra
+          </Link>
+          (8) has the rest.
+        </p>
+      </ManSection>
 
-      <CtaBand
-        label="Ready to work together?"
-        highlight="Let's talk about your project."
-      />
-    </>
+      <ManSection title="SEE ALSO">
+        <p>
+          {github && (
+            <>
+              <a href={github} target="_blank" rel="noopener noreferrer" className={manLink}>
+                github
+              </a>
+              (1),{" "}
+            </>
+          )}
+          {linkedin && (
+            <>
+              <a href={linkedin} target="_blank" rel="noopener noreferrer" className={manLink}>
+                linkedin
+              </a>
+              (1),{" "}
+            </>
+          )}
+          <a href={siteConfig.resumeUrl} target="_blank" rel="noopener noreferrer" className={manLink}>
+            resume.pdf
+          </a>
+          ,{" "}
+          <Link href="/about" className={manLink}>
+            about
+          </Link>
+          (7),{" "}
+          <a href={`mailto:${siteConfig.email}`} className={manLink}>
+            {siteConfig.email}
+          </a>
+        </p>
+      </ManSection>
+
+      <HeroPrompt />
+    </div>
   );
 }

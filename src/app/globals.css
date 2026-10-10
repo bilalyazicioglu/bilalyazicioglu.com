@@ -1,15 +1,19 @@
 @import "tailwindcss";
 
 @theme {
-  /* Warm paper rather than white: the page is sand, the panel is bone, and
-     neither ever hits #fff — that flatness is what the whole design avoids. */
-  --color-canvas: #e9e5da;
-  --color-surface: #f8f5ed;
-  --color-ink: #16150f;
-  --color-muted: #6d6a5d;
-  --color-accent: #14b8a6;
-  --color-accent-ink: #f0fdfa;
-  --color-line: #16150f;
+  /* Papyrus rather than white: warm, a little dim, and never #fff. Ink is a
+     brown-black instead of black, so the contrast stays near 9:1 — enough to
+     read comfortably for a long time without the glare of a white page. */
+  --color-canvas: #e9e0c7;
+  --color-surface: #f1ead6;
+  --color-ink: #3a3125;
+  --color-muted: #6a5d4a;
+  --color-accent: #2e6a5c;
+  --color-accent-ink: #f1ead6;
+  --color-line: #3a3125;
+  /* Service states on /infra. Kept apart from the accent, which means "link". */
+  --color-ok: #4c7638;
+  --color-bad: #a2452f;
 
   --font-display: var(--font-silkscreen), monospace;
   --font-ui: var(--font-plex-mono), ui-monospace, monospace;
@@ -22,8 +26,12 @@
   --font-body: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
-* {
-  border-color: var(--color-line);
+/* In the base layer, so a utility like `border-ink/15` can override it. Left
+   unlayered, this rule beat every border colour class on the site. */
+@layer base {
+  * {
+    border-color: var(--color-line);
+  }
 }
 
 /* ---------------------------------------------------------------------------
@@ -42,15 +50,17 @@
 :root {
   color-scheme: light;
 
-  /* The same relationship upside down, in warm graphite rather than black: a
-     charcoal page with the panel raised out of it, and bone for the type. */
-  --dark-canvas: #1b1a17;
-  --dark-surface: #26241f;
-  --dark-ink: #ece7da;
-  --dark-muted: #97917f;
-  --dark-accent: #2dd4bf;
-  --dark-accent-ink: #04211d;
-  --dark-line: #ece7da;
+  /* Ink: the papyrus at night. Warm brown-black, parchment type, the same
+     teal a shade lighter — it sits in the same family as the tincan page. */
+  --dark-canvas: #231d16;
+  --dark-surface: #2c251c;
+  --dark-ink: #e8dcc2;
+  --dark-muted: #a8987c;
+  --dark-accent: #7ec9b2;
+  --dark-accent-ink: #1c1711;
+  --dark-line: #e8dcc2;
+  --dark-ok: #a5c97a;
+  --dark-bad: #e8866a;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -64,6 +74,8 @@
     --color-accent: var(--dark-accent);
     --color-accent-ink: var(--dark-accent-ink);
     --color-line: var(--dark-line);
+    --color-ok: var(--dark-ok);
+    --color-bad: var(--dark-bad);
   }
 }
 
@@ -77,25 +89,14 @@
   --color-accent: var(--dark-accent);
   --color-accent-ink: var(--dark-accent-ink);
   --color-line: var(--dark-line);
+  --color-ok: var(--dark-ok);
+  --color-bad: var(--dark-bad);
 }
 
 body {
   background: var(--color-canvas);
   color: var(--color-ink);
   font-family: var(--font-body);
-}
-
-/* The page sits on a drafting sheet: 45-degree section hatching, the way a cut
-   surface is marked on a technical drawing. Dense enough to read as a texture
-   in the margins beside the panel, light enough to stay behind everything. */
-.bg-grid {
-  background-image: repeating-linear-gradient(
-    45deg,
-    color-mix(in srgb, var(--color-ink) 10%, transparent) 0,
-    color-mix(in srgb, var(--color-ink) 10%, transparent) 1px,
-    transparent 1px,
-    transparent 9px
-  );
 }
 
 /* Project card copy scrolls inside a fixed-height box, so one long description

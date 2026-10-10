@@ -5,10 +5,9 @@ import { useTerminal } from "./TerminalProvider";
 import { useShortcutLabel } from "./shortcut";
 
 /**
- * The hero's way into the terminal: the window's own prompt, set quietly under
- * the calls to action, picking up the `_` cursor in the name above it. One
- * blinking caret is the only thing that moves, and it holds still for anyone
- * who has asked for less motion.
+ * The last line of the home page's man page: the prompt it returns to, which
+ * really does open the terminal. One blinking caret is the only thing on the
+ * page that moves, and it holds still for anyone who has asked for less motion.
  */
 export function HeroPrompt() {
   const { open } = useTerminal();
@@ -21,7 +20,7 @@ export function HeroPrompt() {
       type="button"
       onClick={() => open(ref.current)}
       aria-keyshortcuts={key}
-      className="group mt-6 inline-flex max-w-full flex-wrap items-baseline gap-x-2 gap-y-1 rounded-sm text-left font-terminal text-[13px] text-ink/55 transition-colors hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+      className="group mt-8 inline-flex max-w-full flex-wrap items-baseline gap-x-2 gap-y-1 self-start rounded-sm text-left font-ui text-sm text-muted transition-colors hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
     >
       <span aria-hidden className="text-accent">
         bilal@web ~ %

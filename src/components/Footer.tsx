@@ -1,37 +1,31 @@
-import Link from "next/link";
 import { siteConfig } from "@/site.config";
-import { DecorativePlus } from "@/components/DecorativePlus";
 import { TerminalButton } from "@/components/terminal/TerminalButton";
 
 export function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="mt-10 border-t-[1.5px] border-ink px-4 py-6 sm:px-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <p className="font-ui text-[11px] uppercase tracking-wider text-muted">
-          © {year} {siteConfig.name}. Built with Next.js.
-        </p>
-        <nav className="flex flex-wrap items-center gap-5">
-          <TerminalButton />
-          {siteConfig.socials.map((social) => (
-            <Link
+    <footer className="mt-14 flex flex-wrap items-center justify-between gap-4 border-t border-ink/15 pt-5 font-ui text-[12.5px] text-muted">
+      <p>
+        © {year} {siteConfig.name}
+      </p>
+      <nav aria-label="Elsewhere" className="flex flex-wrap items-center gap-x-5 gap-y-2">
+        <TerminalButton />
+        {siteConfig.socials.map((social) => {
+          const external = social.href.startsWith("http");
+          return (
+            <a
               key={social.label}
               href={social.href}
-              target={social.href.startsWith("http") ? "_blank" : undefined}
-              rel={
-                social.href.startsWith("http")
-                  ? "noopener noreferrer"
-                  : undefined
-              }
-              className="font-ui text-[11px] font-bold uppercase tracking-wider text-ink/60 hover:text-accent"
+              target={external ? "_blank" : undefined}
+              rel={external ? "noopener noreferrer" : undefined}
+              className="lowercase hover:text-accent"
             >
               {social.label}
-            </Link>
-          ))}
-        </nav>
-        <DecorativePlus className="hidden sm:block" />
-      </div>
+            </a>
+          );
+        })}
+      </nav>
     </footer>
   );
 }

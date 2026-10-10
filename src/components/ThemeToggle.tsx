@@ -32,7 +32,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
       onClick={() => setTheme(next)}
       title={`${face.label} — switch to ${FACE[next].label.toLowerCase()}`}
       aria-label={`${face.label}. Switch to ${FACE[next].label.toLowerCase()}`}
-      className={`rounded-full border border-ink/25 px-2.5 py-1 font-ui text-[11px] font-bold leading-[1.45] tracking-wider text-ink/60 transition-colors hover:border-ink hover:text-accent ${className}`}
+      className={`rounded-[4px] border border-ink/25 px-2 py-0.5 font-ui text-[12px] leading-[1.5] text-ink/70 transition-colors hover:border-ink/60 hover:text-accent ${className}`}
     >
       {/* The glyphs draw thinner than the `>_` next door; a point of extra size
           brings the two buttons back to the same visual weight. */}

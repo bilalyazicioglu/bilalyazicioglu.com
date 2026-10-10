@@ -169,7 +169,7 @@ export function oneLanguage(posts: PostMeta[]): PostMeta[] {
   return posts.filter((post) => post.lang === "en" || !english.has(post.translationKey));
 }
 
-function firstSentence(text: string): string {
+export function firstSentence(text: string): string {
   return text.match(/^.*?[.!?](?=\s|$)/)?.[0] ?? text;
 }
 
