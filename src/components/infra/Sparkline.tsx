@@ -9,8 +9,7 @@ const HEIGHT = 44;
 const PAD = 4;
 
 /**
- * Twenty-four hours as one thin line: the history in the muted ink, the latest
- * point in the accent. Hover, or focus and use the arrow keys, to read any
+ * Twenty-four hours as one thin line in the accent, the latest point marked. Hover, or focus and use the arrow keys, to read any
  * sample; the summary in the label carries the same numbers for screen readers.
  */
 export function Sparkline({
@@ -31,7 +30,7 @@ export function Sparkline({
   const { values } = series;
   const present = values.filter((v): v is number => v !== null);
   if (present.length < 2) {
-    return <p className="font-ui text-[10px] uppercase tracking-wider text-muted">Not enough history yet</p>;
+    return <p className="text-[13px] text-muted">Not enough history yet</p>;
   }
 
   const hi = max ?? (Math.max(...present) * 1.1 || 1);
@@ -70,7 +69,7 @@ export function Sparkline({
           role="img"
           aria-label={summary}
           tabIndex={0}
-          className="h-11 w-full cursor-crosshair touch-none overflow-visible rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          className="h-9 w-full cursor-crosshair touch-none overflow-visible rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-accent"
           onPointerMove={(e) => pick(e.clientX, e.currentTarget.getBoundingClientRect())}
           onPointerDown={(e) => pick(e.clientX, e.currentTarget.getBoundingClientRect())}
           onPointerLeave={() => setActive(null)}
@@ -85,8 +84,9 @@ export function Sparkline({
           <path
             d={d}
             fill="none"
-            stroke="var(--color-muted)"
-            strokeWidth={2}
+            stroke="var(--color-accent)"
+            strokeOpacity={0.75}
+            strokeWidth={1.75}
             strokeLinejoin="round"
             strokeLinecap="round"
             vectorEffect="non-scaling-stroke"
@@ -108,13 +108,13 @@ export function Sparkline({
         {shownValue !== null && (
           <span
             aria-hidden
-            className="pointer-events-none absolute h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-surface bg-accent"
+            className="pointer-events-none absolute h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-canvas bg-accent"
             style={{ left: `${(x(shown) / WIDTH) * 100}%`, top: `${(y(shownValue) / HEIGHT) * 100}%` }}
           />
         )}
       </div>
-      <p className="flex justify-between font-ui text-[10px] uppercase tracking-wider text-muted">
-        <span>{active === null ? "24h" : formatClock(timeAt(active))}</span>
+      <p className="flex justify-between text-[12px] text-muted">
+        <span>{active === null ? "last 24h" : formatClock(timeAt(active))}</span>
         <span className="text-ink">{shownValue === null ? "no data" : format(shownValue)}</span>
       </p>
     </div>

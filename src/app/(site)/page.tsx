@@ -99,8 +99,8 @@ export default async function Home() {
           homelab in Istanbul{status ? `: ${status}.` : "."}{" "}
           <Link href="/infra" className={manLink}>
             infra
-          </Link>
-          (8) has the rest.
+          </Link>{" "}
+          has the rest.
         </p>
       </ManSection>
 
@@ -111,7 +111,7 @@ export default async function Home() {
               <a href={github} target="_blank" rel="noopener noreferrer" className={manLink}>
                 github
               </a>
-              (1),{" "}
+              ,{" "}
             </>
           )}
           {linkedin && (
@@ -119,7 +119,7 @@ export default async function Home() {
               <a href={linkedin} target="_blank" rel="noopener noreferrer" className={manLink}>
                 linkedin
               </a>
-              (1),{" "}
+              ,{" "}
             </>
           )}
           <a href={siteConfig.resumeUrl} target="_blank" rel="noopener noreferrer" className={manLink}>
@@ -129,7 +129,7 @@ export default async function Home() {
           <Link href="/about" className={manLink}>
             about
           </Link>
-          (7),{" "}
+          ,{" "}
           <a href={`mailto:${siteConfig.email}`} className={`${manLink} break-all`}>
             {siteConfig.email}
           </a>

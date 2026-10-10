@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { INFRA_API_PATH, type InfraData, type Series } from "@/lib/infra-types";
 import { siteConfig } from "@/site.config";
+import { ManRows, ManSection, manLink } from "@/components/Man";
 import { Sparkline } from "./Sparkline";
 import { formatAgo, formatBytes, formatNumber } from "./format";
 
@@ -16,7 +17,7 @@ const perMinute = (v: number) => `${formatNumber(v, v < 10 ? 1 : 0)}/min`;
 const share = (v: number) => `${formatNumber(v, v < 10 ? 1 : 0)}%`;
 
 /**
- * The CPU tile is the whole machine, and the machine runs more than this site,
+ * The CPU row is the whole machine, and the machine runs more than this site,
  * so the site's own share sits right under it — a spike to 90% shows at a
  * glance whether the blog had anything to do with it.
  */
@@ -25,7 +26,7 @@ function cpuNote(app: number | null, load: number | null): string | undefined {
     app === null ? null : `this site ${share(app)}`,
     load === null ? null : `load ${formatNumber(load, 2)} per core`,
   ].filter(Boolean);
-  return parts.length ? parts.join(" · ") : undefined;
+  return parts.length ? parts.join(", ") : undefined;
 }
 
 /** Polls while the tab is visible; a hidden tab costs the server nothing. */
@@ -82,24 +83,14 @@ function useNow(start: number) {
   return now;
 }
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return <p className="mb-4 font-ui text-xs font-bold uppercase tracking-wider text-accent">{children}</p>;
-}
-
-function Meter({ value }: { value: number }) {
-  const clamped = Math.max(0, Math.min(100, value));
-  return (
-    <div className="h-1.5 w-full overflow-hidden rounded-full bg-accent/15" aria-hidden>
-      <div className="h-full rounded-full bg-accent transition-[width] duration-700" style={{ width: `${clamped}%` }} />
-    </div>
-  );
-}
-
-function Tile({
+/**
+ * One reading: name, value, then its last 24 hours. The note under it says
+ * what the number is measured against. On a phone the chart drops below.
+ */
+function Metric({
   label,
   value,
   note,
-  meter,
   history,
   format,
   max,
@@ -107,20 +98,18 @@ function Tile({
   label: string;
   value: string;
   note?: string;
-  meter?: number | null;
   history?: Series | null;
   format?: (v: number) => string;
   max?: number;
 }) {
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-ink/15 p-4">
-      <div>
-        <p className="font-ui text-[10px] uppercase tracking-wider text-muted">{label}</p>
-        <p className="mt-1 font-ui text-2xl font-bold">{value}</p>
-        {note && <p className="font-ui text-[10px] uppercase tracking-wider text-muted">{note}</p>}
+    <div className="grid grid-cols-[12ch_minmax(0,1fr)] items-start gap-x-[2ch] sm:grid-cols-[12ch_9ch_minmax(0,1fr)]">
+      <span>{label}</span>
+      <span className="tabular-nums">{value}</span>
+      <div className="col-span-2 mt-1 sm:col-span-1 sm:mt-0">
+        {history && format && <Sparkline series={history} label={label} format={format} max={max} />}
       </div>
-      {meter !== undefined && meter !== null && <Meter value={meter} />}
-      {history && format && <Sparkline series={history} label={label} format={format} max={max} />}
+      {note && <p className="col-span-2 text-[13px] text-muted sm:col-span-3">{note}</p>}
     </div>
   );
 }
@@ -131,149 +120,129 @@ export function InfraDashboard({ initial }: { initial: InfraData }) {
   const { live, specs, history, services, deploy } = data;
   const offline = !data.online;
 
+  const state = offline ? "metrics offline" : stale ? "reconnecting" : "live";
+
   return (
     <>
-      <div className="flex flex-wrap items-center gap-3 border-b-[1.5px] border-ink px-4 py-4 sm:px-6">
-        <span className="inline-flex items-center gap-2 rounded-full border border-ink/20 px-3 py-1 font-ui text-[11px] font-bold uppercase tracking-wider">
-          <span className={`h-1.5 w-1.5 rounded-full ${offline || stale ? "bg-muted" : "animate-pulse bg-accent"}`} />
-          {offline ? "Metrics offline" : stale ? "Reconnecting" : "Live"}
-        </span>
-        <span className="font-ui text-[11px] uppercase tracking-wider text-muted">
-          Updated {formatAgo(data.generatedAt, now)} ago · refreshes every {POLL_MS / 1000}s
-        </span>
-      </div>
-
-      {offline && (
-        <p className="border-b border-ink/10 px-4 py-3 text-sm text-ink/70 sm:px-6">
-          Prometheus isn&apos;t answering right now, so the host numbers are blank. The page itself is
-          still being served from the machine — that part, at least, is working.
+      <ManSection title="RIGHT NOW">
+        <p className="mb-4 text-[13.5px] text-muted">
+          <span className={offline || stale ? "text-muted" : "text-ok"}>
+            <span aria-hidden className={offline || stale ? "" : "motion-safe:animate-pulse"}>
+              ●
+            </span>{" "}
+            {state}
+          </span>
+          , updated {formatAgo(data.generatedAt, now)} ago, refreshes every {POLL_MS / 1000}s
         </p>
-      )}
 
-      <section className="border-b-[1.5px] border-ink px-4 py-8 sm:px-6">
-        <SectionTitle>Host · right now</SectionTitle>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Tile
-            label="CPU"
-            value={live.cpuPercent === null ? "—" : pct(live.cpuPercent)}
-            note={cpuNote(live.appCpuPercent, live.loadPerCore)}
-            meter={live.cpuPercent}
-            history={history?.cpu}
-            format={pct}
-            max={100}
-          />
-          <Tile
-            label="Memory"
-            value={live.memoryPercent === null ? "—" : pct(live.memoryPercent)}
-            note={specs.memoryBytes === null ? undefined : `of ${formatBytes(specs.memoryBytes)} usable`}
-            meter={live.memoryPercent}
-            history={history?.memory}
-            format={pct}
-            max={100}
-          />
-          <Tile
-            label="Temperature"
-            value={live.temperatureC === null ? "—" : celsius(live.temperatureC)}
-            note="hottest sensor"
-            history={history?.temperature}
-            format={celsius}
-          />
-          <Tile
-            label="Traffic"
-            value={live.requestsPerMinute === null ? "—" : perMinute(live.requestsPerMinute)}
-            note={live.requests24h === null ? undefined : `${formatNumber(live.requests24h)} requests · 24h`}
-            history={history?.requests}
-            format={perMinute}
-          />
-        </div>
-      </section>
+        {offline ? (
+          <p className="max-w-[64ch]">
+            Prometheus isn&apos;t answering right now, so the host numbers are blank. The page itself is still being
+            served from the machine — that part, at least, is working.
+          </p>
+        ) : (
+          <div className="flex flex-col gap-5">
+            <Metric
+              label="cpu"
+              value={live.cpuPercent === null ? "—" : pct(live.cpuPercent)}
+              note={cpuNote(live.appCpuPercent, live.loadPerCore)}
+              history={history?.cpu}
+              format={pct}
+              max={100}
+            />
+            <Metric
+              label="memory"
+              value={live.memoryPercent === null ? "—" : pct(live.memoryPercent)}
+              note={specs.memoryBytes === null ? undefined : `of ${formatBytes(specs.memoryBytes)} usable`}
+              history={history?.memory}
+              format={pct}
+              max={100}
+            />
+            <Metric
+              label="temperature"
+              value={live.temperatureC === null ? "—" : celsius(live.temperatureC)}
+              note="hottest sensor"
+              history={history?.temperature}
+              format={celsius}
+            />
+            <Metric
+              label="traffic"
+              value={live.requestsPerMinute === null ? "—" : perMinute(live.requestsPerMinute)}
+              note={live.requests24h === null ? undefined : `${formatNumber(live.requests24h)} requests in 24h`}
+              history={history?.requests}
+              format={perMinute}
+            />
+          </div>
+        )}
+      </ManSection>
 
-      <section className="grid border-b-[1.5px] border-ink lg:grid-cols-2">
-        <div className="border-b-[1.5px] border-ink px-4 py-8 sm:px-6 lg:border-b-0 lg:border-r-[1.5px]">
-          <SectionTitle>The machine</SectionTitle>
-          <dl className="grid grid-cols-[110px_1fr] gap-x-4 gap-y-3">
-            {[
-              ["CPU", specs.cpuModel ? `${specs.cpuModel}${specs.cores ? ` · ${specs.cores} threads` : ""}` : null],
-              // What Linux can use — the integrated GPU's share of RAM is not in it.
-              ["Memory", specs.memoryBytes === null ? null : `${formatBytes(specs.memoryBytes)} usable`],
-              // The root filesystem, which can be smaller than the physical disk.
-              [
-                "Root volume",
-                specs.diskBytes === null
-                  ? null
-                  : `${formatBytes(specs.diskBytes)}${live.diskPercent === null ? "" : ` · ${pct(live.diskPercent)} used`}`,
-              ],
-              ["OS", specs.os],
-              ["Network", "Cloudflare Tunnel · Tailscale for admin"],
-            ].map(([term, detail]) => (
-              <div key={term} className="contents">
-                <dt className="font-ui text-[10px] uppercase tracking-wider text-muted">{term}</dt>
-                <dd className="font-ui text-sm font-bold break-words">{detail ?? "—"}</dd>
-              </div>
-            ))}
-          </dl>
-        </div>
+      <ManSection title="THE MACHINE">
+        <ManRows>
+          {[
+            ["cpu", specs.cpuModel ? `${specs.cpuModel}${specs.cores ? `, ${specs.cores} threads` : ""}` : null],
+            // What Linux can use — the integrated GPU's share of RAM is not in it.
+            ["memory", specs.memoryBytes === null ? null : `${formatBytes(specs.memoryBytes)} usable`],
+            // The root filesystem, which can be smaller than the physical disk.
+            [
+              "root volume",
+              specs.diskBytes === null
+                ? null
+                : `${formatBytes(specs.diskBytes)}${live.diskPercent === null ? "" : `, ${pct(live.diskPercent)} used`}`,
+            ],
+            ["os", specs.os],
+            ["network", "Cloudflare Tunnel, Tailscale for admin"],
+          ].map(([term, detail]) => (
+            <div key={term} className="contents">
+              <span className="text-muted">{term}</span>
+              <span className="break-words">{detail ?? "—"}</span>
+            </div>
+          ))}
+        </ManRows>
+      </ManSection>
 
-        <div className="px-4 py-8 sm:px-6">
-          <SectionTitle>Running build</SectionTitle>
-          <dl className="grid grid-cols-[110px_1fr] gap-x-4 gap-y-3">
-            <dt className="font-ui text-[10px] uppercase tracking-wider text-muted">Commit</dt>
-            <dd className="font-ui text-sm font-bold break-words">
-              {deploy.sha ? (
-                <a
-                  href={`${REPO}/commit/${deploy.sha}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline decoration-accent decoration-2 underline-offset-4 hover:text-accent"
-                >
-                  {deploy.sha.slice(0, 7)}
-                </a>
-              ) : (
-                "—"
-              )}
-              {deploy.subject && <span className="mt-1 block font-normal text-ink/70">{deploy.subject}</span>}
-            </dd>
-            <dt className="font-ui text-[10px] uppercase tracking-wider text-muted">Committed</dt>
-            <dd className="font-ui text-sm font-bold">
-              {deploy.committedAt === null ? "—" : `${formatAgo(deploy.committedAt * 1000, now)} ago`}
-            </dd>
-            <dt className="font-ui text-[10px] uppercase tracking-wider text-muted">Live for</dt>
-            <dd className="font-ui text-sm font-bold">{formatAgo(deploy.startedAt, now)}</dd>
-            <dt className="font-ui text-[10px] uppercase tracking-wider text-muted">App</dt>
-            <dd className="font-ui text-sm font-bold">
-              {formatBytes(live.appMemoryBytes)} RSS
-              {live.eventLoopLagMs !== null && ` · ${formatNumber(live.eventLoopLagMs, 1)} ms event-loop p99`}
-            </dd>
-            <dt className="font-ui text-[10px] uppercase tracking-wider text-muted">Errors</dt>
-            <dd className="font-ui text-sm font-bold">
-              {live.errors24h === null ? "—" : `${formatNumber(live.errors24h)} in 24h`}
-            </dd>
-          </dl>
-        </div>
-      </section>
+      <ManSection title="RUNNING BUILD">
+        <ManRows>
+          <span className="text-muted">commit</span>
+          <span className="break-words">
+            {deploy.sha ? (
+              <a href={`${REPO}/commit/${deploy.sha}`} target="_blank" rel="noopener noreferrer" className={manLink}>
+                {deploy.sha.slice(0, 7)}
+              </a>
+            ) : (
+              "—"
+            )}
+            {deploy.subject && <> {deploy.subject}</>}
+          </span>
+          <span className="text-muted">committed</span>
+          <span>{deploy.committedAt === null ? "—" : `${formatAgo(deploy.committedAt * 1000, now)} ago`}</span>
+          <span className="text-muted">live for</span>
+          <span>{formatAgo(deploy.startedAt, now)}</span>
+          <span className="text-muted">app</span>
+          <span>
+            {formatBytes(live.appMemoryBytes)} RSS
+            {live.eventLoopLagMs !== null && `, ${formatNumber(live.eventLoopLagMs, 1)} ms event-loop p99`}
+          </span>
+          <span className="text-muted">errors</span>
+          <span>{live.errors24h === null ? "—" : `${formatNumber(live.errors24h)} in 24h`}</span>
+        </ManRows>
+      </ManSection>
 
-      <section className="border-b-[1.5px] border-ink px-4 py-8 sm:px-6">
-        <SectionTitle>Services</SectionTitle>
-        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <ManSection title="SERVICES">
+        <ul className="grid grid-cols-[max-content_minmax(0,1fr)] gap-x-[2ch] gap-y-1 sm:grid-cols-[max-content_max-content_minmax(0,1fr)]">
           {services.map((service) => (
-            <li key={service.id} className="flex items-start justify-between gap-3 rounded-xl border border-ink/15 p-4">
-              <div>
-                <p className="font-ui text-sm font-bold">{service.label}</p>
-                <p className="font-ui text-[10px] uppercase tracking-wider text-muted">{service.role}</p>
-              </div>
-              <span className="inline-flex shrink-0 items-center gap-1.5 font-ui text-[10px] font-bold uppercase tracking-wider">
-                <span
-                  aria-hidden
-                  className={`h-2 w-2 rounded-full ${
-                    service.up === null ? "bg-muted" : service.up ? "bg-accent" : "border-2 border-ink bg-transparent"
-                  }`}
-                />
+            <li key={service.id} className="contents">
+              <span className={service.up === null ? "text-muted" : service.up ? "text-ok" : "text-bad"}>
+                <span aria-hidden>{service.up === null ? "○" : "●"}</span>{" "}
                 {service.up === null ? "unknown" : service.up ? "up" : "down"}
+              </span>
+              <span>{service.label}</span>
+              <span className="col-start-2 mb-1.5 text-[13.5px] text-muted sm:col-start-3 sm:mb-0 sm:text-[15px]">
+                {service.role}
               </span>
             </li>
           ))}
         </ul>
-      </section>
+      </ManSection>
     </>
   );
 }

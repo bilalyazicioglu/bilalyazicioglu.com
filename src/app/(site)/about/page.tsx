@@ -184,7 +184,6 @@ export default function AboutPage() {
               <a href={github} target="_blank" rel="noopener noreferrer" className={manLink}>
                 github
               </a>
-              (1)
             </>
           )}
           {linkedin && (
@@ -193,14 +192,12 @@ export default function AboutPage() {
               <a href={linkedin} target="_blank" rel="noopener noreferrer" className={manLink}>
                 linkedin
               </a>
-              (1)
             </>
           )}
           ,{" "}
           <Link href="/projects" className={manLink}>
             projects
           </Link>
-          (1)
         </p>
       </ManSection>
     </div>
