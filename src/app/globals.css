@@ -143,9 +143,21 @@ body {
   transform-origin: 50% 65%;
 }
 
+/* The hero prompt's caret: a hard on/off like a real block cursor, not a fade. */
+@keyframes hero-caret-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.hero-caret {
+  animation: hero-caret-blink 1.1s steps(1) infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .terminal-backdrop,
-  .terminal-window {
+  .terminal-window,
+  .hero-caret {
     animation: none;
   }
 }

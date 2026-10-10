@@ -55,7 +55,7 @@ export function Navbar() {
 
       <div className="flex items-center gap-3">
         <ThemeToggle />
-        <TerminalButton />
+        <TerminalButton labelled />
         <Link
           href={`mailto:${siteConfig.email}`}
           className="inline-flex items-center rounded-full bg-accent px-4 py-2 font-ui text-[11px] font-bold uppercase tracking-wider text-accent-ink hover:bg-ink transition-colors"

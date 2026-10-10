@@ -4,6 +4,7 @@ import { Button } from "@/components/Button";
 import { ProjectCard } from "@/components/ProjectCard";
 import { CtaBand } from "@/components/CtaBand";
 import { DecorativePlus } from "@/components/DecorativePlus";
+import { HeroPrompt } from "@/components/terminal/HeroPrompt";
 import { getProjectsWithLiveStars } from "@/lib/github";
 import { getAllPosts } from "@/lib/blog";
 import { siteConfig } from "@/site.config";
@@ -59,6 +60,8 @@ export default async function Home() {
               Download CV ↓
             </Button>
           </div>
+
+          <HeroPrompt />
         </div>
 
         <div className="relative mx-auto flex h-40 w-40 shrink-0 items-center justify-center rounded-2xl border-[1.5px] border-ink bg-canvas/50 p-2 sm:h-48 sm:w-48">
