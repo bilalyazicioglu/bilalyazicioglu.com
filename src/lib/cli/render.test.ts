@@ -120,8 +120,8 @@ const offlinePlaces: Place[] = [
   },
 ];
 const offlineBooks: Book[] = [
-  { title: "Reading This", author: "Someone", reading: { page: 50, pages: 100 } },
-  { title: "A Book Whose Title Is Long Enough To Wrap In A Terminal On Its Own", author: "An Author", finished: "2026-09", note: "Good." },
+  { title: "Reading This", author: "Someone", status: "reading", progress: { page: 50, pages: 100 } },
+  { title: "A Book Whose Title Is Long Enough To Wrap In A Terminal On Its Own", author: "An Author", status: "read", note: "Good." },
 ];
 
 describe("pages", () => {
@@ -132,7 +132,7 @@ describe("pages", () => {
     projects: (opts: typeof plain) => renderProjects(projects, opts),
     blog: (opts: typeof plain) => renderBlog(posts, opts),
     tincan: (opts: typeof plain) => renderTincan(projects.find((p) => p.slug === "tincan")!, opts),
-    offline: (opts: typeof plain) => renderOffline({ places: offlinePlaces, books: offlineBooks }, opts),
+    offline: (opts: typeof plain) => renderOffline({ places: offlinePlaces, books: offlineBooks, turkey: { visited: ["TR-07", "TR-06"], lived: ["TR-34"] } }, opts),
   };
 
   it.each(Object.entries(pages))("%s fits an 80-column terminal", (name, render) => {
@@ -200,17 +200,22 @@ describe("pages", () => {
     expect(text).toContain("github.com/bilalyazicioglu/tincan-cli");
   });
 
-  it("offline lists trips without home, current reads with progress, and books by year", () => {
+  it("offline lists trips without home, provinces, current reads with progress, and recent reads", () => {
     const text = pages.offline(plain);
-    expect(text).toContain("1 place in 1 country");
+    expect(text).toContain("1 place in 1 country, 3 of Türkiye's 81 provinces");
+    expect(text).toContain("Türkiye, lived in  İstanbul");
+    expect(text).toContain("Türkiye, been to  Ankara, Antalya");
     expect(text).not.toMatch(/\bIstanbul\b/);
     expect(text).toContain("2 photos on the web page");
     expect(text).toContain("███████░░░░░░░  p. 50 of 100");
-    expect(text).toMatch(/2026\n {2}Sep {5}A Book Whose Title/);
+    expect(text).toMatch(/ {2}reading +Reading This/);
+    expect(text).toMatch(/ {2}read +A Book Whose Title/);
   });
 
   it("offline says so when there are no books", () => {
-    expect(renderOffline({ places: offlinePlaces, books: [] }, plain)).toContain("No books here yet.");
+    expect(renderOffline({ places: offlinePlaces, books: [], turkey: { visited: [], lived: [] } }, plain)).toContain(
+      "Nothing on the shelf right now."
+    );
   });
 
   it("tincan prints every install command whole, so it can be pasted", () => {

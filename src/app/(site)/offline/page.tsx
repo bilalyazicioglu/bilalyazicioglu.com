@@ -4,11 +4,15 @@ import { ManSection, manLink } from "@/components/Man";
 import { PageHeader } from "@/components/PageHeader";
 import { Bookshelf } from "@/components/offline/Bookshelf";
 import { PlacesMap, type MapPin } from "@/components/offline/PlacesMap";
-import { books, places } from "@/lib/offline/data";
 import { project } from "@/lib/offline/projection";
+import { readOffline } from "@/lib/offline/store";
 import { tally } from "@/lib/offline/shelf";
+import provinceShapes from "@/lib/offline/turkey-provinces.json";
 import map from "@/lib/offline/world-map.json";
 import { siteConfig } from "@/site.config";
+
+// The data is edited from the admin panel at runtime, so it is read per request.
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Offline",
@@ -19,6 +23,7 @@ export const metadata: Metadata = {
 };
 
 export default function OfflinePage() {
+  const { places, books, turkey } = readOffline();
   // Projected here, on the server: the browser gets finished coordinates and
   // the shaded countries, never the whole map's data.
   const pins: MapPin[] = places.map((p) => ({
@@ -32,18 +37,25 @@ export default function OfflinePage() {
     home: Boolean(p.home),
   }));
   const codes = new Set(places.filter((p) => !p.home).map((p) => p.countryCode));
+  const marked = turkey.visited.length + turkey.lived.length;
+  // Where provinces are marked, they shade Türkiye instead of the whole country.
+  if (marked) codes.delete("TR");
   const visited = map.shapes.filter((s) => codes.has(s.id)).map(({ id, d }) => ({ id, d }));
+  const provinces = {
+    visited: provinceShapes.filter((s) => turkey.visited.includes(s.id)),
+    lived: provinceShapes.filter((s) => turkey.lived.includes(s.id)),
+  };
 
   return (
     <div className="font-ui text-[15px] leading-[1.75]">
       <PageHeader name="offline" section={7} kind="Miscellaneous" summary="where I go and what I read away from the keyboard" />
 
       <ManSection title="PLACES">
-        <p className="mb-1 text-[13px] text-muted">{tally(places)}</p>
-        <PlacesMap width={map.width} height={map.height} pins={pins} visited={visited} />
+        <p className="mb-1 text-[13px] text-muted">{tally(places, marked)}</p>
+        <PlacesMap width={map.width} height={map.height} pins={pins} visited={visited} provinces={provinces} />
       </ManSection>
 
-      <ManSection title="BOOKS">
+      <ManSection title="READING">
         <Bookshelf books={books} />
       </ManSection>
 

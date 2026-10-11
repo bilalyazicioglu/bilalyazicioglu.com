@@ -1,6 +1,6 @@
 import Image from "next/image";
 import type { Book } from "@/lib/offline/data";
-import { monthLabel, progressBar, shelve } from "@/lib/offline/shelf";
+import { progressBar, shelve } from "@/lib/offline/shelf";
 
 function Cover({ book, reading }: { book: Book; reading: boolean }) {
   return (
@@ -32,18 +32,16 @@ function Shelf({ books }: { books: Book[] }) {
   return (
     <ul className="grid grid-cols-2 gap-x-[18px] gap-y-6 min-[480px]:grid-cols-3 sm:grid-cols-[repeat(auto-fill,minmax(124px,1fr))]">
       {books.map((book) => {
-        const bar = book.reading && progressBar(book.reading);
+        const bar = book.progress && progressBar(book.progress);
         return (
-          <li key={book.title} className="flex min-w-0 flex-col gap-1.5">
-            <Cover book={book} reading={Boolean(book.reading)} />
+          <li key={`${book.title}-${book.author}`} className="flex min-w-0 flex-col gap-1.5">
+            <Cover book={book} reading={book.status === "reading"} />
             <p lang={book.lang} className="font-body text-[14px] font-bold leading-tight">
               {book.title}
             </p>
             <p className="text-[12.5px] leading-snug text-muted">
               {book.author}
-              {book.reading
-                ? `, p. ${book.reading.page} of ${book.reading.pages}`
-                : book.finished && monthLabel(book.finished) && `, ${monthLabel(book.finished)}`}
+              {book.progress && `, p. ${book.progress.page} of ${book.progress.pages}`}
             </p>
             {bar && (
               <p
@@ -62,26 +60,26 @@ function Shelf({ books }: { books: Book[] }) {
   );
 }
 
-/** Current reads on top, then finished books under their year. */
+/** What I'm reading now, then what I read recently. A shelf, not an archive. */
 export function Bookshelf({ books }: { books: Book[] }) {
-  const { reading, years } = shelve(books);
-  if (reading.length === 0 && years.length === 0) {
-    return <p className="text-muted">No books here yet.</p>;
+  const { reading, read } = shelve(books);
+  if (books.length === 0) {
+    return <p className="text-muted">Nothing on the shelf right now.</p>;
   }
   return (
     <div className="flex flex-col gap-6">
-      {reading.length > 0 && (
-        <section aria-label="Reading now">
-          <h3 className="mb-2.5 text-[13px] font-normal text-muted">reading now</h3>
-          <Shelf books={reading} />
-        </section>
+      {[
+        { label: "reading now", books: reading },
+        { label: "recently read", books: read },
+      ].map(
+        (group) =>
+          group.books.length > 0 && (
+            <section key={group.label} aria-label={group.label}>
+              <h3 className="mb-2.5 text-[13px] font-normal text-muted">{group.label}</h3>
+              <Shelf books={group.books} />
+            </section>
+          )
       )}
-      {years.map(({ year, books }) => (
-        <section key={year} aria-label={`Finished in ${year}`}>
-          <h3 className="mb-2.5 text-[13px] font-normal text-muted">{year}</h3>
-          <Shelf books={books} />
-        </section>
-      ))}
     </div>
   );
 }

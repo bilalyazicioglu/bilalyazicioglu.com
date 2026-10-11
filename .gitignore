@@ -49,3 +49,6 @@ next-env.d.ts
 # runtime caches
 /data/github-stars.json
 /data/*.tmp
+
+# Covers and photos uploaded from the admin panel in development; production keeps them on the content volume.
+/src/content/offline-media/

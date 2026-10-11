@@ -1,7 +1,7 @@
 import { getAllPosts } from "@/lib/blog";
 import { isTerminalClient } from "@/lib/cli/client";
 import { renderBlog, renderHome, renderInfra, renderOffline, renderProjects, renderTincan } from "@/lib/cli/render";
-import { books, places } from "@/lib/offline/data";
+import { readOffline } from "@/lib/offline/store";
 import { getProjectsWithLiveStars } from "@/lib/github";
 import { cloudflareColo, getInfra } from "@/lib/infra";
 
@@ -41,7 +41,7 @@ export async function GET(request: Request, ctx: RouteContext<"/cli/[[...page]]"
       body = renderBlog(getAllPosts(), options);
       break;
     case "offline":
-      body = renderOffline({ places, books }, options);
+      body = renderOffline(readOffline(), options);
       break;
     case "tincan": {
       const tincan = (await getProjectsWithLiveStars()).find((p) => p.slug === "tincan");

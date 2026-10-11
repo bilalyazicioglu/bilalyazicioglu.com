@@ -10,8 +10,9 @@
 import type { InfraData, Series } from "@/lib/infra-types";
 import type { PostMeta } from "@/lib/blog";
 import type { Project } from "@/lib/projects";
-import type { Book, Place } from "@/lib/offline/data";
-import { byCountry, monthLabel, progressBar, shelve, tally, trips } from "@/lib/offline/shelf";
+import type { OfflineData } from "@/lib/offline/data";
+import provinces from "@/lib/offline/turkey-provinces.json";
+import { byCountry, progressBar, shelve, tally, trips } from "@/lib/offline/shelf";
 import { TINCAN_INSTALL } from "@/lib/tincan-install";
 import { TINCAN_URL } from "@/lib/tincan-host";
 import { formatAgo, formatBytes, formatNumber } from "@/components/infra/format";
@@ -369,12 +370,13 @@ export function renderBlog(posts: PostMeta[], { color }: RenderOptions): string 
   return finish([...lines, ...footer(p, `${siteConfig.url}/blog`)]);
 }
 
-export function renderOffline(data: { places: Place[]; books: Book[] }, { color }: RenderOptions): string {
+export function renderOffline(data: OfflineData, { color }: RenderOptions): string {
   const p = palette(color);
   const column = INDENT + " ".repeat(8);
   const lines = ["", `${INDENT}${p.heading("OFFLINE")}  ${p.dim("where I go and what I read away from the keyboard")}`];
 
-  lines.push(...heading(p, "Places"), `${INDENT}${p.dim(tally(data.places))}`);
+  const marked = data.turkey.visited.length + data.turkey.lived.length;
+  lines.push(...heading(p, "Places"), `${INDENT}${p.dim(tally(data.places, marked))}`);
   // The places with something to say get their own lines; the rest are named
   // under their country, as the list under the web page's map does.
   const told = trips(data.places).filter((place) => place.note || place.photos?.length);
@@ -395,20 +397,31 @@ export function renderOffline(data: { places: Place[]; books: Book[] }, { color 
     );
   }
 
-  const { reading, years } = shelve(data.books);
-  lines.push(...heading(p, "Books"));
-  if (!reading.length && !years.length) lines.push(`${INDENT}${p.dim("No books here yet.")}`);
-  for (const book of reading) {
-    const [done, left] = progressBar(book.reading!);
-    lines.push(`${INDENT}${p.dim(pad("reading", 8))}${p.bold(book.title)}${p.dim(`, ${book.author}`)}`);
-    lines.push(`${column}${p.accent(done)}${p.dim(left)}  ${p.dim(`p. ${book.reading!.page} of ${book.reading!.pages}`)}`);
+  const named = (codes: string[]) => provinces.filter((pr) => codes.includes(pr.id)).map((pr) => pr.name);
+  for (const [label, codes] of [
+    ["lived in", data.turkey.lived],
+    ["been to", data.turkey.visited],
+  ] as const) {
+    if (!codes.length) continue;
+    const head = `Türkiye, ${label}  `;
+    const [first, ...rest] = wrap(named(codes).join(", "), WIDTH - INDENT.length - head.length);
+    lines.push("", `${INDENT}${p.dim(head)}${first}`, ...rest.map((l) => INDENT + " ".repeat(head.length) + l));
   }
-  for (const { year, books } of years) {
-    lines.push("", `${INDENT}${p.dim(year)}`);
+
+  const { reading, read } = shelve(data.books);
+  lines.push(...heading(p, "Reading"));
+  if (!data.books.length) lines.push(`${INDENT}${p.dim("Nothing on the shelf right now.")}`);
+  for (const [label, books] of [
+    ["reading", reading],
+    ["read", read],
+  ] as const) {
     for (const book of books) {
-      const month = monthLabel(book.finished!).slice(0, 3);
       const [first, ...rest] = wrap(`${book.title}, ${book.author}`, WIDTH - column.length);
-      lines.push(`${INDENT}${p.dim(pad(month, 8))}${first}`, ...rest.map((l) => column + l));
+      lines.push(`${INDENT}${p.dim(pad(label, 8))}${p.bold(first)}`, ...rest.map((l) => column + l));
+      if (book.progress) {
+        const [done, left] = progressBar(book.progress);
+        lines.push(`${column}${p.accent(done)}${p.dim(left)}  ${p.dim(`p. ${book.progress.page} of ${book.progress.pages}`)}`);
+      }
       if (book.note) lines.push(...paragraph(book.note, column, p.dim));
     }
   }

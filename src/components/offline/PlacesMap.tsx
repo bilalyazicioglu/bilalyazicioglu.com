@@ -44,11 +44,14 @@ export function PlacesMap({
   height,
   pins,
   visited,
+  provinces = { visited: [], lived: [] },
 }: {
   width: number;
   height: number;
   pins: MapPin[];
   visited: { id: string; d: string }[];
+  /** Provinces of Türkiye I have been to, and the one I live in. */
+  provinces?: { visited: { id: string; d: string }[]; lived: { id: string; d: string }[] };
 }) {
   const box = useRef<HTMLDivElement>(null);
   const pinRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -325,6 +328,23 @@ export function PlacesMap({
               strokeWidth={stroke}
             />
           ))}
+          {[...provinces.visited.map((c) => ({ ...c, lived: false })), ...provinces.lived.map((c) => ({ ...c, lived: true }))].map(
+            (c) => (
+              <path
+                key={c.id}
+                d={c.d}
+                className={
+                  c.lived
+                    ? "fill-[color-mix(in_srgb,var(--color-accent)_60%,var(--color-canvas))]"
+                    : "fill-[color-mix(in_srgb,var(--color-accent)_30%,var(--color-canvas))]"
+                }
+              />
+            )
+          )}
+          {/* Türkiye's province borders, once zoomed in far enough to tell them apart. */}
+          {provinces.visited.length + provinces.lived.length > 0 && v.w < 320 && (
+            <use href="/offline/world.svg#tr" className="fill-none stroke-ink/20" strokeWidth={stroke * 0.75} />
+          )}
         </svg>
 
         {pins.map((p, i) => {

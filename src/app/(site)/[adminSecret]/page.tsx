@@ -74,6 +74,13 @@ export default async function StudioPage({
           </form>
 
           <Link
+            href={`/${adminSecret}/offline`}
+            className="border border-ink/30 px-3 py-2 font-ui text-xs font-bold uppercase tracking-wider text-ink transition-colors hover:bg-ink hover:text-surface"
+          >
+            Offline: kitaplar ve yerler
+          </Link>
+
+          <Link
             href={`/${adminSecret}/new`}
             className="inline-flex items-center border-[1.5px] border-ink bg-ink px-4 py-2 font-ui text-xs font-bold uppercase tracking-wider text-surface transition-colors hover:bg-accent hover:text-accent-ink"
           >

@@ -1,19 +1,8 @@
 import type { Book, Place } from "./data";
 
-/** Books still being read, then finished ones grouped by year, newest first. */
-export function shelve(books: Book[]): { reading: Book[]; years: { year: string; books: Book[] }[] } {
-  const reading = books.filter((b) => b.reading);
-  const finished = books
-    .filter((b) => !b.reading && b.finished)
-    .sort((a, b) => b.finished!.localeCompare(a.finished!));
-  const years: { year: string; books: Book[] }[] = [];
-  for (const book of finished) {
-    const year = book.finished!.slice(0, 4);
-    const group = years.at(-1);
-    if (group?.year === year) group.books.push(book);
-    else years.push({ year, books: [book] });
-  }
-  return { reading, years };
+/** The shelf in the order the admin panel set: books I'm reading, then ones I just read. */
+export function shelve(books: Book[]): { reading: Book[]; read: Book[] } {
+  return { reading: books.filter((b) => b.status === "reading"), read: books.filter((b) => b.status === "read") };
 }
 
 /** Trips newest first; home is the starting point, not a trip. */
@@ -28,24 +17,17 @@ export function byCountry(places: Place[]): [string, Place[]][] {
   return [...groups].sort((a, b) => b[1].length - a[1].length);
 }
 
-/** "5 places in 3 countries", counting the home country only if a trip went there. */
-export function tally(places: Place[]): string {
+/**
+ * "5 places in 3 countries", counting the home country only if a trip went
+ * there, and the provinces of Türkiye when any are marked.
+ */
+export function tally(places: Place[], provinces = 0): string {
   const away = trips(places);
   const countries = new Set(away.map((p) => p.countryCode)).size;
   const placeWord = away.length === 1 ? "place" : "places";
   const countryWord = countries === 1 ? "country" : "countries";
-  return `${away.length} ${placeWord} in ${countries} ${countryWord}`;
-}
-
-/** "Sep 2026" from "2026-09"; nothing from a bare "2026", which its year heading already says. */
-export function monthLabel(finished: string): string {
-  const [year, month] = finished.split("-").map(Number);
-  if (!month) return "";
-  return new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString("en-US", {
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  });
+  const line = `${away.length} ${placeWord} in ${countries} ${countryWord}`;
+  return provinces ? `${line}, ${provinces} of Türkiye's 81 provinces` : line;
 }
 
 /** Fourteen blocks, filled in proportion to the page I'm on. */

@@ -1,23 +1,22 @@
 /**
- * What /offline shows: places I have been and books I have read. Newest
- * first is not required here — the page sorts — so add entries anywhere.
+ * What /offline shows: places I have been, the provinces of Türkiye I have
+ * been to, and the books I am reading or have just read.
  *
- * Adding a book:  node scripts/fetch-cover.mjs <isbn>, then an entry below
- *                 with `cover: "/offline/books/<isbn>.jpg"`.
- * Adding photos:  node scripts/add-place-photo.mjs <file> <place-slug>, which
- *                 shrinks the image and strips its metadata (phones write the
- *                 exact GPS position into every photo).
+ * The data is edited from the admin panel and kept on the content volume
+ * (see store.ts); src/content/offline.json is the starting copy. This module
+ * holds only the shapes and the check every save goes through, so the browser
+ * can share it.
  */
 
 export type Photo = {
-  /** Under /public, e.g. "/offline/places/oviedo-1.jpg". */
+  /** "/media/offline/oviedo-1a2b.jpg", or a file under /public. */
   src: string;
   /** What the photo shows, for anyone who can't see it. */
   alt: string;
 };
 
 export type Place = {
-  /** Lower-case and dashed, used for photo file names: "oviedo". */
+  /** Lower-case and dashed: "oviedo". Unique; names the place's photo files. */
   slug: string;
   city: string;
   country: string;
@@ -36,104 +35,123 @@ export type Place = {
 export type Book = {
   title: string;
   author: string;
-  /** Under /public, e.g. "/offline/books/9781449373320.jpg". */
+  /** "/media/offline/…jpg", or a file under /public. */
   cover?: string;
-  /** "2026-09" when finished, or just "2026" when the month is forgotten. */
-  finished?: string;
-  /** Present while I'm still reading it. */
-  reading?: { page: number; pages: number };
+  /** Still on it, or read recently. The shelf is what I'm reading now, not an archive. */
+  status: "reading" | "read";
+  /** Where I am in a book I'm reading. */
+  progress?: { page: number; pages: number };
   note?: string;
   /** The language the title is in, when it isn't English. */
   lang?: string;
 };
 
-export const places: Place[] = [
-  {
-    slug: "istanbul",
-    city: "Istanbul",
-    country: "Türkiye",
-    countryCode: "TR",
-    lat: 41.01,
-    lng: 28.98,
-    note: "Where I live and study.",
-    home: true,
-  },
-  {
-    slug: "oviedo",
-    city: "Oviedo",
-    country: "Spain",
-    countryCode: "ES",
-    lat: 43.36,
-    lng: -5.85,
-    year: 2026,
-    note: "An Erasmus semester at Universidad de Oviedo, and a season with the university basketball team.",
-  },
-  { slug: "a-coruna", city: "A Coruña", country: "Spain", countryCode: "ES", lat: 43.362, lng: -8.411 },
-  { slug: "vigo", city: "Vigo", country: "Spain", countryCode: "ES", lat: 42.24, lng: -8.721 },
-  { slug: "lugo", city: "Lugo", country: "Spain", countryCode: "ES", lat: 43.012, lng: -7.556 },
-  { slug: "o-cebreiro", city: "O Cebreiro", country: "Spain", countryCode: "ES", lat: 42.708, lng: -7.043 },
-  { slug: "villafranca-del-bierzo", city: "Villafranca del Bierzo", country: "Spain", countryCode: "ES", lat: 42.607, lng: -6.811 },
-  { slug: "cudillero", city: "Cudillero", country: "Spain", countryCode: "ES", lat: 43.563, lng: -6.146 },
-  { slug: "aviles", city: "Avilés", country: "Spain", countryCode: "ES", lat: 43.556, lng: -5.925 },
-  { slug: "luanco", city: "Luanco", country: "Spain", countryCode: "ES", lat: 43.614, lng: -5.792 },
-  { slug: "gijon", city: "Gijón", country: "Spain", countryCode: "ES", lat: 43.532, lng: -5.661 },
-  { slug: "ribadesella", city: "Ribadesella", country: "Spain", countryCode: "ES", lat: 43.462, lng: -5.059 },
-  { slug: "arriondas", city: "Arriondas", country: "Spain", countryCode: "ES", lat: 43.389, lng: -5.185 },
-  { slug: "cangas-de-onis", city: "Cangas de Onís", country: "Spain", countryCode: "ES", lat: 43.351, lng: -5.129 },
-  { slug: "san-vicente-de-la-barquera", city: "San Vicente de la Barquera", country: "Spain", countryCode: "ES", lat: 43.384, lng: -4.399 },
-  { slug: "santander", city: "Santander", country: "Spain", countryCode: "ES", lat: 43.462, lng: -3.81 },
-  { slug: "laredo", city: "Laredo", country: "Spain", countryCode: "ES", lat: 43.41, lng: -3.416 },
-  { slug: "bilbao", city: "Bilbao", country: "Spain", countryCode: "ES", lat: 43.263, lng: -2.935 },
-  { slug: "eibar", city: "Eibar", country: "Spain", countryCode: "ES", lat: 43.184, lng: -2.472 },
-  { slug: "san-sebastian", city: "San Sebastián", country: "Spain", countryCode: "ES", lat: 43.318, lng: -1.981 },
-  { slug: "vitoria-gasteiz", city: "Vitoria-Gasteiz", country: "Spain", countryCode: "ES", lat: 42.847, lng: -2.672 },
-  { slug: "leon", city: "León", country: "Spain", countryCode: "ES", lat: 42.599, lng: -5.567 },
-  { slug: "astorga", city: "Astorga", country: "Spain", countryCode: "ES", lat: 42.458, lng: -6.056 },
-  { slug: "burgos", city: "Burgos", country: "Spain", countryCode: "ES", lat: 42.344, lng: -3.697 },
-  { slug: "benavente", city: "Benavente", country: "Spain", countryCode: "ES", lat: 42.003, lng: -5.678 },
-  { slug: "valladolid", city: "Valladolid", country: "Spain", countryCode: "ES", lat: 41.652, lng: -4.724 },
-  { slug: "zamora", city: "Zamora", country: "Spain", countryCode: "ES", lat: 41.504, lng: -5.745 },
-  { slug: "zaragoza", city: "Zaragoza", country: "Spain", countryCode: "ES", lat: 41.649, lng: -0.889 },
-  { slug: "lleida", city: "Lleida", country: "Spain", countryCode: "ES", lat: 41.617, lng: 0.62 },
-  { slug: "barcelona", city: "Barcelona", country: "Spain", countryCode: "ES", lat: 41.387, lng: 2.169 },
-  { slug: "salamanca", city: "Salamanca", country: "Spain", countryCode: "ES", lat: 40.97, lng: -5.663 },
-  { slug: "madrid", city: "Madrid", country: "Spain", countryCode: "ES", lat: 40.417, lng: -3.704 },
-  { slug: "plasencia", city: "Plasencia", country: "Spain", countryCode: "ES", lat: 40.03, lng: -6.088 },
-  { slug: "caceres", city: "Cáceres", country: "Spain", countryCode: "ES", lat: 39.475, lng: -6.372 },
-  { slug: "merida", city: "Mérida", country: "Spain", countryCode: "ES", lat: 38.916, lng: -6.344 },
-  { slug: "valencia", city: "Valencia", country: "Spain", countryCode: "ES", lat: 39.47, lng: -0.376 },
-  { slug: "seville", city: "Seville", country: "Spain", countryCode: "ES", lat: 37.389, lng: -5.984 },
-  { slug: "jerez", city: "Jerez de la Frontera", country: "Spain", countryCode: "ES", lat: 36.686, lng: -6.137 },
-  { slug: "cadiz", city: "Cádiz", country: "Spain", countryCode: "ES", lat: 36.527, lng: -6.289 },
-  { slug: "lisbon", city: "Lisbon", country: "Portugal", countryCode: "PT", lat: 38.722, lng: -9.139 },
-  { slug: "paris", city: "Paris", country: "France", countryCode: "FR", lat: 48.857, lng: 2.352 },
-  { slug: "bordeaux", city: "Bordeaux", country: "France", countryCode: "FR", lat: 44.838, lng: -0.579 },
-  { slug: "rome", city: "Rome", country: "Italy", countryCode: "IT", lat: 41.903, lng: 12.496 },
-  { slug: "ghent", city: "Ghent", country: "Belgium", countryCode: "BE", lat: 51.054, lng: 3.725 },
-  { slug: "bruges", city: "Bruges", country: "Belgium", countryCode: "BE", lat: 51.209, lng: 3.225 },
-  { slug: "brussels", city: "Brussels", country: "Belgium", countryCode: "BE", lat: 50.85, lng: 4.352 },
-  { slug: "amsterdam", city: "Amsterdam", country: "Netherlands", countryCode: "NL", lat: 52.37, lng: 4.895 },
-  { slug: "mecca", city: "Mecca", country: "Saudi Arabia", countryCode: "SA", lat: 21.389, lng: 39.858 },
-  { slug: "medina", city: "Medina", country: "Saudi Arabia", countryCode: "SA", lat: 24.467, lng: 39.611 },
-];
+export type OfflineData = {
+  places: Place[];
+  /** In shelf order: the first one shows first. */
+  books: Book[];
+  /** Provinces of Türkiye by ISO 3166-2 code ("TR-34"), shaded on the map. */
+  turkey: { visited: string[]; lived: string[] };
+};
 
-export const books: Book[] = [
-  {
-    title: "A Game of Thrones",
-    author: "George R. R. Martin",
-    cover: "/offline/books/9780553593716.jpg",
-    finished: "2026",
-  },
-  {
-    title: "Silent Spring",
-    author: "Rachel Carson",
-    cover: "/offline/books/9780618249060.jpg",
-    finished: "2026",
-  },
-  {
-    title: "Why Nations Fail",
-    author: "Daron Acemoğlu, James A. Robinson",
-    cover: "/offline/books/9780307719225.jpg",
-    finished: "2026",
-  },
-];
+const LIMIT = { text: 200, note: 600, places: 300, books: 60, photos: 12 };
+
+const isObject = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
+
+function text(v: unknown, max = LIMIT.text): string {
+  return typeof v === "string" ? v.trim().slice(0, max) : "";
+}
+
+/** A path on this site, never another origin, so a saved cover or photo can't point anywhere else. */
+function localPath(v: unknown): string {
+  const s = text(v, 300);
+  return /^\/(?!\/)[\w\-./]+$/.test(s) && !s.includes("..") ? s : "";
+}
+
+const optional = <T>(value: T | "" | undefined) => (value === "" || value === undefined ? undefined : value);
+
+function parsePlace(raw: unknown, i: number): Place | string {
+  if (!isObject(raw)) return `Place ${i + 1} is not an object.`;
+  const slug = text(raw.slug, 60);
+  const city = text(raw.city);
+  const country = text(raw.country);
+  const countryCode = text(raw.countryCode, 2).toUpperCase();
+  const lat = Number(raw.lat);
+  const lng = Number(raw.lng);
+  if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug)) return `Place ${i + 1}: the slug may only hold a-z, 0-9 and dashes.`;
+  if (!city || !country) return `Place "${slug}": city and country are required.`;
+  if (!/^[A-Z]{2}$/.test(countryCode)) return `Place "${slug}": the country code must be two letters.`;
+  if (!(Math.abs(lat) <= 90) || !(Math.abs(lng) <= 180)) return `Place "${slug}": the coordinates are out of range.`;
+  const year = Number(raw.year);
+  const photos = (Array.isArray(raw.photos) ? raw.photos : [])
+    .filter(isObject)
+    .map((p) => ({ src: localPath(p.src), alt: text(p.alt) }))
+    .filter((p) => p.src)
+    .slice(0, LIMIT.photos);
+  return {
+    slug,
+    city,
+    country,
+    countryCode,
+    lat: Math.round(lat * 1000) / 1000,
+    lng: Math.round(lng * 1000) / 1000,
+    year: Number.isInteger(year) && year > 1900 && year < 2200 ? year : undefined,
+    note: optional(text(raw.note, LIMIT.note)),
+    photos: photos.length ? photos : undefined,
+    home: raw.home === true || undefined,
+  };
+}
+
+function parseBook(raw: unknown, i: number): Book | string {
+  if (!isObject(raw)) return `Book ${i + 1} is not an object.`;
+  const title = text(raw.title);
+  const author = text(raw.author);
+  if (!title || !author) return `Book ${i + 1}: title and author are required.`;
+  const status = raw.status === "reading" ? "reading" : "read";
+  let progress: Book["progress"];
+  if (status === "reading" && isObject(raw.progress)) {
+    const page = Math.floor(Number(raw.progress.page));
+    const pages = Math.floor(Number(raw.progress.pages));
+    if (pages > 0 && page >= 0) progress = { page: Math.min(page, pages), pages };
+  }
+  return {
+    title,
+    author,
+    cover: optional(localPath(raw.cover)),
+    status,
+    progress,
+    note: optional(text(raw.note, LIMIT.note)),
+    lang: optional(text(raw.lang, 12)),
+  };
+}
+
+const provinceList = (v: unknown) =>
+  [...new Set((Array.isArray(v) ? v : []).filter((c): c is string => typeof c === "string" && /^TR-\d{2}$/.test(c)))].sort();
+
+/**
+ * The check every save from the admin panel goes through: trims and caps the
+ * text, drops what isn't understood, and refuses what would break the page.
+ */
+export function parseOffline(raw: unknown): OfflineData | { error: string } {
+  if (!isObject(raw)) return { error: "The data must be an object." };
+  const rawPlaces = Array.isArray(raw.places) ? raw.places.slice(0, LIMIT.places) : [];
+  const rawBooks = Array.isArray(raw.books) ? raw.books.slice(0, LIMIT.books) : [];
+  const places: Place[] = [];
+  for (const [i, p] of rawPlaces.entries()) {
+    const place = parsePlace(p, i);
+    if (typeof place === "string") return { error: place };
+    if (places.some((other) => other.slug === place.slug)) return { error: `Two places share the slug "${place.slug}".` };
+    places.push(place);
+  }
+  const books: Book[] = [];
+  for (const [i, b] of rawBooks.entries()) {
+    const book = parseBook(b, i);
+    if (typeof book === "string") return { error: book };
+    books.push(book);
+  }
+  const turkey = isObject(raw.turkey) ? raw.turkey : {};
+  const lived = provinceList(turkey.lived);
+  // A province I lived in is not also listed as one I visited.
+  const visited = provinceList(turkey.visited).filter((c) => !lived.includes(c));
+  return { places, books, turkey: { visited, lived } };
+}

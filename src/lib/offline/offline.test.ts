@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { geoNaturalEarth1 } from "d3-geo";
 import map from "./world-map.json";
 import { clampView, fitView, placeLabels, project, zoomView } from "./projection";
-import { byCountry, monthLabel, progressBar, shelve, tally, trips } from "./shelf";
-import type { Book, Place } from "./data";
+import { byCountry, progressBar, shelve, tally, trips } from "./shelf";
+import { parseOffline, type Book, type Place } from "./data";
 
 describe("project", () => {
   it("puts a pin exactly where d3 drew the map", () => {
@@ -99,21 +99,47 @@ describe("placeLabels", () => {
   });
 });
 
-const book = (title: string, extra: Partial<Book>): Book => ({ title, author: "A", ...extra });
+const book = (title: string, status: Book["status"]): Book => ({ title, author: "A", status });
 
 describe("shelve", () => {
-  it("puts current reads first and groups the rest by year, newest first", () => {
-    const { reading, years } = shelve([
-      book("old", { finished: "2025-11" }),
-      book("now", { reading: { page: 10, pages: 100 } }),
-      book("new", { finished: "2026-09" }),
-      book("mid", { finished: "2026-04" }),
-    ]);
+  it("splits current reads from recent ones and keeps the order set in the panel", () => {
+    const { reading, read } = shelve([book("b", "read"), book("now", "reading"), book("a", "read")]);
     expect(reading.map((b) => b.title)).toEqual(["now"]);
-    expect(years.map((y) => [y.year, y.books.map((b) => b.title)])).toEqual([
-      ["2026", ["new", "mid"]],
-      ["2025", ["old"]],
-    ]);
+    expect(read.map((b) => b.title)).toEqual(["b", "a"]);
+  });
+});
+
+describe("parseOffline", () => {
+  const place = { slug: "oviedo", city: "Oviedo", country: "Spain", countryCode: "es", lat: 43.36, lng: -5.85 };
+
+  it("keeps good data and tidies it", () => {
+    const parsed = parseOffline({
+      places: [{ ...place, note: "  hi  ", year: "2026", photos: [{ src: "/media/offline/a-1.jpg", alt: "x" }] }],
+      books: [{ title: "T", author: "A", status: "reading", progress: { page: 500, pages: 300 } }],
+      turkey: { visited: ["TR-07", "TR-34", "nope"], lived: ["TR-34"] },
+    });
+    expect(parsed).toEqual({
+      places: [{ ...place, countryCode: "ES", note: "hi", year: 2026, photos: [{ src: "/media/offline/a-1.jpg", alt: "x" }] }],
+      books: [{ title: "T", author: "A", status: "reading", progress: { page: 300, pages: 300 } }],
+      turkey: { visited: ["TR-07"], lived: ["TR-34"] },
+    });
+  });
+
+  it("refuses what would break the page", () => {
+    expect(parseOffline({ places: [{ ...place, lat: 200 }] })).toHaveProperty("error");
+    expect(parseOffline({ places: [place, place] })).toHaveProperty("error");
+    expect(parseOffline({ books: [{ title: "", author: "A" }] })).toHaveProperty("error");
+  });
+
+  it("only lets covers and photos point at this site", () => {
+    const parsed = parseOffline({
+      books: [
+        { title: "T", author: "A", cover: "https://evil.example/x.jpg" },
+        { title: "U", author: "A", cover: "//evil.example/x.jpg" },
+        { title: "V", author: "A", cover: "/media/../../etc/passwd" },
+      ],
+    });
+    expect("error" in parsed ? null : parsed.books.map((b) => b.cover)).toEqual([undefined, undefined, undefined]);
   });
 });
 
@@ -146,9 +172,7 @@ describe("places", () => {
 });
 
 describe("labels", () => {
-  it("formats months and draws progress", () => {
-    expect(monthLabel("2026-09")).toBe("Sep 2026");
-    expect(monthLabel("2026")).toBe("");
+  it("draws progress", () => {
     expect(progressBar({ page: 50, pages: 100 })).toEqual(["███████", "░░░░░░░"]);
     expect(progressBar({ page: 400, pages: 100 }).join("")).toBe("██████████████");
   });
