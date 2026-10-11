@@ -439,7 +439,11 @@ export function PlacesMap({
         });
     });
   }
-  const provinceList = (ids: string[]) => provinces?.all.filter((p) => ids.includes(p.id)).map((p) => p.name).sort((a, b) => a.localeCompare(b, "tr")) ?? [];
+  const provinceList = (ids: string[]) =>
+    provinces?.all
+      .filter((p) => ids.includes(p.id))
+      .map((p) => p.name)
+      .sort((a, b) => a.localeCompare(b, "tr")) ?? [];
   const beenTo = provinceList(provinces?.visited ?? []);
   const livedIn = provinceList(provinces?.lived ?? []);
 
@@ -696,6 +700,16 @@ function PlaceCard({
   const count = pin.photos.length;
   const current = pin.photos[photo];
 
+  // The photos either side are fetched ahead, so an arrow shows its photo at
+  // once instead of after a wait.
+  useEffect(() => {
+    if (count < 2) return;
+    for (const step of [1, 2, -1]) {
+      const img = new window.Image();
+      img.src = pin.photos[(photo + step + count) % count].src;
+    }
+  }, [photo, count, pin.photos]);
+
   return (
     <div
       role="dialog"
@@ -707,13 +721,10 @@ function PlaceCard({
     >
       {current && (
         <div className={`relative bg-ink/5 ${wide ? "aspect-square" : "aspect-[4/5]"}`}>
-          <Image
-            src={current.src}
-            alt={current.alt}
-            fill
-            sizes={wide ? "420px" : "(max-width: 560px) 100vw, 300px"}
-            className="object-contain"
-          />
+          {/* Served as they are: they were shrunk when uploaded, and Cloudflare
+              caches these files but not /_next/image, which made every photo
+              a slow trip to the server. */}
+          <Image src={current.src} alt={current.alt} fill unoptimized loading="eager" className="object-contain" />
           {count > 1 && (
             <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-black/55 to-transparent px-2 pb-1.5 pt-6 text-[12px] text-white">
               <button

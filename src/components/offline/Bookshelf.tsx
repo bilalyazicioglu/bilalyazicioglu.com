@@ -10,6 +10,7 @@ function Cover({ book, reading }: { book: Book; reading: boolean }) {
           src={book.cover}
           alt=""
           fill
+          unoptimized
           sizes="(max-width: 640px) 45vw, 160px"
           className="object-cover"
         />
