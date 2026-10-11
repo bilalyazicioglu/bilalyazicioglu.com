@@ -1,12 +1,13 @@
 import { getAllPosts } from "@/lib/blog";
 import { isTerminalClient } from "@/lib/cli/client";
-import { renderBlog, renderHome, renderInfra, renderProjects, renderTincan } from "@/lib/cli/render";
+import { renderBlog, renderHome, renderInfra, renderOffline, renderProjects, renderTincan } from "@/lib/cli/render";
+import { books, places } from "@/lib/offline/data";
 import { getProjectsWithLiveStars } from "@/lib/github";
 import { cloudflareColo, getInfra } from "@/lib/infra";
 
 /**
  * The terminal edition. The proxy rewrites curl's requests for /, /infra,
- * /projects, /blog and tincan.rs here; see lib/cli/client.ts.
+ * /projects, /blog, /offline and tincan.rs here; see lib/cli/client.ts.
  */
 export const dynamic = "force-dynamic";
 
@@ -38,6 +39,9 @@ export async function GET(request: Request, ctx: RouteContext<"/cli/[[...page]]"
       break;
     case "blog":
       body = renderBlog(getAllPosts(), options);
+      break;
+    case "offline":
+      body = renderOffline({ places, books }, options);
       break;
     case "tincan": {
       const tincan = (await getProjectsWithLiveStars()).find((p) => p.slug === "tincan");

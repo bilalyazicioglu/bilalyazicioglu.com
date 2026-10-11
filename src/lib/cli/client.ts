@@ -19,6 +19,7 @@ export const CLI_PAGES: Record<string, string> = {
   "/infra": "/cli/infra",
   "/projects": "/cli/projects",
   "/blog": "/cli/blog",
+  "/offline": "/cli/offline",
 };
 
 /** tincan.rs's root, for the same clients. */

@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import type { InfraData } from "@/lib/infra-types";
 import type { PostMeta } from "@/lib/blog";
 import { projects } from "@/lib/projects";
-import { oneLanguage, renderBlog, renderHome, renderInfra, renderProjects, renderTincan, sparkline, wrap } from "./render";
+import { oneLanguage, renderBlog, renderHome, renderInfra, renderOffline, renderProjects, renderTincan, sparkline, wrap } from "./render";
+import type { Book, Place } from "@/lib/offline/data";
 
 const NOW = Date.parse("2026-10-08T12:00:00Z");
 const plain = { color: false, now: NOW };
@@ -104,6 +105,25 @@ describe("oneLanguage", () => {
   });
 });
 
+const offlinePlaces: Place[] = [
+  { slug: "istanbul", city: "Istanbul", country: "Türkiye", countryCode: "TR", lat: 41, lng: 29, home: true },
+  {
+    slug: "oviedo",
+    city: "Oviedo",
+    country: "Spain",
+    countryCode: "ES",
+    lat: 43.4,
+    lng: -5.8,
+    year: 2026,
+    note: "An Erasmus semester, and a long note that has to wrap before it runs past the eightieth column of a terminal.",
+    photos: [{ src: "/a.jpg", alt: "a" }, { src: "/b.jpg", alt: "b" }],
+  },
+];
+const offlineBooks: Book[] = [
+  { title: "Reading This", author: "Someone", reading: { page: 50, pages: 100 } },
+  { title: "A Book Whose Title Is Long Enough To Wrap In A Terminal On Its Own", author: "An Author", finished: "2026-09", note: "Good." },
+];
+
 describe("pages", () => {
   const posts = [post("hello", "en", undefined, "A title long enough that it would run straight past the eightieth column of a terminal")];
   const pages = {
@@ -112,6 +132,7 @@ describe("pages", () => {
     projects: (opts: typeof plain) => renderProjects(projects, opts),
     blog: (opts: typeof plain) => renderBlog(posts, opts),
     tincan: (opts: typeof plain) => renderTincan(projects.find((p) => p.slug === "tincan")!, opts),
+    offline: (opts: typeof plain) => renderOffline({ places: offlinePlaces, books: offlineBooks }, opts),
   };
 
   it.each(Object.entries(pages))("%s fits an 80-column terminal", (name, render) => {
@@ -177,6 +198,19 @@ describe("pages", () => {
     const text = pages.projects(plain);
     for (const project of projects) expect(text).toContain(project.name);
     expect(text).toContain("github.com/bilalyazicioglu/tincan-cli");
+  });
+
+  it("offline lists trips without home, current reads with progress, and books by year", () => {
+    const text = pages.offline(plain);
+    expect(text).toContain("1 place in 1 country");
+    expect(text).not.toMatch(/\bIstanbul\b/);
+    expect(text).toContain("2 photos on the web page");
+    expect(text).toContain("███████░░░░░░░  p. 50 of 100");
+    expect(text).toMatch(/2026\n {2}Sep {5}A Book Whose Title/);
+  });
+
+  it("offline says so when there are no books", () => {
+    expect(renderOffline({ places: offlinePlaces, books: [] }, plain)).toContain("No books here yet.");
   });
 
   it("tincan prints every install command whole, so it can be pasted", () => {

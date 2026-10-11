@@ -10,6 +10,8 @@
 import type { InfraData, Series } from "@/lib/infra-types";
 import type { PostMeta } from "@/lib/blog";
 import type { Project } from "@/lib/projects";
+import type { Book, Place } from "@/lib/offline/data";
+import { monthLabel, progressBar, shelve, tally, trips } from "@/lib/offline/shelf";
 import { TINCAN_INSTALL } from "@/lib/tincan-install";
 import { TINCAN_URL } from "@/lib/tincan-host";
 import { formatAgo, formatBytes, formatNumber } from "@/components/infra/format";
@@ -118,6 +120,7 @@ const MORE = [
   [`${SITE}/projects`, "everything I have shipped"],
   [`${SITE}/blog`, "writing"],
   [`${SITE}/infra`, "the machine answering you, live"],
+  [`${SITE}/offline`, "places I have been, books I have read"],
   ["tincan.rs", "voice chat for the terminal"],
 ] as const;
 
@@ -364,6 +367,39 @@ export function renderBlog(posts: PostMeta[], { color }: RenderOptions): string 
     lines.push(`${column}${p.accent(bare(`/blog/${post.slug}`))}`);
   }
   return finish([...lines, ...footer(p, `${siteConfig.url}/blog`)]);
+}
+
+export function renderOffline(data: { places: Place[]; books: Book[] }, { color }: RenderOptions): string {
+  const p = palette(color);
+  const column = INDENT + " ".repeat(8);
+  const lines = ["", `${INDENT}${p.heading("OFFLINE")}  ${p.dim("where I go and what I read away from the keyboard")}`];
+
+  lines.push(...heading(p, "Places"), `${INDENT}${p.dim(tally(data.places))}`);
+  for (const place of trips(data.places)) {
+    lines.push("", `${INDENT}${p.dim(pad(String(place.year ?? ""), 8))}${p.bold(place.city)}${p.dim(`, ${place.country}`)}`);
+    if (place.note) lines.push(...paragraph(place.note, column));
+    const photos = place.photos?.length ?? 0;
+    if (photos) lines.push(`${column}${p.dim(`${photos} photo${photos === 1 ? "" : "s"} on the web page`)}`);
+  }
+
+  const { reading, years } = shelve(data.books);
+  lines.push(...heading(p, "Books"));
+  if (!reading.length && !years.length) lines.push(`${INDENT}${p.dim("No books here yet.")}`);
+  for (const book of reading) {
+    const [done, left] = progressBar(book.reading!);
+    lines.push(`${INDENT}${p.dim(pad("reading", 8))}${p.bold(book.title)}${p.dim(`, ${book.author}`)}`);
+    lines.push(`${column}${p.accent(done)}${p.dim(left)}  ${p.dim(`p. ${book.reading!.page} of ${book.reading!.pages}`)}`);
+  }
+  for (const { year, books } of years) {
+    lines.push("", `${INDENT}${p.dim(year)}`);
+    for (const book of books) {
+      const month = monthLabel(book.finished!).slice(0, 3);
+      const [first, ...rest] = wrap(`${book.title}, ${book.author}`, WIDTH - column.length);
+      lines.push(`${INDENT}${p.dim(pad(month, 8))}${first}`, ...rest.map((l) => column + l));
+      if (book.note) lines.push(...paragraph(book.note, column, p.dim));
+    }
+  }
+  return finish([...lines, ...footer(p, `${siteConfig.url}/offline`)]);
 }
 
 export function renderTincan(project: Project, { color }: RenderOptions): string {
