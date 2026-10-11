@@ -397,7 +397,7 @@ export function renderOffline(data: OfflineData, { color }: RenderOptions): stri
     );
   }
 
-  const named = (codes: string[]) => provinces.filter((pr) => codes.includes(pr.id)).map((pr) => pr.name);
+  const named = (codes: string[]) => provinces.filter((pr) => codes.includes(pr.id)).map((pr) => pr.name).sort((a, b) => a.localeCompare(b, "tr"));
   for (const [label, codes] of [
     ["lived in", data.turkey.lived],
     ["been to", data.turkey.visited],

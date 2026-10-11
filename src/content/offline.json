@@ -371,14 +371,6 @@
       "countryCode": "SA",
       "lat": 24.467,
       "lng": 39.611
-    },
-    {
-      "slug": "antalya",
-      "city": "Antalya",
-      "country": "Türkiye",
-      "countryCode": "TR",
-      "lat": 36.897,
-      "lng": 30.713
     }
   ],
   "books": [

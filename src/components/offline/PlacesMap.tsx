@@ -439,7 +439,7 @@ export function PlacesMap({
         });
     });
   }
-  const provinceList = (ids: string[]) => provinces?.all.filter((p) => ids.includes(p.id)).map((p) => p.name) ?? [];
+  const provinceList = (ids: string[]) => provinces?.all.filter((p) => ids.includes(p.id)).map((p) => p.name).sort((a, b) => a.localeCompare(b, "tr")) ?? [];
   const beenTo = provinceList(provinces?.visited ?? []);
   const livedIn = provinceList(provinces?.lived ?? []);
 

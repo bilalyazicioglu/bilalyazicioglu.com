@@ -205,6 +205,10 @@ describe("pages", () => {
     expect(text).toContain("1 place in 1 country, 3 of Türkiye's 81 provinces");
     expect(text).toContain("Türkiye, lived in  İstanbul");
     expect(text).toContain("Türkiye, been to  Ankara, Antalya");
+    // Alphabetical, not in plate-code order (Yalova is 77, Karabük 78).
+    expect(renderOffline({ places: [], books: [], turkey: { visited: ["TR-77", "TR-78", "TR-81", "TR-18"], lived: [] } }, plain)).toContain(
+      "Çankırı, Düzce, Karabük, Yalova"
+    );
     expect(text).not.toMatch(/\bIstanbul\b/);
     expect(text).toContain("2 photos on the web page");
     expect(text).toContain("███████░░░░░░░  p. 50 of 100");
