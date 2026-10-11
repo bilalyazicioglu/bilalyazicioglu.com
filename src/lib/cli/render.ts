@@ -11,7 +11,7 @@ import type { InfraData, Series } from "@/lib/infra-types";
 import type { PostMeta } from "@/lib/blog";
 import type { Project } from "@/lib/projects";
 import type { Book, Place } from "@/lib/offline/data";
-import { monthLabel, progressBar, shelve, tally, trips } from "@/lib/offline/shelf";
+import { byCountry, monthLabel, progressBar, shelve, tally, trips } from "@/lib/offline/shelf";
 import { TINCAN_INSTALL } from "@/lib/tincan-install";
 import { TINCAN_URL } from "@/lib/tincan-host";
 import { formatAgo, formatBytes, formatNumber } from "@/components/infra/format";
@@ -375,11 +375,24 @@ export function renderOffline(data: { places: Place[]; books: Book[] }, { color 
   const lines = ["", `${INDENT}${p.heading("OFFLINE")}  ${p.dim("where I go and what I read away from the keyboard")}`];
 
   lines.push(...heading(p, "Places"), `${INDENT}${p.dim(tally(data.places))}`);
-  for (const place of trips(data.places)) {
+  // The places with something to say get their own lines; the rest are named
+  // under their country, as the list under the web page's map does.
+  const told = trips(data.places).filter((place) => place.note || place.photos?.length);
+  for (const place of told) {
     lines.push("", `${INDENT}${p.dim(pad(String(place.year ?? ""), 8))}${p.bold(place.city)}${p.dim(`, ${place.country}`)}`);
     if (place.note) lines.push(...paragraph(place.note, column));
     const photos = place.photos?.length ?? 0;
     if (photos) lines.push(`${column}${p.dim(`${photos} photo${photos === 1 ? "" : "s"} on the web page`)}`);
+  }
+  const countries = byCountry(data.places);
+  const countryWidth = Math.max(0, ...countries.map(([country]) => country.length)) + 2;
+  if (countries.length) lines.push("");
+  for (const [country, places] of countries) {
+    const [first, ...rest] = wrap(places.map((place) => place.city).join(", "), WIDTH - INDENT.length - countryWidth);
+    lines.push(
+      `${INDENT}${p.dim(pad(country, countryWidth))}${first}`,
+      ...rest.map((l) => INDENT + " ".repeat(countryWidth) + l)
+    );
   }
 
   const { reading, years } = shelve(data.books);

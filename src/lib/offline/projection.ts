@@ -58,3 +58,76 @@ export function fitView(
   const y = Math.min(Math.max(0, (y0 + y1) / 2 - h / 2), height - h);
   return { x, y, w, h };
 }
+
+export type Bounds = { width: number; height: number; minWidth: number };
+
+const clamp = (n: number, lo: number, hi: number) => Math.min(Math.max(n, lo), Math.max(lo, hi));
+
+/**
+ * The view moved back inside the map, its width between `minWidth` and as
+ * wide as the map allows. The aspect ratio never changes, so the map's box on
+ * the page keeps its height while zooming.
+ */
+export function clampView(v: ViewBox, { width, height, minWidth }: Bounds): ViewBox {
+  const aspect = v.w / v.h;
+  const w = clamp(v.w, minWidth, Math.min(width, height * aspect));
+  const h = w / aspect;
+  return { x: clamp(v.x, 0, width - w), y: clamp(v.y, 0, height - h), w, h };
+}
+
+/**
+ * The view scaled by `factor` (below 1 zooms in) around a point given as a
+ * share of the view's width and height, which stays under the cursor.
+ */
+export function zoomView(v: ViewBox, factor: number, fx: number, fy: number, bounds: Bounds): ViewBox {
+  const next = clampView({ ...v, w: v.w * factor, h: v.h * factor }, bounds);
+  const px = v.x + fx * v.w;
+  const py = v.y + fy * v.h;
+  return clampView({ ...next, x: px - fx * next.w, y: py - fy * next.h }, bounds);
+}
+
+export type Label = { x: number; y: number; text: string };
+export type LabelSpot = "right" | "left";
+
+/**
+ * Which pins get a name beside them, in screen pixels: each label goes to the
+ * right of its pin, or the left when the right is taken, and is dropped when
+ * both would overlap another label or pin or leave the box. Earlier labels win,
+ * so list the ones that matter most first.
+ */
+export function placeLabels(
+  labels: Label[],
+  {
+    width,
+    height,
+    charWidth = 7,
+    lineHeight = 15,
+    gap = 12,
+    pinRadius = 7,
+  }: { width: number; height: number; charWidth?: number; lineHeight?: number; gap?: number; pinRadius?: number }
+): (LabelSpot | null)[] {
+  type Rect = [number, number, number, number];
+  const taken: Rect[] = labels.map((l) => [l.x - pinRadius, l.y - pinRadius, l.x + pinRadius, l.y + pinRadius]);
+  const free = (r: Rect, self: number) =>
+    r[0] >= 0 &&
+    r[2] <= width &&
+    r[1] >= 0 &&
+    r[3] <= height &&
+    taken.every((t, i) => i === self || r[2] <= t[0] || r[0] >= t[2] || r[3] <= t[1] || r[1] >= t[3]);
+  return labels.map((l, i) => {
+    const w = l.text.length * charWidth;
+    const [top, bottom] = [l.y - lineHeight / 2, l.y + lineHeight / 2];
+    const right: Rect = [l.x + gap, top, l.x + gap + w, bottom];
+    const left: Rect = [l.x - gap - w, top, l.x - gap, bottom];
+    for (const [spot, rect] of [
+      ["right", right],
+      ["left", left],
+    ] as const) {
+      if (free(rect, i)) {
+        taken.push(rect);
+        return spot;
+      }
+    }
+    return null;
+  });
+}

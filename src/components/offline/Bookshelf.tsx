@@ -43,7 +43,7 @@ function Shelf({ books }: { books: Book[] }) {
               {book.author}
               {book.reading
                 ? `, p. ${book.reading.page} of ${book.reading.pages}`
-                : book.finished && `, ${monthLabel(book.finished)}`}
+                : book.finished && monthLabel(book.finished) && `, ${monthLabel(book.finished)}`}
             </p>
             {bar && (
               <p

@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { geoNaturalEarth1 } from "d3-geo";
 import map from "./world-map.json";
-import { fitView, project } from "./projection";
-import { monthLabel, progressBar, shelve, tally, trips } from "./shelf";
+import { clampView, fitView, placeLabels, project, zoomView } from "./projection";
+import { byCountry, monthLabel, progressBar, shelve, tally, trips } from "./shelf";
 import type { Book, Place } from "./data";
 
 describe("project", () => {
@@ -49,6 +49,56 @@ describe("fitView", () => {
   });
 });
 
+describe("zoomView", () => {
+  const bounds = { width: 1000, height: 440, minWidth: 40 };
+  const v = { x: 0, y: 0, w: 880, h: 440 };
+
+  it("keeps the point under the cursor in place", () => {
+    const z = zoomView(v, 0.5, 0.25, 0.5, bounds);
+    expect(z.w).toBe(440);
+    expect(z.x + 0.25 * z.w).toBeCloseTo(v.x + 0.25 * v.w);
+    expect(z.y + 0.5 * z.h).toBeCloseTo(v.y + 0.5 * v.h);
+  });
+
+  it("keeps the aspect ratio", () => {
+    const z = zoomView(v, 0.3, 0.5, 0.5, bounds);
+    expect(z.w / z.h).toBeCloseTo(2);
+  });
+
+  it("stops at minWidth and at the whole map", () => {
+    expect(zoomView(v, 0.001, 0.5, 0.5, bounds).w).toBe(40);
+    expect(zoomView(v, 10, 0.5, 0.5, bounds).w).toBe(880);
+  });
+
+  it("won't pan past the edge", () => {
+    expect(clampView({ x: -50, y: 900, w: 200, h: 100 }, bounds)).toEqual({ x: 0, y: 340, w: 200, h: 100 });
+  });
+});
+
+describe("placeLabels", () => {
+  const box = { width: 400, height: 200 };
+
+  it("puts a lone label on the right", () => {
+    expect(placeLabels([{ x: 100, y: 100, text: "Oviedo" }], box)).toEqual(["right"]);
+  });
+
+  it("moves a label left when the right is taken, and drops it when both are", () => {
+    const spots = placeLabels(
+      [
+        { x: 100, y: 100, text: "Gijón" }, // the right would cover Avilés's pin
+        { x: 130, y: 100, text: "Avilés" },
+        { x: 115, y: 100, text: "Luanco" }, // boxed in on both sides
+      ],
+      box
+    );
+    expect(spots).toEqual(["left", "right", null]);
+  });
+
+  it("flips at the box's right edge", () => {
+    expect(placeLabels([{ x: 390, y: 100, text: "Medina" }], box)).toEqual(["left"]);
+  });
+});
+
 const book = (title: string, extra: Partial<Book>): Book => ({ title, author: "A", ...extra });
 
 describe("shelve", () => {
@@ -85,11 +135,20 @@ describe("places", () => {
     expect(tally(all)).toBe("3 places in 2 countries");
     expect(tally([all[0], all[1]])).toBe("1 place in 1 country");
   });
+
+  it("groups trips by country, the most visited first", () => {
+    const groups = byCountry([place("ist", "TR", undefined, true), place("rome", "IT"), place("lugo", "ES"), place("leon", "ES")]);
+    expect(groups.map(([country, list]) => [country, list.map((p) => p.slug)])).toEqual([
+      ["ES", ["lugo", "leon"]],
+      ["IT", ["rome"]],
+    ]);
+  });
 });
 
 describe("labels", () => {
   it("formats months and draws progress", () => {
     expect(monthLabel("2026-09")).toBe("Sep 2026");
+    expect(monthLabel("2026")).toBe("");
     expect(progressBar({ page: 50, pages: 100 })).toEqual(["███████", "░░░░░░░"]);
     expect(progressBar({ page: 400, pages: 100 }).join("")).toBe("██████████████");
   });

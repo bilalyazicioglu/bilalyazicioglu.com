@@ -21,6 +21,13 @@ export function trips(places: Place[]): Place[] {
   return places.filter((p) => !p.home).sort((a, b) => (b.year ?? 0) - (a.year ?? 0));
 }
 
+/** Trips by country, the most visited country first, places in the order listed. */
+export function byCountry(places: Place[]): [string, Place[]][] {
+  const groups = new Map<string, Place[]>();
+  for (const place of trips(places)) groups.set(place.country, [...(groups.get(place.country) ?? []), place]);
+  return [...groups].sort((a, b) => b[1].length - a[1].length);
+}
+
 /** "5 places in 3 countries", counting the home country only if a trip went there. */
 export function tally(places: Place[]): string {
   const away = trips(places);
@@ -30,9 +37,10 @@ export function tally(places: Place[]): string {
   return `${away.length} ${placeWord} in ${countries} ${countryWord}`;
 }
 
-/** "Sep 2026" from "2026-09". */
+/** "Sep 2026" from "2026-09"; nothing from a bare "2026", which its year heading already says. */
 export function monthLabel(finished: string): string {
   const [year, month] = finished.split("-").map(Number);
+  if (!month) return "";
   return new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString("en-US", {
     month: "short",
     year: "numeric",
