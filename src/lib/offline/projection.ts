@@ -131,3 +131,35 @@ export function placeLabels(
     return null;
   });
 }
+
+export type Rect = [left: number, top: number, right: number, bottom: number];
+
+/**
+ * Which centred labels (province names) get drawn, in screen pixels: a label
+ * is kept unless it overlaps one kept before it, a box to avoid (pins and
+ * their names), or the edge of the map. Earlier labels win.
+ */
+export function placeCentered(
+  labels: Label[],
+  avoid: Rect[],
+  {
+    width,
+    height,
+    charWidth = 6.5,
+    lineHeight = 13,
+  }: { width: number; height: number; charWidth?: number; lineHeight?: number }
+): boolean[] {
+  const taken: Rect[] = [...avoid];
+  return labels.map((l) => {
+    const half = (l.text.length * charWidth) / 2;
+    const r: Rect = [l.x - half, l.y - lineHeight / 2, l.x + half, l.y + lineHeight / 2];
+    const ok =
+      r[0] >= 0 &&
+      r[2] <= width &&
+      r[1] >= 0 &&
+      r[3] <= height &&
+      taken.every((t) => r[2] <= t[0] || r[0] >= t[2] || r[3] <= t[1] || r[1] >= t[3]);
+    if (ok) taken.push(r);
+    return ok;
+  });
+}

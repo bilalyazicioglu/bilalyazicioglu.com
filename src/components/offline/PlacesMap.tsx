@@ -3,7 +3,16 @@
 import Image from "next/image";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { Photo } from "@/lib/offline/data";
-import { clampView, fitView, placeLabels, zoomView, type Point, type ViewBox } from "@/lib/offline/projection";
+import {
+  clampView,
+  fitView,
+  placeCentered,
+  placeLabels,
+  zoomView,
+  type Point,
+  type Rect,
+  type ViewBox,
+} from "@/lib/offline/projection";
 
 export type MapPin = Point & {
   slug: string;
@@ -15,10 +24,15 @@ export type MapPin = Point & {
   home: boolean;
 };
 
+/** A province of Türkiye: its outline, and where its name is written. */
+export type Province = { id: string; name: string; d: string; cx: number; cy: number };
+
 type View = "fit" | "world";
 
 /** Below this the map is too small to float a card over; the card opens under it. */
 const NARROW = 560;
+/** Province names are written once the map is zoomed in about this close. */
+const PROVINCE_NAMES_BELOW = 320;
 /**
  * Safari reports a pinch, on a Mac trackpad or an iPhone, as its own gesture
  * events rather than as ctrl+scroll or two pointers, and zooms the whole page
@@ -26,6 +40,7 @@ const NARROW = 560;
  */
 type GestureEvent = UIEvent & { scale: number; clientX: number; clientY: number };
 const safariGestures = () => typeof window !== "undefined" && "GestureEvent" in window;
+const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /** How much one press of + or − zooms. */
 const STEP = 1.6;
@@ -36,22 +51,28 @@ const STEP = 1.6;
  * countries are drawn inline. Pins are HTML buttons laid over the drawing, so
  * they stay round and keyboard-reachable at any zoom.
  *
- * Zoom with + and −, a double click, ctrl+scroll, or a pinch on a trackpad
- * or a phone; drag to move. A plain scroll still scrolls the page.
+ * It behaves like a map:
+ * - drag to move, and a flick keeps coasting;
+ * - pinch (trackpad or phone), ctrl+scroll, double click, or + and − to zoom;
+ * - once the map has been clicked, a two-finger scroll moves it, and hands
+ *   the scroll back to the page when the map can go no further;
+ * - arrow keys move it and + and − zoom it while it has focus;
+ * - choosing a place from the list flies the map to it.
+ * Until it has been clicked, a plain scroll over it still scrolls the page.
  */
 export function PlacesMap({
   width,
   height,
   pins,
   visited,
-  provinces = { visited: [], lived: [] },
+  provinces,
 }: {
   width: number;
   height: number;
   pins: MapPin[];
   visited: { id: string; d: string }[];
-  /** Provinces of Türkiye I have been to, and the one I live in. */
-  provinces?: { visited: { id: string; d: string }[]; lived: { id: string; d: string }[] };
+  /** All of Türkiye's provinces, and which I have been to and live in. */
+  provinces?: { all: Province[]; visited: string[]; lived: string[] };
 }) {
   const box = useRef<HTMLDivElement>(null);
   const pinRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -94,16 +115,70 @@ export function PlacesMap({
   // but it doesn't reach into the <use>d drawing.)
   const stroke = boxWidth > 0 ? (0.8 * v.w) / boxWidth : 0.4;
 
-  // The latest view, for the wheel and pointer handlers below.
+  // The view the handlers below work from. It is set where the view changes
+  // as well as after each render, so several events in one frame add up.
   const current = useRef(v);
   useLayoutEffect(() => {
     current.current = v;
   }, [v]);
-  const move = useCallback((next: ViewBox) => setCam({ ...clampView(next, bounds), narrow }), [bounds, narrow]);
+  const frame = useRef(0);
+  const stop = useCallback(() => {
+    cancelAnimationFrame(frame.current);
+    frame.current = 0;
+  }, []);
+  useEffect(() => stop, [stop]);
+
+  /** Straight to a view: dragging, pinching, scrolling. */
+  const move = useCallback(
+    (next: ViewBox) => {
+      stop();
+      const clamped = clampView(next, bounds);
+      current.current = clamped;
+      setCam({ ...clamped, narrow });
+    },
+    [bounds, narrow, stop]
+  );
   const zoom = useCallback(
     (factor: number, fx = 0.5, fy = 0.5) => move(zoomView(current.current, factor, fx, fy, bounds)),
     [move, bounds]
   );
+  /** Eased to a view: buttons, double click, keys, the list. */
+  const fly = useCallback(
+    (target: ViewBox, done?: () => void) => {
+      stop();
+      const from = current.current;
+      const to = clampView(target, bounds);
+      if (reducedMotion()) {
+        current.current = to;
+        setCam({ ...to, narrow });
+        done?.();
+        return;
+      }
+      const start = performance.now();
+      const fromAspect = from.w / from.h;
+      const toAspect = to.w / to.h;
+      const tick = (now: number) => {
+        const t = Math.min(1, (now - start) / 260);
+        const k = 1 - (1 - t) ** 3;
+        // Width changes by the same factor each moment, so a zoom feels even.
+        const w = from.w * (to.w / from.w) ** k;
+        const h = w / (fromAspect + (toAspect - fromAspect) * k);
+        const cx = from.x + from.w / 2 + (to.x + to.w / 2 - from.x - from.w / 2) * k;
+        const cy = from.y + from.h / 2 + (to.y + to.h / 2 - from.y - from.h / 2) * k;
+        const next = { x: cx - w / 2, y: cy - h / 2, w, h };
+        current.current = next;
+        setCam({ ...next, narrow });
+        if (t < 1) frame.current = requestAnimationFrame(tick);
+        else {
+          frame.current = 0;
+          done?.();
+        }
+      };
+      frame.current = requestAnimationFrame(tick);
+    },
+    [bounds, narrow, stop]
+  );
+  const flyZoom = (factor: number, fx = 0.5, fy = 0.5) => fly(zoomView(current.current, factor, fx, fy, bounds));
 
   /** A client point as a share of the map's width and height. */
   const share = (clientX: number, clientY: number) => {
@@ -111,17 +186,33 @@ export function PlacesMap({
     return [(clientX - r.left) / r.width, (clientY - r.top) / r.height] as const;
   };
 
-  // React's wheel listener is passive and can't stop the page from zooming,
-  // so this one is attached by hand.
+  // Once clicked (or focused), a scroll moves the map instead of the page.
+  const engaged = useRef(false);
+
+  // React's wheel listener is passive and can't stop the page from scrolling
+  // or zooming, so these are attached by hand.
   useEffect(() => {
     const el = box.current;
     if (!el) return;
     const onWheel = (e: WheelEvent) => {
-      if (!e.ctrlKey && !e.metaKey) return;
-      e.preventDefault();
+      const v = current.current;
       const r = el.getBoundingClientRect();
-      const delta = Math.max(-50, Math.min(50, e.deltaY));
-      zoom(Math.exp(delta * 0.01), (e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height);
+      if (e.ctrlKey || e.metaKey) {
+        // ctrl+scroll, and a pinch on a trackpad in Chrome and Firefox.
+        e.preventDefault();
+        const delta = Math.max(-50, Math.min(50, e.deltaY));
+        zoom(Math.exp(delta * 0.01), (e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height);
+        return;
+      }
+      // Two fingers on a trackpad. Zoomed all the way out there is nothing to
+      // move, and at the map's edge the scroll belongs to the page again.
+      if (!engaged.current || v.w >= Math.min(width, height * (v.w / v.h)) - 0.5) return;
+      const unit = v.w / r.width;
+      const line = e.deltaMode === 1 ? 16 : 1;
+      const next = clampView({ ...v, x: v.x + e.deltaX * line * unit, y: v.y + e.deltaY * line * unit }, bounds);
+      if (Math.abs(next.x - v.x) < 1e-6 && Math.abs(next.y - v.y) < 1e-6) return;
+      e.preventDefault();
+      move(next);
     };
     // Safari's pinch: scale is measured from where the fingers started.
     let start: { v: ViewBox; fx: number; fy: number } | null = null;
@@ -150,16 +241,23 @@ export function PlacesMap({
       el.removeEventListener("gesturechange", onGestureChange);
       el.removeEventListener("gestureend", onGestureEnd);
     };
-  }, [zoom, move, bounds]);
+  }, [zoom, move, bounds, width, height]);
 
   /** Pins and the card handle their own clicks; anywhere else drags the map. */
   const onMap = (e: React.PointerEvent | React.MouseEvent) =>
     !(e.target as HTMLElement).closest("button, [role=dialog]");
 
+  // How fast the last drag was moving, in map units per millisecond, so that
+  // letting go of a flick keeps the map coasting.
+  const velocity = useRef({ vx: 0, vy: 0, at: 0 });
+
   function onPointerDown(e: React.PointerEvent) {
+    engaged.current = true;
     if (!onMap(e) || (e.pointerType === "mouse" && e.button !== 0)) return;
+    stop();
     e.currentTarget.setPointerCapture(e.pointerId);
     pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    velocity.current = { vx: 0, vy: 0, at: 0 };
   }
 
   function onPointerMove(e: React.PointerEvent) {
@@ -170,15 +268,23 @@ export function PlacesMap({
     const v = current.current;
     const unit = v.w / box.current!.getBoundingClientRect().width;
     if (others.length === 0) {
-      move({
-        ...v,
-        x: v.x - (e.clientX - last.x) * unit,
-        y: v.y - (e.clientY - last.y) * unit,
-      });
+      const dx = -(e.clientX - last.x) * unit;
+      const dy = -(e.clientY - last.y) * unit;
+      move({ ...v, x: v.x + dx, y: v.y + dy });
+      // An event's timeStamp is on the same clock as requestAnimationFrame's.
+      const now = e.timeStamp;
+      const dt = Math.max(1, now - velocity.current.at);
+      // Smoothed, so one jittery event doesn't set the speed.
+      velocity.current = {
+        vx: velocity.current.vx * 0.6 + (dx / dt) * 0.4,
+        vy: velocity.current.vy * 0.6 + (dy / dt) * 0.4,
+        at: now,
+      };
       return;
     }
     // Two fingers: zoom by how far they spread, around the point between them,
     // and move with that point. Safari's gesture events above do this there.
+    velocity.current = { vx: 0, vy: 0, at: 0 };
     if (safariGestures()) return;
     const other = others[0];
     const before = Math.hypot(last.x - other.x, last.y - other.y);
@@ -194,18 +300,65 @@ export function PlacesMap({
   }
 
   function onPointerUp(e: React.PointerEvent) {
+    const wasDragging = pointers.current.size === 1 && pointers.current.has(e.pointerId);
     pointers.current.delete(e.pointerId);
+    const { vx, vy, at } = velocity.current;
+    // Only a flick still moving as the finger lifts coasts on.
+    if (!wasDragging || reducedMotion() || e.timeStamp - at > 80 || Math.hypot(vx, vy) < 0.004) return;
+    let last = e.timeStamp;
+    let speed = { vx, vy };
+    const coast = (now: number) => {
+      const dt = Math.min(48, now - last);
+      last = now;
+      const v = current.current;
+      const next = clampView({ ...v, x: v.x + speed.vx * dt, y: v.y + speed.vy * dt }, bounds);
+      const stuck = Math.abs(next.x - v.x) < 1e-6 && Math.abs(next.y - v.y) < 1e-6;
+      const decay = Math.exp(-dt / 325);
+      speed = { vx: speed.vx * decay, vy: speed.vy * decay };
+      current.current = next;
+      setCam({ ...next, narrow });
+      frame.current = !stuck && Math.hypot(speed.vx, speed.vy) > 0.0015 ? requestAnimationFrame(coast) : 0;
+    };
+    frame.current = requestAnimationFrame(coast);
   }
 
   function onDoubleClick(e: React.MouseEvent) {
     if (!onMap(e)) return;
     const [fx, fy] = share(e.clientX, e.clientY);
-    zoom(e.shiftKey ? STEP : 1 / STEP, fx, fy);
+    flyZoom(e.shiftKey ? STEP : 1 / STEP, fx, fy);
+  }
+
+  /** With the map itself focused (not a pin in it): arrows move it, + and − zoom it. */
+  function onKeyDown(e: React.KeyboardEvent) {
+    if (e.target !== e.currentTarget || e.altKey || e.ctrlKey || e.metaKey) return;
+    const v = current.current;
+    const step = (e.shiftKey ? 0.6 : 0.25) * v.w;
+    const arrows: Record<string, [number, number]> = {
+      ArrowLeft: [-step, 0],
+      ArrowRight: [step, 0],
+      ArrowUp: [0, -step],
+      ArrowDown: [0, step],
+    };
+    if (arrows[e.key]) {
+      e.preventDefault();
+      const [dx, dy] = arrows[e.key];
+      fly({ ...v, x: v.x + dx, y: v.y + dy });
+    } else if (e.key === "+" || e.key === "=") {
+      e.preventDefault();
+      flyZoom(1 / STEP);
+    } else if (e.key === "-" || e.key === "_") {
+      e.preventDefault();
+      flyZoom(STEP);
+    } else if (e.key === "0") {
+      e.preventDefault();
+      choose("fit");
+    }
   }
 
   function choose(name: View) {
     setView(name);
-    setCam(null);
+    // Eased to the preset, then handed back to it, so a resize still re-fits.
+    fly(views[name], () => setCam(null));
   }
 
   const close = useCallback((refocus: boolean) => {
@@ -225,8 +378,10 @@ export function PlacesMap({
   function toggle(i: number) {
     if (open === i) return close(false);
     const p = pins[i];
-    // A pin outside the current view is brought in by showing the whole world.
-    if (p.x < v.x || p.x > v.x + v.w || p.y < v.y || p.y > v.y + v.h) choose("world");
+    // A pin outside the view is flown to, at the zoom the map is already at.
+    if (p.x < v.x || p.x > v.x + v.w || p.y < v.y || p.y > v.y + v.h) {
+      fly({ ...v, x: p.x - v.w / 2, y: p.y - v.h / 2 });
+    }
     setPhoto(0);
     setOpen(i);
   }
@@ -245,22 +400,63 @@ export function PlacesMap({
   const order = pins
     .map((p, i) => ({ p, i, rank: p.home ? 0 : p.note || p.photos.length ? 1 : 2 }))
     .sort((a, b) => a.rank - b.rank);
+  const screen = (p: Point) => ({ x: ((p.x - v.x) / v.w) * boxWidth, y: ((p.y - v.y) / v.h) * boxHeight });
   const spots = placeLabels(
-    order.map(({ p }) => ({ x: ((p.x - v.x) / v.w) * boxWidth, y: ((p.y - v.y) / v.h) * boxHeight, text: p.city })),
+    order.map(({ p }) => ({ ...screen(p), text: p.city })),
     { width: boxWidth, height: boxHeight }
   );
   const labelAt = new Map(order.map(({ i }, n) => [i, spots[n]]));
+
+  // Türkiye's provinces are named once the map is close enough, visited ones
+  // first, in whatever room the pins and their names leave.
+  const provinceNames: { p: Province; x: number; y: number; state: "lived" | "visited" | "none" }[] = [];
+  if (provinces && boxWidth > 0 && v.w <= PROVINCE_NAMES_BELOW) {
+    const rank = (id: string) => (provinces.lived.includes(id) ? 0 : provinces.visited.includes(id) ? 1 : 2);
+    const taken: Rect[] = [];
+    order.forEach(({ p }, n) => {
+      const { x, y } = screen(p);
+      taken.push([x - 9, y - 9, x + 9, y + 9]);
+      const spot = spots[n];
+      if (spot) {
+        const w = p.city.length * 7;
+        taken.push(spot === "right" ? [x + 12, y - 8, x + 12 + w, y + 8] : [x - 12 - w, y - 8, x - 12, y + 8]);
+      }
+    });
+    const inView = provinces.all
+      .filter((p) => p.cx >= v.x && p.cx <= v.x + v.w && p.cy >= v.y && p.cy <= v.y + v.h)
+      .sort((a, b) => rank(a.id) - rank(b.id));
+    const fits = placeCentered(
+      inView.map((p) => ({ ...screen({ x: p.cx, y: p.cy }), text: p.name })),
+      taken,
+      { width: boxWidth, height: boxHeight }
+    );
+    inView.forEach((p, n) => {
+      if (fits[n])
+        provinceNames.push({
+          p,
+          ...screen({ x: p.cx, y: p.cy }),
+          state: ["lived", "visited", "none"][rank(p.id)] as "lived",
+        });
+    });
+  }
+  const provinceList = (ids: string[]) => provinces?.all.filter((p) => ids.includes(p.id)).map((p) => p.name) ?? [];
+  const beenTo = provinceList(provinces?.visited ?? []);
+  const livedIn = provinceList(provinces?.lived ?? []);
+
   // The list under the map, one line per country, the most visited first.
   const countries = new Map<string, { p: MapPin; i: number }[]>();
   pins.forEach((p, i) => !p.home && countries.set(p.country, [...(countries.get(p.country) ?? []), { p, i }]));
+  if (beenTo.length + livedIn.length > 0 && !countries.has("Türkiye")) countries.set("Türkiye", []);
   const byCountry = [...countries].sort((a, b) => b[1].length - a[1].length);
 
   return (
     <div>
       <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-4 text-[13px]">
         <p className="text-muted">
-          <span className="[@media(pointer:coarse)]:hidden">pinch or ctrl+scroll to zoom, drag to move</span>
-          <span className="hidden [@media(pointer:coarse)]:inline">pinch to zoom, drag to move</span>
+          <span className="[@media(pointer:coarse)]:hidden">
+            click the map, then scroll with two fingers to move; pinch or ctrl+scroll to zoom
+          </span>
+          <span className="hidden [@media(pointer:coarse)]:inline">drag to move, pinch to zoom</span>
         </p>
         <div className="flex items-baseline gap-4">
           <div role="group" aria-label="Map view" className="flex gap-4">
@@ -288,7 +484,7 @@ export function PlacesMap({
                 type="button"
                 aria-label={label}
                 disabled={limit}
-                onClick={() => zoom(factor)}
+                onClick={() => flyZoom(factor)}
                 className="h-6 w-6 border border-ink/15 leading-none text-ink first:rounded-l-md last:rounded-r-md last:border-l-0 hover:bg-ink/5 disabled:text-muted/50 disabled:hover:bg-transparent"
               >
                 {sign}
@@ -305,9 +501,22 @@ export function PlacesMap({
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
         onDoubleClick={onDoubleClick}
+        onKeyDown={onKeyDown}
+        onFocus={(e) => {
+          if (e.target === e.currentTarget) engaged.current = true;
+        }}
+        onPointerLeave={(e) => {
+          if (e.pointerType === "mouse" && !pointers.current.size) engaged.current = false;
+        }}
+        onBlur={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget)) engaged.current = false;
+        }}
+        tabIndex={0}
+        role="group"
+        aria-label="Map of the places. Arrow keys move it, plus and minus zoom it, 0 resets it."
         // One finger scrolls the page until the map is zoomed in; two always zoom it.
         style={{ touchAction: v.w < maxW - 0.5 ? "none" : "pan-y" }}
-        className="relative cursor-grab select-none overflow-hidden rounded-md border border-ink/15 bg-ink/[0.03] active:cursor-grabbing"
+        className="relative cursor-grab select-none overflow-hidden rounded-md border border-ink/15 bg-ink/[0.03] outline-none focus-visible:border-accent focus-visible:ring-1 focus-visible:ring-accent active:cursor-grabbing"
       >
         <svg
           viewBox={`${v.x} ${v.y} ${v.w} ${v.h}`}
@@ -328,24 +537,37 @@ export function PlacesMap({
               strokeWidth={stroke}
             />
           ))}
-          {[...provinces.visited.map((c) => ({ ...c, lived: false })), ...provinces.lived.map((c) => ({ ...c, lived: true }))].map(
-            (c) => (
+          {provinces?.all
+            .filter((c) => provinces.visited.includes(c.id) || provinces.lived.includes(c.id))
+            .map((c) => (
               <path
                 key={c.id}
                 d={c.d}
                 className={
-                  c.lived
+                  provinces.lived.includes(c.id)
                     ? "fill-[color-mix(in_srgb,var(--color-accent)_60%,var(--color-canvas))]"
                     : "fill-[color-mix(in_srgb,var(--color-accent)_30%,var(--color-canvas))]"
                 }
               />
-            )
-          )}
+            ))}
           {/* Türkiye's province borders, once zoomed in far enough to tell them apart. */}
-          {provinces.visited.length + provinces.lived.length > 0 && v.w < 320 && (
+          {provinces && beenTo.length + livedIn.length > 0 && v.w < PROVINCE_NAMES_BELOW && (
             <use href="/offline/world.svg#tr" className="fill-none stroke-ink/20" strokeWidth={stroke * 0.75} />
           )}
         </svg>
+
+        {provinceNames.map(({ p, x, y, state }) => (
+          <span
+            key={p.id}
+            aria-hidden
+            className={`pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 whitespace-nowrap text-[10.5px] leading-none [text-shadow:0_0_3px_var(--color-canvas),0_0_3px_var(--color-canvas)] ${
+              state === "lived" ? "font-bold text-ink" : state === "visited" ? "text-ink" : "text-ink/50"
+            }`}
+            style={{ left: x, top: y }}
+          >
+            {p.name}
+          </span>
+        ))}
 
         {pins.map((p, i) => {
           const { left, top } = position(p);
@@ -418,11 +640,23 @@ export function PlacesMap({
                       >
                         {p.city}
                       </button>
-                      {p.photos.length > 0 && <span className="text-muted"> ({p.photos.length} photo{p.photos.length === 1 ? "" : "s"})</span>}
+                      {p.photos.length > 0 && (
+                        <span className="text-muted">
+                          {" "}
+                          ({p.photos.length} photo{p.photos.length === 1 ? "" : "s"})
+                        </span>
+                      )}
                       {n < list.length - 1 && ","}
                     </span>
                   </span>
                 ))}
+                {country === "Türkiye" && beenTo.length + livedIn.length > 0 && (
+                  <span className={`block text-muted ${list.length ? "mt-0.5" : ""}`}>
+                    {livedIn.length > 0 && `lived in ${livedIn.join(", ")}`}
+                    {livedIn.length > 0 && beenTo.length > 0 && "; "}
+                    {beenTo.length > 0 && `been to ${beenTo.join(", ")}`}
+                  </span>
+                )}
               </dd>
             </div>
           ))}

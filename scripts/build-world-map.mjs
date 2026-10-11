@@ -21,7 +21,7 @@ import { access, readFile, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { geoNaturalEarth1, geoPath } from "d3-geo";
+import { geoCentroid, geoNaturalEarth1, geoPath } from "d3-geo";
 import { feature } from "topojson-client";
 import countries from "i18n-iso-countries";
 
@@ -100,7 +100,15 @@ const provinces = admin1.features
   .map((f) => {
     const polygons = f.geometry.type === "Polygon" ? [f.geometry.coordinates] : f.geometry.coordinates;
     const d = polygons.flatMap((rings) => rings.map(ringPath)).join("");
-    return { id: f.properties.iso_3166_2, name: f.properties.name_tr ?? f.properties.name, d };
+    // Where the name is written: the middle of the province, in map units.
+    const [cx, cy] = projection(geoCentroid(f));
+    return {
+      id: f.properties.iso_3166_2,
+      name: f.properties.name_tr ?? f.properties.name,
+      cx: Math.round(cx * 100) / 100,
+      cy: Math.round(cy * 100) / 100,
+      d,
+    };
   })
   .sort((a, b) => a.id.localeCompare(b.id));
 await writeFile(new URL("../src/lib/offline/turkey-provinces.json", import.meta.url), JSON.stringify(provinces));

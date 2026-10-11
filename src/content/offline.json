@@ -371,14 +371,6 @@
       "countryCode": "TR",
       "lat": 36.897,
       "lng": 30.713
-    },
-    {
-      "slug": "alanya",
-      "city": "Alanya",
-      "country": "Türkiye",
-      "countryCode": "TR",
-      "lat": 36.544,
-      "lng": 31.999
     }
   ],
   "books": [
@@ -403,6 +395,8 @@
   ],
   "turkey": {
     "visited": [
+      "TR-03",
+      "TR-05",
       "TR-06",
       "TR-07",
       "TR-10",
@@ -410,15 +404,20 @@
       "TR-14",
       "TR-15",
       "TR-16",
+      "TR-18",
       "TR-22",
       "TR-26",
       "TR-32",
-      "TR-39",
+      "TR-37",
       "TR-41",
       "TR-43",
+      "TR-48",
       "TR-54",
+      "TR-55",
       "TR-59",
+      "TR-61",
       "TR-77",
+      "TR-78",
       "TR-81"
     ],
     "lived": [

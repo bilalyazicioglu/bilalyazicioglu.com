@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { geoNaturalEarth1 } from "d3-geo";
 import map from "./world-map.json";
-import { clampView, fitView, placeLabels, project, zoomView } from "./projection";
+import { clampView, fitView, placeCentered, placeLabels, project, zoomView } from "./projection";
 import { byCountry, progressBar, shelve, tally, trips } from "./shelf";
 import { parseOffline, type Book, type Place } from "./data";
 
@@ -96,6 +96,28 @@ describe("placeLabels", () => {
 
   it("flips at the box's right edge", () => {
     expect(placeLabels([{ x: 390, y: 100, text: "Medina" }], box)).toEqual(["left"]);
+  });
+});
+
+describe("placeCentered", () => {
+  const box = { width: 300, height: 100 };
+
+  it("keeps the first of two overlapping names, and every name that has room", () => {
+    const kept = placeCentered(
+      [
+        { x: 100, y: 50, text: "Ankara" },
+        { x: 110, y: 52, text: "Kırıkkale" },
+        { x: 220, y: 50, text: "Konya" },
+      ],
+      [],
+      box
+    );
+    expect(kept).toEqual([true, false, true]);
+  });
+
+  it("steps around boxes to avoid and out of the map", () => {
+    expect(placeCentered([{ x: 100, y: 50, text: "Bursa" }], [[90, 40, 110, 60]], box)).toEqual([false]);
+    expect(placeCentered([{ x: 5, y: 50, text: "Edirne" }], [], box)).toEqual([false]);
   });
 });
 

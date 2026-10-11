@@ -41,10 +41,8 @@ export default function OfflinePage() {
   // Where provinces are marked, they shade Türkiye instead of the whole country.
   if (marked) codes.delete("TR");
   const visited = map.shapes.filter((s) => codes.has(s.id)).map(({ id, d }) => ({ id, d }));
-  const provinces = {
-    visited: provinceShapes.filter((s) => turkey.visited.includes(s.id)),
-    lived: provinceShapes.filter((s) => turkey.lived.includes(s.id)),
-  };
+  const provinces = { all: provinceShapes, visited: turkey.visited, lived: turkey.lived };
+
 
   return (
     <div className="font-ui text-[15px] leading-[1.75]">
