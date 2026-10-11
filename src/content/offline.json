@@ -53,14 +53,6 @@
       "lng": -7.043
     },
     {
-      "slug": "villafranca-del-bierzo",
-      "city": "Villafranca del Bierzo",
-      "country": "Spain",
-      "countryCode": "ES",
-      "lat": 42.607,
-      "lng": -6.811
-    },
-    {
       "slug": "cudillero",
       "city": "Cudillero",
       "country": "Spain",
@@ -99,14 +91,6 @@
       "countryCode": "ES",
       "lat": 43.462,
       "lng": -5.059
-    },
-    {
-      "slug": "arriondas",
-      "city": "Arriondas",
-      "country": "Spain",
-      "countryCode": "ES",
-      "lat": 43.389,
-      "lng": -5.185
     },
     {
       "slug": "cangas-de-onis",
@@ -195,14 +179,6 @@
       "countryCode": "ES",
       "lat": 42.344,
       "lng": -3.697
-    },
-    {
-      "slug": "benavente",
-      "city": "Benavente",
-      "country": "Spain",
-      "countryCode": "ES",
-      "lat": 42.003,
-      "lng": -5.678
     },
     {
       "slug": "valladolid",
@@ -299,14 +275,6 @@
       "countryCode": "ES",
       "lat": 37.389,
       "lng": -5.984
-    },
-    {
-      "slug": "jerez",
-      "city": "Jerez de la Frontera",
-      "country": "Spain",
-      "countryCode": "ES",
-      "lat": 36.686,
-      "lng": -6.137
     },
     {
       "slug": "cadiz",
@@ -435,7 +403,23 @@
   ],
   "turkey": {
     "visited": [
-      "TR-07"
+      "TR-06",
+      "TR-07",
+      "TR-10",
+      "TR-11",
+      "TR-14",
+      "TR-15",
+      "TR-16",
+      "TR-22",
+      "TR-26",
+      "TR-32",
+      "TR-39",
+      "TR-41",
+      "TR-43",
+      "TR-54",
+      "TR-59",
+      "TR-77",
+      "TR-81"
     ],
     "lived": [
       "TR-34"

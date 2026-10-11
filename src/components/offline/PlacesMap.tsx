@@ -418,7 +418,7 @@ export function PlacesMap({
                       >
                         {p.city}
                       </button>
-                      {p.photos.length > 0 && <span className="text-muted"> ({p.photos.length} photos)</span>}
+                      {p.photos.length > 0 && <span className="text-muted"> ({p.photos.length} photo{p.photos.length === 1 ? "" : "s"})</span>}
                       {n < list.length - 1 && ","}
                     </span>
                   </span>
