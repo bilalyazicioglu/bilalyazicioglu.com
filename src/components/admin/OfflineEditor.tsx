@@ -288,7 +288,7 @@ function BookRow({
         <div className="aspect-[2/3] w-24 overflow-hidden border border-ink/15 bg-ink/5">
           {book.cover ? (
             // eslint-disable-next-line @next/next/no-img-element -- an admin preview of a just-saved file
-            <img src={book.cover} alt="" className="h-full w-full object-cover" />
+            <img src={book.cover} alt="" className="h-full w-full object-contain" />
           ) : (
             <p className="p-2 font-ui text-[10px] text-ink/50">kapak yok</p>
           )}
@@ -446,7 +446,7 @@ function BookRow({
                       <img
                         src={c.url}
                         alt={c.from}
-                        className="aspect-[2/3] w-full object-cover"
+                        className="aspect-[2/3] w-full bg-ink/5 object-contain"
                         referrerPolicy="no-referrer"
                       />
                     </button>
@@ -644,7 +644,7 @@ function PlaceForm({
           {photos.map((ph, i) => (
             <div key={ph.src} className="flex w-36 flex-col gap-1">
               {/* eslint-disable-next-line @next/next/no-img-element -- an admin preview */}
-              <img src={ph.src} alt={ph.alt} className="aspect-[4/3] w-full border border-ink/15 object-cover" />
+              <img src={ph.src} alt={ph.alt} className="aspect-square w-full border border-ink/15 bg-ink/5 object-contain" />
               <textarea
                 rows={3}
                 className={`${input} text-xs`}
