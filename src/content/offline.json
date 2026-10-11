@@ -101,6 +101,14 @@
       "lng": -5.129
     },
     {
+      "slug": "covadonga",
+      "city": "Covadonga",
+      "country": "Spain",
+      "countryCode": "ES",
+      "lat": 43.308,
+      "lng": -5.056
+    },
+    {
       "slug": "san-vicente-de-la-barquera",
       "city": "San Vicente de la Barquera",
       "country": "Spain",
@@ -315,6 +323,14 @@
       "countryCode": "IT",
       "lat": 41.903,
       "lng": 12.496
+    },
+    {
+      "slug": "fiumicino",
+      "city": "Fiumicino",
+      "country": "Italy",
+      "countryCode": "IT",
+      "lat": 41.771,
+      "lng": 12.235
     },
     {
       "slug": "vatican-city",

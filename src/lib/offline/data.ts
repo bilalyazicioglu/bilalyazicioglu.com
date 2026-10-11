@@ -54,7 +54,7 @@ export type OfflineData = {
   turkey: { visited: string[]; lived: string[] };
 };
 
-const LIMIT = { text: 200, note: 600, places: 300, books: 60, photos: 12 };
+const LIMIT = { text: 200, note: 600, places: 300, books: 60, photos: 60 };
 
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
 

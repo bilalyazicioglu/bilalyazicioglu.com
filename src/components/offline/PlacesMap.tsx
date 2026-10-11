@@ -702,17 +702,17 @@ function PlaceCard({
       aria-label={pin.city}
       style={style}
       className={`z-10 overflow-hidden border border-ink/15 bg-surface text-[13.5px] leading-normal ${
-        floating ? "absolute rounded-md shadow-[0_6px_20px_rgb(0_0_0/0.18)]" : "mt-2 rounded-md"
+        floating ? "absolute rounded-md shadow-[0_6px_20px_rgb(0_0_0/0.18)]" : "relative mt-2 rounded-md"
       } ${wide && current ? "grid grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]" : ""}`}
     >
       {current && (
-        <div className="relative aspect-[4/3] bg-ink/5">
+        <div className={`relative bg-ink/5 ${wide ? "aspect-square" : "aspect-[4/5]"}`}>
           <Image
             src={current.src}
             alt={current.alt}
             fill
             sizes={wide ? "420px" : "(max-width: 560px) 100vw, 300px"}
-            className="object-cover"
+            className="object-contain"
           />
           {count > 1 && (
             <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-black/55 to-transparent px-2 pb-1.5 pt-6 text-[12px] text-white">
@@ -739,23 +739,38 @@ function PlaceCard({
           )}
         </div>
       )}
-      <div className="relative px-3 py-2.5 pr-8">
-        <button
-          type="button"
-          aria-label="Close"
-          onClick={onClose}
-          className="absolute right-2 top-1.5 text-base text-muted hover:text-ink"
-        >
-          ×
-        </button>
-        <p>
-          <b className="font-bold">{pin.city}</b>{" "}
-          <span className="text-muted">
-            {pin.country}
-            {pin.home ? ", home" : pin.year ? `, ${pin.year}` : ""}
-          </span>
-        </p>
-        {pin.note && <p className="mt-1 font-body text-[14px]">{pin.note}</p>}
+      <button
+        type="button"
+        aria-label="Close"
+        onClick={onClose}
+        className="absolute right-2 top-1.5 z-20 rounded bg-surface/85 px-1.5 text-base leading-snug text-muted shadow-sm hover:text-ink"
+      >
+        ×
+      </button>
+      {/* Beside the photo the text is as tall as the photo and scrolls inside
+          it; the place above a rule, this photo's own words below it. */}
+      <div className="relative min-h-0">
+        <div className={wide && current ? "absolute inset-0 flex flex-col" : ""}>
+          <div className={`px-3 py-2.5 pr-8 ${wide && current ? "min-h-0 flex-1 overflow-y-auto" : ""}`}>
+            <p>
+              <b className="font-bold">{pin.city}</b>{" "}
+              <span className="text-muted">
+                {pin.country}
+                {pin.home ? ", home" : pin.year ? `, ${pin.year}` : ""}
+              </span>
+            </p>
+            {pin.note && <p className="mt-1 font-body text-[14px]">{pin.note}</p>}
+          </div>
+          {current?.alt && (
+            <div
+              // The photo's alt text is these same words; read it once.
+              aria-hidden
+              className={`border-t border-ink/15 px-3 py-2.5 ${wide ? "min-h-0 flex-1 overflow-y-auto" : ""}`}
+            >
+              <p className="font-body text-[14px]">{current.alt}</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

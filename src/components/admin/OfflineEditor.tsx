@@ -639,15 +639,16 @@ function PlaceForm({
         />
       </div>
       <div>
-        <p className={label}>Fotoğraflar (konum bilgisi silinir, 1600px&apos;e küçültülür)</p>
+        <p className={label}>Fotoğraflar (konum bilgisi silinir, 1600px&apos;e küçültülür; açıklaması olmayanın yanında yazı çıkmaz)</p>
         <div className="flex flex-wrap gap-3">
           {photos.map((ph, i) => (
             <div key={ph.src} className="flex w-36 flex-col gap-1">
               {/* eslint-disable-next-line @next/next/no-img-element -- an admin preview */}
               <img src={ph.src} alt={ph.alt} className="aspect-[4/3] w-full border border-ink/15 object-cover" />
-              <input
+              <textarea
+                rows={3}
                 className={`${input} text-xs`}
-                placeholder="ne görünüyor?"
+                placeholder="açıklama (kartta fotoğrafın yanında görünür)"
                 value={ph.alt}
                 onChange={(e) => setPhotos(photos.map((x, j) => (j === i ? { ...x, alt: e.target.value } : x)))}
               />

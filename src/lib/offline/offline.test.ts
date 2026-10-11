@@ -147,6 +147,12 @@ describe("parseOffline", () => {
     });
   });
 
+  it("keeps a place's twenty photos", () => {
+    const photos = Array.from({ length: 20 }, (_, i) => ({ src: `/offline/places/oviedo-${i}.jpg`, alt: "" }));
+    const parsed = parseOffline({ places: [{ ...place, photos }] });
+    expect("error" in parsed ? 0 : parsed.places[0].photos?.length).toBe(20);
+  });
+
   it("refuses what would break the page", () => {
     expect(parseOffline({ places: [{ ...place, lat: 200 }] })).toHaveProperty("error");
     expect(parseOffline({ places: [place, place] })).toHaveProperty("error");

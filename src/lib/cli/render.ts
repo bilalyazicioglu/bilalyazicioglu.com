@@ -377,9 +377,9 @@ export function renderOffline(data: OfflineData, { color }: RenderOptions): stri
 
   const marked = data.turkey.visited.length + data.turkey.lived.length;
   lines.push(...heading(p, "Places"), `${INDENT}${p.dim(tally(data.places, marked))}`);
-  // The places with something to say get their own lines; the rest are named
-  // under their country, as the list under the web page's map does.
-  const told = trips(data.places).filter((place) => place.note || place.photos?.length);
+  // The places with a note get their own lines; the rest, photos or not, are
+  // named under their country, as the list under the web page's map does.
+  const told = trips(data.places).filter((place) => place.note);
   for (const place of told) {
     lines.push("", `${INDENT}${p.dim(pad(String(place.year ?? ""), 8))}${p.bold(place.city)}${p.dim(`, ${place.country}`)}`);
     if (place.note) lines.push(...paragraph(place.note, column));
