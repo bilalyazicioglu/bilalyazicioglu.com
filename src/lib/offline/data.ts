@@ -69,6 +69,7 @@ export const places: Place[] = [
     note: "An Erasmus semester at Universidad de Oviedo, and a season with the university basketball team.",
   },
   { slug: "a-coruna", city: "A Coruña", country: "Spain", countryCode: "ES", lat: 43.362, lng: -8.411 },
+  { slug: "vigo", city: "Vigo", country: "Spain", countryCode: "ES", lat: 42.24, lng: -8.721 },
   { slug: "lugo", city: "Lugo", country: "Spain", countryCode: "ES", lat: 43.012, lng: -7.556 },
   { slug: "o-cebreiro", city: "O Cebreiro", country: "Spain", countryCode: "ES", lat: 42.708, lng: -7.043 },
   { slug: "villafranca-del-bierzo", city: "Villafranca del Bierzo", country: "Spain", countryCode: "ES", lat: 42.607, lng: -6.811 },

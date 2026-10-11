@@ -19,6 +19,14 @@ type View = "fit" | "world";
 
 /** Below this the map is too small to float a card over; the card opens under it. */
 const NARROW = 560;
+/**
+ * Safari reports a pinch, on a Mac trackpad or an iPhone, as its own gesture
+ * events rather than as ctrl+scroll or two pointers, and zooms the whole page
+ * unless they are cancelled.
+ */
+type GestureEvent = UIEvent & { scale: number; clientX: number; clientY: number };
+const safariGestures = () => typeof window !== "undefined" && "GestureEvent" in window;
+
 /** How much one press of + or − zooms. */
 const STEP = 1.6;
 
@@ -28,9 +36,8 @@ const STEP = 1.6;
  * countries are drawn inline. Pins are HTML buttons laid over the drawing, so
  * they stay round and keyboard-reachable at any zoom.
  *
- * Zoom with + and −, a double click, ctrl+scroll or a trackpad pinch (which
- * browsers report as ctrl+scroll), or two fingers on a phone; drag to move.
- * A plain scroll still scrolls the page.
+ * Zoom with + and −, a double click, ctrl+scroll, or a pinch on a trackpad
+ * or a phone; drag to move. A plain scroll still scrolls the page.
  */
 export function PlacesMap({
   width,
@@ -113,9 +120,34 @@ export function PlacesMap({
       const delta = Math.max(-50, Math.min(50, e.deltaY));
       zoom(Math.exp(delta * 0.01), (e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height);
     };
+    // Safari's pinch: scale is measured from where the fingers started.
+    let start: { v: ViewBox; fx: number; fy: number } | null = null;
+    const onGestureStart = (e: Event) => {
+      e.preventDefault();
+      const g = e as GestureEvent;
+      const r = el.getBoundingClientRect();
+      start = { v: current.current, fx: (g.clientX - r.left) / r.width, fy: (g.clientY - r.top) / r.height };
+    };
+    const onGestureChange = (e: Event) => {
+      e.preventDefault();
+      const g = e as GestureEvent;
+      if (start && g.scale > 0) move(zoomView(start.v, 1 / g.scale, start.fx, start.fy, bounds));
+    };
+    const onGestureEnd = (e: Event) => {
+      e.preventDefault();
+      start = null;
+    };
     el.addEventListener("wheel", onWheel, { passive: false });
-    return () => el.removeEventListener("wheel", onWheel);
-  }, [zoom]);
+    el.addEventListener("gesturestart", onGestureStart);
+    el.addEventListener("gesturechange", onGestureChange);
+    el.addEventListener("gestureend", onGestureEnd);
+    return () => {
+      el.removeEventListener("wheel", onWheel);
+      el.removeEventListener("gesturestart", onGestureStart);
+      el.removeEventListener("gesturechange", onGestureChange);
+      el.removeEventListener("gestureend", onGestureEnd);
+    };
+  }, [zoom, move, bounds]);
 
   /** Pins and the card handle their own clicks; anywhere else drags the map. */
   const onMap = (e: React.PointerEvent | React.MouseEvent) =>
@@ -143,7 +175,8 @@ export function PlacesMap({
       return;
     }
     // Two fingers: zoom by how far they spread, around the point between them,
-    // and move with that point.
+    // and move with that point. Safari's gesture events above do this there.
+    if (safariGestures()) return;
     const other = others[0];
     const before = Math.hypot(last.x - other.x, last.y - other.y);
     const after = Math.hypot(e.clientX - other.x, e.clientY - other.y);
@@ -223,8 +256,8 @@ export function PlacesMap({
     <div>
       <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-4 text-[13px]">
         <p className="text-muted">
-          <span className="[@media(pointer:coarse)]:hidden">drag to move, ctrl+scroll to zoom</span>
-          <span className="hidden [@media(pointer:coarse)]:inline">pinch to zoom</span>
+          <span className="[@media(pointer:coarse)]:hidden">pinch or ctrl+scroll to zoom, drag to move</span>
+          <span className="hidden [@media(pointer:coarse)]:inline">pinch to zoom, drag to move</span>
         </p>
         <div className="flex items-baseline gap-4">
           <div role="group" aria-label="Map view" className="flex gap-4">
