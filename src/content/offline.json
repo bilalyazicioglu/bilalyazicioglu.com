@@ -317,6 +317,14 @@
       "lng": 12.496
     },
     {
+      "slug": "vatican-city",
+      "city": "Vatican City",
+      "country": "Vatican City",
+      "countryCode": "VA",
+      "lat": 41.903,
+      "lng": 12.453
+    },
+    {
       "slug": "ghent",
       "city": "Ghent",
       "country": "Belgium",
