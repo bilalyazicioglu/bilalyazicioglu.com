@@ -67,7 +67,7 @@ export default function AboutPage() {
             <p>{siteConfig.bio}</p>
             <p>
               Outside of coursework I contribute translations to Tuta, an open-source privacy-first email
-              client, and play competitive basketball — first with Marmara University, and during my Erasmus+
+              client, and play competitive basketball with Marmara University, and during my Erasmus+
               exchange with Universidad de Oviedo.
             </p>
             <p>
