@@ -394,6 +394,13 @@ export function PlacesMap({
   // A card with photos is taller than the map is high, so it opens under the
   // map, photo beside text; a plain note floats next to its pin.
   const below = narrow || (active !== null && active.photos.length > 0);
+  // A card under the map can open beyond the bottom of the screen, where
+  // nothing seems to have happened: bring it into view.
+  const belowCard = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (open === null || !below) return;
+    belowCard.current?.scrollIntoView({ block: "nearest", behavior: reducedMotion() ? "auto" : "smooth" });
+  }, [open, below]);
   // Names only where they fit: home first, then places with something to
   // open, so a crowded region still names the ones worth clicking.
   const boxHeight = boxWidth * (v.h / v.w);
@@ -623,7 +630,9 @@ export function PlacesMap({
       </div>
 
       {active && below && (
-        <PlaceCard pin={active} photo={photo} setPhoto={setPhoto} onClose={() => close(true)} wide={!narrow} />
+        <div ref={belowCard}>
+          <PlaceCard pin={active} photo={photo} setPhoto={setPhoto} onClose={() => close(true)} wide={!narrow} />
+        </div>
       )}
 
       {byCountry.length > 0 && (
