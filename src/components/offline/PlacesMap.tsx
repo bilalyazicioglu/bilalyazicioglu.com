@@ -496,7 +496,7 @@ export function PlacesMap({
                 aria-label={label}
                 disabled={limit}
                 onClick={() => flyZoom(factor)}
-                className="h-6 w-6 border border-ink/15 leading-none text-ink first:rounded-l-md last:rounded-r-md last:border-l-0 hover:bg-ink/5 disabled:text-muted/50 disabled:hover:bg-transparent"
+                className="h-8 w-8 border border-ink/15 leading-none text-ink first:rounded-l-md last:rounded-r-md last:border-l-0 hover:bg-ink/5 disabled:text-muted/50 disabled:hover:bg-transparent"
               >
                 {sign}
               </button>
