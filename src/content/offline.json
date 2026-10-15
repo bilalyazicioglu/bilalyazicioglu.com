@@ -391,6 +391,13 @@
   ],
   "books": [
     {
+      "title": "Huysuz, Oyunbozan, Dahi",
+      "author": "Nevzat Aydın biyografisi",
+      "cover": "/offline/books/huysuz-oyunbozan-dahi.jpg",
+      "status": "reading",
+      "lang": "tr"
+    },
+    {
       "title": "A Game of Thrones",
       "author": "George R. R. Martin",
       "cover": "/offline/books/9780553593716.jpg",
