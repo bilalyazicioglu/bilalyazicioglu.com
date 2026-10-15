@@ -409,7 +409,7 @@ export function renderOffline(data: OfflineData, { color }: RenderOptions): stri
   }
 
   const { reading, read } = shelve(data.books);
-  lines.push(...heading(p, "Reading"));
+  lines.push(...heading(p, "Recent reads"));
   if (!data.books.length) lines.push(`${INDENT}${p.dim("Nothing on the shelf right now.")}`);
   for (const [label, books] of [
     ["reading", reading],

@@ -53,7 +53,7 @@ export default function OfflinePage() {
         <PlacesMap width={map.width} height={map.height} pins={pins} visited={visited} provinces={provinces} />
       </ManSection>
 
-      <ManSection title="READING">
+      <ManSection title="RECENT READS">
         <Bookshelf books={books} />
       </ManSection>
 

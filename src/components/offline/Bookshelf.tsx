@@ -61,26 +61,11 @@ function Shelf({ books }: { books: Book[] }) {
   );
 }
 
-/** What I'm reading now, then what I read recently. A shelf, not an archive. */
+/** A handful of recent reads, the ones in progress first. A shelf, not an archive. */
 export function Bookshelf({ books }: { books: Book[] }) {
   const { reading, read } = shelve(books);
   if (books.length === 0) {
     return <p className="text-muted">Nothing on the shelf right now.</p>;
   }
-  return (
-    <div className="flex flex-col gap-6">
-      {[
-        { label: "reading now", books: reading },
-        { label: "recently read", books: read },
-      ].map(
-        (group) =>
-          group.books.length > 0 && (
-            <section key={group.label} aria-label={group.label}>
-              <h3 className="mb-2.5 text-[13px] font-normal text-muted">{group.label}</h3>
-              <Shelf books={group.books} />
-            </section>
-          )
-      )}
-    </div>
-  );
+  return <Shelf books={[...reading, ...read]} />;
 }
