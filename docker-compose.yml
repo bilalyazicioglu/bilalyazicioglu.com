@@ -145,7 +145,7 @@ services:
   # port; tunnel routes (Zero Trust dashboard, tunnel "portfolio") point at
   # http://blog:3000 on this network.
   cloudflared:
-    image: cloudflare/cloudflared:2026.10.0
+    image: cloudflare/cloudflared:2026.10.3
     restart: unless-stopped
     command: tunnel --no-autoupdate run
     environment:

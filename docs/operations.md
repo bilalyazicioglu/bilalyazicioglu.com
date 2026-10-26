@@ -45,6 +45,25 @@ It pulls `main`, rebuilds the blog image with the commit's SHA, subject and time
 
 Public traffic reaches the app through the `cloudflared` service, which dials out to Cloudflare and talks to the app over the Compose network; tunnel routes in the Cloudflare dashboard point at `http://blog:3000`. The app's port is bound to `127.0.0.1:3000` only, for `tailscale serve` on the host. Do not publish it more widely, including from a `docker-compose.override.yml`: the admin gate trusts headers that anyone who can reach the port could forge.
 
+### Security updates (2026-10-26)
+
+The deploy script pulls a fresh Node base image before rebuilding. CI rejects npm dependencies with known high or critical advisories. These checks do not scan container images or prove that a deployed host is uncompromised.
+
+Cloudflared must be at least 2026.10.2 (2026.10.3 on macOS without Homebrew); this checkout pins the Docker image to 2026.10.3. See [Cloudflare's certificate incident](https://blog.cloudflare.com/emudhra-certificate-compromise/). Updating this file alone does not update a running connector. Before restarting a single connector, add a temporary replica through the Cloudflare dashboard on a second host or container and confirm it is connected. On the deployment host, after updating this checkout:
+
+```sh
+docker compose pull cloudflared
+docker compose up -d --no-deps cloudflared
+docker compose exec -T cloudflared cloudflared --version
+docker compose logs --tail 50 cloudflared
+```
+
+Confirm the replacement connector is connected and the tunnel is Healthy in Cloudflare before removing the temporary replica. Existing long-lived connections can still drop. Repeat for every tunnel and connector; the account-wide inventory is in the Cloudflare dashboard. If a route uses an HTTPS origin, check its certificate chain first and replace affected eMudhra certificates. Never bypass certificate checks with `noTLSVerify`. The documented blog origin is HTTP inside the Compose network, so that specific origin does not have an HTTPS certificate chain to replace.
+
+The application must also be rebuilt and deployed to activate the Next.js security fixes; see the [October advisory](https://nextjs.org/blog/nextjs-security-update-october-14-2026). A valid, private `ADMIN_SESSION_SECRET` is required; sessions are rejected when it is missing in production.
+
+Remaining infrastructure work: [Promtail reached end of life on March 2, 2026](https://grafana.com/docs/loki/latest/send-data/promtail/), and needs migration to Alloy. Loki and Promtail currently use mutable `latest` tags. The live host, all running image digests, OS patches, container vulnerability scan, origin TLS settings and other Cloudflare connectors must be inspected separately before claiming the whole deployment is patched.
+
 Promtail discovers containers through `docker-socket-proxy`, which allows only read-only container and network lookups, rather than through the Docker socket itself.
 
 ### Automatic deploys

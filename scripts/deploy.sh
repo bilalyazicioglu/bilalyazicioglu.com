@@ -30,9 +30,10 @@ main() {
   export GIT_SUBJECT="$(git log -1 --format=%s)"
   export GIT_COMMIT_TIME="$(git log -1 --format=%ct)"
 
-  # --build is not optional: without it compose reuses the old image and the
-  # "deploy" silently ships stale code.
-  docker compose up -d --build blog
+  # Rebuild every deploy and refresh the base image for runtime/CA updates;
+  # otherwise compose can silently reuse an old, unpatched image.
+  docker compose build --pull blog
+  docker compose up -d blog
 
   # Bring the rest of the stack in line with docker-compose.yml: start new
   # services, recreate changed ones. Then have Prometheus re-read its config,

@@ -138,6 +138,9 @@ const SESSION_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
 
 export function createSessionToken(username: string): string {
   const config = getAdminConfig();
+  if (!config.sessionSecret) {
+    throw new Error("Admin session secret is not configured");
+  }
   const now = Math.floor(Date.now() / 1000);
   const payload: SessionPayload = {
     user: username,
@@ -161,6 +164,7 @@ export function verifySessionToken(token: string | null | undefined): SessionPay
 
   const [encodedPayload, signature] = parts;
   const config = getAdminConfig();
+  if (!config.sessionSecret) return null;
 
   const hmac = crypto.createHmac("sha256", config.sessionSecret);
   hmac.update(encodedPayload);
@@ -174,7 +178,17 @@ export function verifySessionToken(token: string | null | undefined): SessionPay
     const raw = Buffer.from(encodedPayload, "base64url").toString("utf8");
     const payload: SessionPayload = JSON.parse(raw);
     const now = Math.floor(Date.now() / 1000);
-    if (payload.exp && payload.exp < now) {
+    if (
+      !payload ||
+      typeof payload.user !== "string" ||
+      !payload.user.trim() ||
+      !Number.isSafeInteger(payload.iat) ||
+      !Number.isSafeInteger(payload.exp) ||
+      payload.iat > now ||
+      payload.exp <= now ||
+      payload.exp <= payload.iat ||
+      payload.exp - payload.iat > SESSION_TTL_SECONDS
+    ) {
       return null;
     }
     return payload;

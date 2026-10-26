@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import crypto from "node:crypto";
 import {
   checkRateLimit,
   createSessionToken,
@@ -50,6 +51,26 @@ describe("session tokens", () => {
   it("rejects a token signed with another secret", () => {
     const token = createSessionToken("bilal");
     vi.stubEnv("ADMIN_SESSION_SECRET", "test-secret-two");
+    expect(verifySessionToken(token)).toBeNull();
+  });
+
+  it.each([
+    null,
+    {},
+    { user: "bilal", iat: 0 },
+    { user: "bilal", iat: 0, exp: "9999999999" },
+    { user: "", iat: 0, exp: 9_999_999_999 },
+    { user: "bilal", iat: 0, exp: 9_999_999_999 },
+  ])("rejects signed invalid session payload %j", (payload) => {
+    const encoded = Buffer.from(JSON.stringify(payload)).toString("base64url");
+    const signature = crypto.createHmac("sha256", "test-secret-one").update(encoded).digest("base64url");
+    expect(verifySessionToken(`${encoded}.${signature}`)).toBeNull();
+  });
+
+  it("expires a token at its exact expiry time", () => {
+    vi.useFakeTimers();
+    const token = createSessionToken("bilal");
+    vi.advanceTimersByTime(7 * 24 * 60 * 60 * 1000);
     expect(verifySessionToken(token)).toBeNull();
   });
 
@@ -129,6 +150,14 @@ describe("production configuration", () => {
   it("refuses every login when credentials are unset", () => {
     expect(verifyAdminCredentials("", "", "")).toBe(false);
     expect(verifyAdminCredentials("admin", "admin12345", "0000")).toBe(false);
+  });
+
+  it("refuses to issue or accept sessions without a signing secret", () => {
+    const now = Math.floor(Date.now() / 1000);
+    const encoded = Buffer.from(JSON.stringify({ user: "attacker", iat: now, exp: now + 60 })).toString("base64url");
+    const signature = crypto.createHmac("sha256", "").update(encoded).digest("base64url");
+    expect(verifySessionToken(`${encoded}.${signature}`)).toBeNull();
+    expect(() => createSessionToken("bilal")).toThrow("Admin session secret is not configured");
   });
 
   it("checks all three factors", () => {
