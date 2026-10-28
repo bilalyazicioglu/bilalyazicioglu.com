@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { isVercelDeployment } from "./deployment";
 
 function getFilePath(): string {
   if (process.env.VIEWS_FILE_PATH) {
@@ -58,12 +59,14 @@ function saveFileAtomic(filePath: string, data: ViewsData) {
 }
 
 export function getViewCount(slug: string): number {
+  if (isVercelDeployment()) return 0;
   const filePath = getFilePath();
   const data = ensureFile(filePath);
   return data[slug]?.count ?? 0;
 }
 
 export function getAllViewCounts(): { [slug: string]: number } {
+  if (isVercelDeployment()) return {};
   const filePath = getFilePath();
   const data = ensureFile(filePath);
   const result: { [slug: string]: number } = {};
@@ -74,6 +77,7 @@ export function getAllViewCounts(): { [slug: string]: number } {
 }
 
 export function recordView(slug: string, ip: string): number {
+  if (isVercelDeployment()) return 0;
   const filePath = getFilePath();
   const data = ensureFile(filePath);
   if (!data[slug]) {

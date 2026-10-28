@@ -33,6 +33,17 @@ describe("isAdminRequestAllowed in production", () => {
     ).toBe(true);
   });
 
+  it("disables disk-backed admin access on Vercel even with valid session and headers", () => {
+    const token = createSessionToken("bilal");
+    vi.stubEnv("VERCEL", "1");
+    expect(
+      isAdminRequestAllowed(
+        headers({ host: "homeserver.tailnet.ts.net", "tailscale-user-login": "bilal@github" }),
+        cookiesWith(token)
+      )
+    ).toBe(false);
+  });
+
   it("treats anything that came through Cloudflare as anonymous", () => {
     expect(
       isAdminRequestAllowed(

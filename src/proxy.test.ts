@@ -85,6 +85,12 @@ describe("tincan.rs", () => {
 });
 
 describe("admin surface", () => {
+  it.each(["/api/admin/posts", "/api/admin/auth/login", "/api/admin/auth/logout"])(
+    "disables %s on Vercel", (path) => {
+      vi.stubEnv("VERCEL", "1");
+      expect(run(`https://bilalyazicioglu.com${path}?key=open-sesame`).status).toBe(404);
+    }
+  );
   beforeEach(() => {
     vi.stubEnv("ADMIN_SECRET_SLUG", "hidden-door");
     vi.stubEnv("ADMIN_ACCESS_KEY", "open-sesame");

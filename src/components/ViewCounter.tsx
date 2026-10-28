@@ -14,6 +14,7 @@ export function ViewCounter({
   const [views, setViews] = useState<number | null>(initialViews ?? null);
 
   useEffect(() => {
+    if (process.env.NEXT_PUBLIC_VIEW_COUNTER_ENABLED === "0") return;
     const method = trackView ? "POST" : "GET";
     fetch(`/api/views/${slug}`, {
       method,
@@ -32,6 +33,8 @@ export function ViewCounter({
         console.error("ViewCounter fetch error:", err);
       });
   }, [slug, trackView]);
+
+  if (process.env.NEXT_PUBLIC_VIEW_COUNTER_ENABLED === "0") return null;
 
   const count = views ?? initialViews ?? 0;
   const label = count === 1 ? "1 view" : `${count} views`;

@@ -1,11 +1,32 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   STAR_RETRY_INTERVAL_MS,
   STAR_SYNC_INTERVAL_MS,
   getProjectsWithLiveStars,
   getScheduleDelay,
   getTincanStars,
+  TINCAN_FALLBACK_STARS,
 } from "./github";
+
+describe("Vercel star cache", () => {
+  it("refreshes stars through the request cache without a background scheduler", async () => {
+    vi.stubEnv("VERCEL", "1");
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      Response.json({ stargazers_count: 321 })
+    );
+    expect(await getTincanStars()).toBe(321);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.github.com/repos/bilalyazicioglu/tincan-cli",
+      expect.objectContaining({ next: { revalidate: 3600 } })
+    );
+  });
+
+  it("keeps the page available if GitHub is unavailable", async () => {
+    vi.stubEnv("VERCEL", "1");
+    vi.spyOn(globalThis, "fetch").mockRejectedValue(new TypeError("fetch failed"));
+    expect(await getTincanStars()).toBe(TINCAN_FALLBACK_STARS);
+  });
+});
 
 describe("github star sync scheduler", () => {
   it("marks as stale and 0 delay if never fetched before", () => {

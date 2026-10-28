@@ -1,5 +1,15 @@
 # Deployment and publishing
 
+## Vercel deployment
+
+Import `bilalyazicioglu/bilalyazicioglu.com` from GitHub into a personal Vercel Hobby project. Use the Next.js preset, repository root, Node.js 22 and the default install/build settings. No homeserver `.env` or admin credentials are needed. Vercel provides `VERCEL=1` automatically; do not set it in the Docker deployment.
+
+On Vercel, posts and offline content come from Git. The file-backed admin panel, uploads and view tracking are disabled. View counts are hidden rather than stored on temporary function disks. GitHub stars use an hourly request cache; the private Prometheus service is not queried and `/infra` explains the hosting change. The Docker deployment retains its existing storage and admin behavior.
+
+Check the generated `vercel.app` deployment before switching DNS: homepage, `/about`, `/projects`, `/blog`, an article, `/offline`, CV download, and the terminal edition. Add `bilalyazicioglu.com` and `www.bilalyazicioglu.com` in Vercel's project domain settings, then apply the exact DNS records Vercel displays in Cloudflare. Replace only the website records currently pointing to the tunnel; keep email and other service records. Keep Cloudflare as the DNS provider. Also add `tincan.rs` and `www.tincan.rs` if moving that site, since the main site links to it.
+
+GitHub integration deploys future pushes independently of the homeserver runner. Files changed only on the homeserver content volume are not present in a Git import; recover them after home connectivity returns. Do not copy the homeserver's environment file into Vercel.
+
 ## Configuration
 
 For local development, copy `.env.example` to `.env.local`. For Docker Compose, use `.env` in the repository root so Compose can substitute the configured values.

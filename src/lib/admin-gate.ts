@@ -22,6 +22,7 @@
  */
 
 import { isValidAdminSessionFromCookies } from "./admin-auth";
+import { isVercelDeployment } from "./deployment";
 
 type HeaderSource = { get(name: string): string | null };
 type CookieSource = { get(name: string): { value: string } | undefined };
@@ -48,6 +49,7 @@ export function isAdminRequestAllowed(
   headers: HeaderSource,
   cookies?: CookieSource
 ): boolean {
+  if (isVercelDeployment()) return false;
   // Check if caller has an active authenticated admin session
   if (cookies && isSessionAuthorized(cookies)) {
     return true;

@@ -7,6 +7,7 @@ import { TINCAN_URL, isTincanHost } from "@/lib/tincan-host";
 import { httpRequests } from "@/lib/metrics";
 import { INFRA_API_PATH } from "@/lib/infra-types";
 import { CLI_PAGES, CLI_TINCAN_PAGE, wantsText } from "@/lib/cli/client";
+import { isVercelDeployment } from "@/lib/deployment";
 
 /** The one host every page declares as its canonical — see `siteConfig.url`. */
 const CANONICAL_HOST = new URL(siteConfig.url).host;
@@ -105,6 +106,7 @@ export function proxy(request: NextRequest) {
 
   // 2. Admin API routes:
   if (path.startsWith("/api/admin")) {
+    if (isVercelDeployment()) return new NextResponse(null, { status: 404 });
     const config = getAdminConfig();
     // Allow login endpoint only when accompanied by the secret access key
     if (path === "/api/admin/auth/login") {

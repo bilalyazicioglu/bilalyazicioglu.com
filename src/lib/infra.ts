@@ -14,6 +14,7 @@
  */
 
 import type { InfraData, Series, ServiceStatus } from "./infra-types";
+import { isVercelDeployment } from "./deployment";
 
 const LIVE_TTL_MS = 5_000;
 const SLOW_TTL_MS = 60_000;
@@ -189,7 +190,7 @@ const startedAt = Date.now() - Math.round(process.uptime() * 1000);
 
 export async function getInfra(): Promise<InfraData> {
   const state = cache();
-  const [live, slow] = await Promise.all([
+  const [live, slow] = isVercelDeployment() ? [null, null] : await Promise.all([
     cached(state.live, LIVE_TTL_MS, fetchLive),
     cached(state.slow, SLOW_TTL_MS, fetchSlow),
   ]);
@@ -215,8 +216,8 @@ export async function getInfra(): Promise<InfraData> {
     services: live?.services ?? SERVICES.map((service) => ({ ...service, up: null })),
     history: slow?.history ?? null,
     deploy: {
-      sha: process.env.GIT_SHA?.trim() || null,
-      subject: process.env.GIT_SUBJECT?.trim() || null,
+      sha: process.env.GIT_SHA?.trim() || process.env.VERCEL_GIT_COMMIT_SHA?.trim() || null,
+      subject: process.env.GIT_SUBJECT?.trim() || process.env.VERCEL_GIT_COMMIT_MESSAGE?.trim() || null,
       committedAt: Number.isFinite(committedAt) && committedAt > 0 ? committedAt : null,
       startedAt,
     },
