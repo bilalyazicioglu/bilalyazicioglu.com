@@ -14,11 +14,24 @@
 
 Cloudflare's GitHub integration supplies deployment authorization; do not commit an API token. First open the generated `workers.dev` URL and verify the homepage, CV, projects, blog, article, offline page, terminal and `/infra`.
 
-## Domain routing
+## Domain routing and standby
 
-`wrangler.jsonc` attaches Worker routes to `bilalyazicioglu.com/*`, `www.bilalyazicioglu.com/*`, `tincan.rs/*` and `www.tincan.rs/*`. The existing proxied Tunnel DNS records stay in place for rollback. The Worker handles requests before they reach that origin, and fetches only its own ASSETS binding, so the fallback does not depend on a connected tunnel. There were no existing Worker routes on either zone when these routes were added.
+The homeserver resumed serving the public domains on 2026-10-28. `wrangler.jsonc` deliberately has `routes: []`, so deploying this branch updates only the standby `workers.dev` site. The existing proxied Tunnel DNS records remain unchanged.
 
-Test browser and curl requests separately. Terminal responses have `Content-Type: text/plain` and `Vary: User-Agent, Accept`; `?plain` removes ANSI escape codes. Unknown paths and admin/API writes return genuine 404s. The separate `workers.dev` URL remains enabled for diagnosis.
+To activate the fallback during another outage, replace the empty `routes` array with:
+
+```json
+"routes": [
+  { "pattern": "bilalyazicioglu.com/*", "zone_name": "bilalyazicioglu.com" },
+  { "pattern": "www.bilalyazicioglu.com/*", "zone_name": "bilalyazicioglu.com" },
+  { "pattern": "tincan.rs/*", "zone_name": "tincan.rs" },
+  { "pattern": "www.tincan.rs/*", "zone_name": "tincan.rs" }
+]
+```
+
+Rebuild and deploy. The Worker handles requests before they reach the Tunnel origin and fetches only its own ASSETS binding, so the fallback does not need a connected tunnel. Check for any other Worker routes on these hostnames before activating it.
+
+Test browser and curl requests separately. Terminal responses have `Content-Type: text/plain` and `Vary: User-Agent, Accept`; `?plain` removes ANSI escape codes. Unknown paths and admin/API writes return genuine 404s.
 
 ## Content and limitations
 
@@ -42,4 +55,4 @@ npm run preview
 
 ## Return to the homeserver
 
-Leave main and its CI deployment on the homeserver. Once that origin is healthy, remove the four routes from this Worker's configuration and redeploy, or remove those routes from its Domains & Routes panel. The unchanged Tunnel DNS records then resume carrying traffic. Keep the fallback branch for future outages. Subsequent changes on main need to be intentionally brought into this branch; pushes to main do not update this fallback.
+Leave main and its CI deployment on the homeserver. Once that origin is healthy, explicitly delete the four routes from this Worker's Domains & Routes panel (or the Cloudflare routes API), then keep `routes: []` in this branch so future deployments do not add them again. An empty Wrangler routes array alone did not remove the existing zone routes in our rollback. The unchanged Tunnel DNS records then resume carrying traffic. Keep the fallback branch for future outages. Subsequent changes on main need to be intentionally brought into this branch; pushes to main do not update this fallback.
