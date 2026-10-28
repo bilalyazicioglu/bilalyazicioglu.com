@@ -3,6 +3,13 @@
   "name": "bilal-blog",
   "main": "src/cloudflare/worker.ts",
   "compatibility_date": "2026-10-28",
+  "workers_dev": true,
+  "routes": [
+    { "pattern": "bilalyazicioglu.com/*", "zone_name": "bilalyazicioglu.com" },
+    { "pattern": "www.bilalyazicioglu.com/*", "zone_name": "bilalyazicioglu.com" },
+    { "pattern": "tincan.rs/*", "zone_name": "tincan.rs" },
+    { "pattern": "www.tincan.rs/*", "zone_name": "tincan.rs" }
+  ],
   "assets": {
     "directory": "./out",
     "binding": "ASSETS",

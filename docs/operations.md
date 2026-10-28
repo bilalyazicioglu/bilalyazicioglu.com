@@ -14,11 +14,11 @@
 
 Cloudflare's GitHub integration supplies deployment authorization; do not commit an API token. First open the generated `workers.dev` URL and verify the homepage, CV, projects, blog, article, offline page, terminal and `/infra`.
 
-## Custom domains
+## Domain routing
 
-After the preview passes, add `bilalyazicioglu.com` and `www.bilalyazicioglu.com` under the Worker's **Settings → Domains & Routes → Custom Domain**. If Cloudflare reports conflicting tunnel DNS records, record their current targets for rollback and replace only those website records. Keep MX, TXT and unrelated subdomains. For the separate project site, add `tincan.rs` and `www.tincan.rs` to the same Worker as well. The Worker keeps www redirects, tincan language routes, crawler files and terminal responses separate by hostname.
+`wrangler.jsonc` attaches Worker routes to `bilalyazicioglu.com/*`, `www.bilalyazicioglu.com/*`, `tincan.rs/*` and `www.tincan.rs/*`. The existing proxied Tunnel DNS records stay in place for rollback. The Worker handles requests before they reach that origin, and fetches only its own ASSETS binding, so the fallback does not depend on a connected tunnel. There were no existing Worker routes on either zone when these routes were added.
 
-Test browser and curl requests separately. Terminal responses have `Content-Type: text/plain` and `Vary: User-Agent, Accept`; `?plain` removes ANSI escape codes. Unknown paths and admin/API writes return genuine 404s.
+Test browser and curl requests separately. Terminal responses have `Content-Type: text/plain` and `Vary: User-Agent, Accept`; `?plain` removes ANSI escape codes. Unknown paths and admin/API writes return genuine 404s. The separate `workers.dev` URL remains enabled for diagnosis.
 
 ## Content and limitations
 
@@ -42,4 +42,4 @@ npm run preview
 
 ## Return to the homeserver
 
-Leave main and its CI deployment on the homeserver. Once that origin is healthy, remove the Worker's custom domains and restore the recorded tunnel DNS targets. Keep the fallback branch for future outages. Subsequent changes on main need to be intentionally brought into this branch; pushes to main do not update this fallback.
+Leave main and its CI deployment on the homeserver. Once that origin is healthy, remove the four routes from this Worker's configuration and redeploy, or remove those routes from its Domains & Routes panel. The unchanged Tunnel DNS records then resume carrying traffic. Keep the fallback branch for future outages. Subsequent changes on main need to be intentionally brought into this branch; pushes to main do not update this fallback.
