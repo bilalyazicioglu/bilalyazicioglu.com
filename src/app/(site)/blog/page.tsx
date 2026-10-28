@@ -2,10 +2,9 @@ import type { Metadata } from "next";
 import { PageHeader } from "@/components/PageHeader";
 import { BlogList } from "@/components/BlogList";
 import { getAllPosts } from "@/lib/blog";
-import { getViewCount } from "@/lib/views";
 import { siteConfig } from "@/site.config";
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-static";
 
 export const metadata: Metadata = {
   title: "Blog",
@@ -16,11 +15,9 @@ export const metadata: Metadata = {
 };
 
 export default function BlogPage() {
-  // View counts are read here rather than in the list, so the client component
-  // never has to fetch them a row at a time.
   const posts = getAllPosts().map((post) => ({
     ...post,
-    views: getViewCount(post.slug),
+    views: 0,
   }));
 
   return (

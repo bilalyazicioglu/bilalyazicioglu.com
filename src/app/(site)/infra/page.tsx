@@ -1,55 +1,34 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import { PageHeader } from "@/components/PageHeader";
-import { InfraDashboard } from "@/components/infra/InfraDashboard";
-import { RequestPath } from "@/components/infra/RequestPath";
 import { ManSection } from "@/components/Man";
-import { cloudflareColo, getInfra } from "@/lib/infra";
 import { siteConfig } from "@/site.config";
-
-export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Infra",
-  description:
-    "Live numbers from the homeserver this site runs on: CPU, memory, temperature, traffic, services and the commit that is deployed.",
-  alternates: {
-    canonical: `${siteConfig.url}/infra`,
-  },
+  description: "Normally hosted in my homelab, temporarily served from Cloudflare Workers.",
+  alternates: { canonical: `${siteConfig.url}/infra` },
 };
 
-export default async function InfraPage() {
-  const [data, requestHeaders] = await Promise.all([getInfra(), headers()]);
-  const colo = cloudflareColo(requestHeaders.get("cf-ray"));
-
+export default function InfraPage() {
   return (
     <div className="font-ui text-[15px] leading-[1.75]">
-      <PageHeader name="infra" section={8} kind="System Administration" summary="the machine answering this request">
+      <PageHeader name="infra" section={8} kind="System Administration" summary="temporarily running on Cloudflare">
         <p>
-          This site isn&apos;t on a cloud platform. It runs in Docker on a small server in my homelab in Istanbul. The
-          server dials out to Cloudflare through a tunnel, so visitors never connect to it directly. Everything below is
-          read live from the Prometheus that watches it.
+          This site normally runs in Docker on a small server in my homelab in Istanbul.
+          When the home internet outage lasted over an hour, I moved it to Cloudflare Workers
+          temporarily to keep the portfolio, projects and blog available.
         </p>
       </PageHeader>
-
-      <InfraDashboard initial={data} />
-
       <ManSection title="HOW THIS REACHED YOU">
-        <RequestPath colo={colo} />
-      </ManSection>
-
-      <ManSection title="LEFT OUT ON PURPOSE">
         <p className="max-w-[64ch]">
-          No IP addresses, hostnames or ports, and no host uptime or kernel version: together they would tell anyone how
-          long ago the machine was patched. The code and its pinned versions are public anyway — the commit above links
-          to them — so hiding those would only be obscurity. The numbers come from fixed queries cached for a few
-          seconds, so this page can&apos;t be used to ask Prometheus anything else, or to load it.
+          The pages are generated from the Git repository at build time and served as static
+          assets from Cloudflare. This deployment does not depend on the home connection.
         </p>
       </ManSection>
-
-      <ManSection title="SEE ALSO">
-        <p>
-          <code>curl bilalyazicioglu.com/infra</code> prints this page in a terminal.
+      <ManSection title="HOMELAB METRICS">
+        <p className="max-w-[64ch]">
+          The live dashboard normally reads from Prometheus on the homeserver. Those metrics
+          are unavailable here. I plan to move the site back once the home connection is stable.
         </p>
       </ManSection>
     </div>

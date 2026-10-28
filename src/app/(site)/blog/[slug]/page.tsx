@@ -3,9 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import { getAllSlugs, getPostBySlug, getPostTranslation } from "@/lib/blog";
-import { getViewCount } from "@/lib/views";
 import { ManPrompt } from "@/components/Man";
-import { ViewCounter } from "@/components/ViewCounter";
 
 import { siteConfig } from "@/site.config";
 
@@ -13,9 +11,8 @@ export function generateStaticParams() {
   return getAllSlugs().map((slug) => ({ slug }));
 }
 
-// Posts written from /admin land on disk after the build, so slugs missing from
-// generateStaticParams must still render on first request.
-export const dynamicParams = true;
+// Only published, Git-backed posts are included in the static deployment.
+export const dynamicParams = false;
 
 export async function generateMetadata({
   params,
@@ -70,7 +67,6 @@ export default async function BlogPostPage({
     notFound();
   }
 
-  const initialViews = getViewCount(slug);
   const translation = getPostTranslation(slug);
 
   const blogPostingJsonLd = {
@@ -116,7 +112,6 @@ export default async function BlogPostPage({
             {post.date.slice(0, 10)}
           </time>
           <span>{post.readingTime}</span>
-          <ViewCounter slug={slug} initialViews={initialViews} />
           <span>{post.lang}</span>
         </p>
         <h1 lang={post.lang} className="mt-3 text-balance font-body text-[1.75rem] font-bold leading-tight sm:text-[2.125rem]">

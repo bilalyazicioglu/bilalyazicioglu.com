@@ -11,8 +11,8 @@ import provinceShapes from "@/lib/offline/turkey-provinces.json";
 import map from "@/lib/offline/world-map.json";
 import { siteConfig } from "@/site.config";
 
-// The data is edited from the admin panel at runtime, so it is read per request.
-export const dynamic = "force-dynamic";
+// The fallback deployment publishes the content committed to this branch.
+export const dynamic = "force-static";
 
 export const metadata: Metadata = {
   title: "Offline",

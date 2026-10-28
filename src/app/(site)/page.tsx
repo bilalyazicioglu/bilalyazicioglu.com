@@ -1,30 +1,17 @@
 import Link from "next/link";
 import { ManPrompt, ManRows, ManSection, ManTitle, manLink } from "@/components/Man";
 import { HeroPrompt } from "@/components/terminal/HeroPrompt";
-import { formatNumber } from "@/components/infra/format";
 import { firstSentence, oneLanguage } from "@/lib/cli/render";
 import { getProjectsWithLiveStars } from "@/lib/github";
 import { getAllPosts } from "@/lib/blog";
-import { getInfra } from "@/lib/infra";
 import { siteConfig } from "@/site.config";
 
-export const dynamic = "force-dynamic";
-
-/** "cpu 6%, memory 46%, 48°C", or nothing when Prometheus is not answering. */
-function vitals(live: Awaited<ReturnType<typeof getInfra>>["live"]): string | null {
-  const parts = [
-    live.cpuPercent === null ? null : `cpu ${formatNumber(live.cpuPercent)}%`,
-    live.memoryPercent === null ? null : `memory ${formatNumber(live.memoryPercent)}%`,
-    live.temperatureC === null ? null : `${formatNumber(live.temperatureC)}°C`,
-  ].filter(Boolean);
-  return parts.length ? parts.join(", ") : null;
-}
+export const dynamic = "force-static";
 
 export default async function Home() {
-  const [projects, infra] = await Promise.all([getProjectsWithLiveStars(), getInfra()]);
+  const projects = await getProjectsWithLiveStars();
   const featured = projects.slice(0, 3);
   const posts = oneLanguage(getAllPosts()).slice(0, 5);
-  const status = vitals(infra.live);
   const github = siteConfig.socials.find((s) => s.label === "GitHub")?.href;
   const linkedin = siteConfig.socials.find((s) => s.label === "LinkedIn")?.href;
 
@@ -95,8 +82,7 @@ export default async function Home() {
 
       <ManSection title="HOST">
         <p className="max-w-[64ch]">
-          Rendered a moment ago by {infra.specs.cpuModel ? `an ${infra.specs.cpuModel}` : "a small machine"} in a
-          homelab in Istanbul{status ? `: ${status}.` : "."}{" "}
+          Temporarily served from Cloudflare while the home internet connection is unavailable.
           <Link href="/infra" className={manLink}>
             infra
           </Link>{" "}

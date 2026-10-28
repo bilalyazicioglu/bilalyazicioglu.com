@@ -22,45 +22,20 @@ Next.js 16 · React 19 · TypeScript · Tailwind CSS 4 · MDX
 
 Docker Compose · Prometheus · Grafana · Loki
 
-## Run locally
+## Cloudflare fallback branch
 
-Use Node.js 22 and npm; the Docker build uses the same Node.js major version.
+This is `cloudflare-workers`, the static fallback. **`main` remains the homeserver deployment.** The site is built from Git and served directly from Cloudflare Workers Static Assets, with a small Worker for host routing and terminal responses.
 
 ```sh
-git clone https://github.com/bilalyazicioglu/bilalyazicioglu.com.git
-cd bilalyazicioglu.com
 npm ci
-npm run dev
+npm run build
+npm run verify:static
+npm run preview
 ```
 
-Open [localhost:3000](http://localhost:3000). The public site runs without an environment file. To configure the publishing studio, copy `.env.example` to `.env.local` and replace the example values.
+Connect this repository in Workers Builds with production branch `cloudflare-workers`, build command `npm run build && npm run verify:static`, and deploy command `npm run deploy`. Worker name: `bilal-blog`. No application secrets are required. See [setup, custom domains and rollback](docs/operations.md).
 
-| Command | Purpose |
-| --- | --- |
-| `npm run dev` | Start the development server |
-| `npm run build` | Create a production build |
-| `npm start` | Serve the production build |
-| `npm run lint` | Run ESLint |
-| `npm run typecheck` | Generate route types and run the TypeScript compiler |
-| `npm test` | Run the Vitest suite once (`npm run test:watch` to watch) |
-
-## Structure
-
-```text
-src/app/          Pages, layouts, and API routes
-src/components/   Site interface and interactive components
-src/content/blog/ Versioned MDX posts used to seed deployments
-src/lib/          Content, authentication, metrics, and view-count utilities
-public/           Static assets
-monitoring/       Prometheus and Grafana configuration
-scripts/          Content and deployment support scripts
-```
-
-## Deployment
-
-The application runs in Docker with separate volumes for posts and view counts. The repository also includes a monitoring stack.
-
-See [deployment and publishing](docs/operations.md) for configuration, storage behavior, and update commands.
+The portfolio, projects, CV, published blog, offline page and terminal edition are included. Admin editing, uploads, view tracking and live homelab metrics are unavailable in this static deployment.
 
 ## License
 

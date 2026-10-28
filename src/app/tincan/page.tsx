@@ -1,6 +1,6 @@
 import { TincanPage, tincanMetadata } from "@/components/tincan/TincanPage";
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-static";
 export const metadata = tincanMetadata("en");
 
 export default function Page() {

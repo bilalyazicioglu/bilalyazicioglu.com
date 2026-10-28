@@ -1,11 +1,10 @@
 import type { MetadataRoute } from "next";
-import { headers } from "next/headers";
 import { siteConfig } from "@/site.config";
-import { TINCAN_URL, isTincanHost } from "@/lib/tincan-host";
+
+export const dynamic = "force-static";
 
 export default async function robots(): Promise<MetadataRoute.Robots> {
-  // tincan.rs is served by this app too, and points crawlers at its own sitemap.
-  const origin = isTincanHost((await headers()).get("host")) ? TINCAN_URL : siteConfig.url;
+  const origin = siteConfig.url;
   return {
     rules: [
       {

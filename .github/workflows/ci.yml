@@ -1,69 +1,32 @@
-name: CI
+name: Cloudflare static site
 
 on:
   push:
-    branches: [main]
+    branches: [cloudflare-workers]
   pull_request:
-
-# A newer push to a PR makes the older run pointless, so PR runs share a group
-# and cancel each other. Pushes to main get a group per commit: they never
-# wait on each other, and the deploy job below serialises itself.
-concurrency:
-  group: ${{ github.event_name == 'pull_request' && format('ci-pr-{0}', github.ref) || format('ci-{0}', github.sha) }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+    branches: [cloudflare-workers]
 
 permissions:
   contents: read
 
+concurrency:
+  group: cloudflare-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check:
-    name: Lint, typecheck, test, build
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          # Same major as the Dockerfile's base image.
           node-version: 22
           cache: npm
       - run: npm ci
       - run: npm audit --audit-level=high
       - run: npm run lint -- --max-warnings=0
-      - run: npm run typecheck
       - run: npm test
       - run: npm run build
-
-  docker:
-    name: Docker image builds
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v7
-      - uses: docker/setup-buildx-action@v4
-      # The homeserver deploys with `docker compose up --build`, so a broken
-      # Dockerfile should fail here rather than there.
-      - uses: docker/build-push-action@v7
-        with:
-          context: .
-          push: false
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  # Runs on the homeserver itself, through a self-hosted runner labelled
-  # "homeserver", and only once every check above has passed for a push to
-  # main — never for pull requests, which may come from forks.
-  deploy:
-    name: Deploy to homeserver
-    needs: [check, docker]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: [self-hosted, homeserver]
-    timeout-minutes: 20
-    # One deploy at a time; a newer commit waits rather than cutting in.
-    concurrency:
-      group: deploy
-      cancel-in-progress: false
-    steps:
-      - name: Deploy the commit CI tested
-        working-directory: /home/bilal/portfolio
-        run: scripts/deploy.sh ${{ github.sha }}
+      - run: npm run verify:static
+      - run: npm run check:worker

@@ -178,7 +178,7 @@ export function firstSentence(text: string): string {
 }
 
 export function renderHome(
-  data: { projects: Project[]; posts: PostMeta[]; infra: InfraData },
+  data: { projects: Project[]; posts: PostMeta[]; infra?: InfraData },
   { color, now }: RenderOptions
 ): string {
   const p = palette(color);
@@ -206,15 +206,17 @@ export function renderHome(
   lines.push(`${INDENT}${p.dim(`and ${data.projects.length - 3} more →`)} ${p.accent(`curl ${SITE}/projects`)}`);
 
   lines.push(...heading(p, "Served from"));
-  const cpu = infra.specs.cpuModel ? `an ${infra.specs.cpuModel}` : "a small machine";
+  const cpu = infra?.specs.cpuModel ? `an ${infra.specs.cpuModel}` : "a small machine";
   lines.push(
     ...paragraph(
-      `This text was rendered a moment ago by ${cpu} in a homelab in Istanbul, and reached you through a Cloudflare Tunnel — no open ports at home.`
+      infra
+        ? `This text was rendered a moment ago by ${cpu} in a homelab in Istanbul, and reached you through a Cloudflare Tunnel — no open ports at home.`
+        : "This site normally runs on my homeserver in Istanbul. After the home internet outage lasted over an hour, I moved it temporarily to Cloudflare Workers. This terminal page was generated at build time."
     )
   );
-  const status = vitals(infra);
+  const status = infra ? vitals(infra) : null;
   if (status) lines.push("", `${INDENT}${status}`);
-  const build = buildLine(p, infra, now);
+  const build = infra ? buildLine(p, infra, now) : null;
   if (build) lines.push(build);
   lines.push("", `${INDENT}${p.dim("details →")} ${p.accent(`curl ${SITE}/infra`)}`);
 

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Big_Shoulders, Martian_Mono } from "next/font/google";
 import { LiveTerminal } from "@/components/tincan/LiveTerminal";
 import { InstallTabs } from "@/components/tincan/InstallTabs";
@@ -277,14 +276,14 @@ export async function TincanPage({ lang }: { lang: Lang }) {
       <header className="tc-top">
         <TincanBrand lang={lang} />
         <nav className="tc-top-links" aria-label={t.ui.nav}>
-          <Link
+          <a
             href={t.ui.other.href}
             hrefLang={t.ui.other.lang}
             lang={t.ui.other.lang}
             className="tc-lang"
           >
             {t.ui.other.label}
-          </Link>
+          </a>
           <a href={REPO} className="tc-github">
             <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
               <path

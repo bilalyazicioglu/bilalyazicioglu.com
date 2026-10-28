@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { PostLang, PostMeta } from "@/lib/blog";
-import { ViewCounter } from "@/components/ViewCounter";
 import { ManSection } from "@/components/Man";
 
 /** A post plus the view count read on the server, so no request is made per row. */
@@ -117,7 +116,6 @@ export function BlogList({ posts }: { posts: BlogListPost[] }) {
                     {post.date.slice(0, 10)}
                   </time>
                   <span>{post.readingTime}</span>
-                  <ViewCounter slug={post.slug} initialViews={post.views} trackView={false} />
                   <span>
                     {(post.availableLangs.length > 1 ? post.availableLangs : [post.lang]).join(" + ")}
                   </span>
