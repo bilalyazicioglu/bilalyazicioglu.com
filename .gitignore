@@ -34,9 +34,6 @@ yarn-error.log*
 .env*
 !.env.example
 
-# vercel
-.vercel
-
 # geoip database (downloaded via scripts/download-geolite2.sh)
 monitoring/geolite2/
 

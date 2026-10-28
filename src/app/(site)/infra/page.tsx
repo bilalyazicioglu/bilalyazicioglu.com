@@ -6,39 +6,19 @@ import { RequestPath } from "@/components/infra/RequestPath";
 import { ManSection } from "@/components/Man";
 import { cloudflareColo, getInfra } from "@/lib/infra";
 import { siteConfig } from "@/site.config";
-import { isVercelDeployment } from "@/lib/deployment";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Infra",
   description:
-    "How this site is hosted, with live homelab metrics when available.",
+    "Live numbers from the homeserver this site runs on: CPU, memory, temperature, traffic, services and the commit that is deployed.",
   alternates: {
     canonical: `${siteConfig.url}/infra`,
   },
 };
 
 export default async function InfraPage() {
-  if (isVercelDeployment()) {
-    return (
-      <div className="font-ui text-[15px] leading-[1.75]">
-        <PageHeader name="infra" section={8} kind="System Administration" summary="temporarily running on Vercel">
-          <p>
-            This site normally runs in Docker on a small server in my homelab in Istanbul.
-            When the home internet outage lasted over an hour, I moved it to Vercel temporarily
-            to keep the portfolio, projects and blog available.
-          </p>
-        </PageHeader>
-        <ManSection title="HOMELAB METRICS">
-          <p className="max-w-[64ch]">
-            The live dashboard reads from Prometheus on the homeserver. Those metrics are unavailable
-            while the site is running here. I plan to move it back once the home connection is stable.
-          </p>
-        </ManSection>
-      </div>
-    );
-  }
   const [data, requestHeaders] = await Promise.all([getInfra(), headers()]);
   const colo = cloudflareColo(requestHeaders.get("cf-ray"));
 

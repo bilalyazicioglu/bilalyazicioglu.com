@@ -19,13 +19,6 @@ afterEach(() => {
 });
 
 describe("view counter", () => {
-  it("does not write ephemeral counters on Vercel", () => {
-    vi.stubEnv("VERCEL", "1");
-    expect(recordView("tincan", "1.1.1.1")).toBe(0);
-    expect(getViewCount("tincan")).toBe(0);
-    expect(getAllViewCounts()).toEqual({});
-    expect(fs.readdirSync(dir)).toEqual([]);
-  });
   it("counts a visitor once per day per post", () => {
     expect(recordView("tincan", "1.1.1.1")).toBe(1);
     expect(recordView("tincan", "1.1.1.1")).toBe(1);

@@ -57,15 +57,6 @@ afterEach(() => {
 });
 
 describe("getInfra", () => {
-  it("does not query private homelab services from Vercel", async () => {
-    vi.stubEnv("VERCEL", "1");
-    const fetchMock = vi.fn();
-    vi.stubGlobal("fetch", fetchMock);
-    const data = await getInfra();
-    expect(data.online).toBe(false);
-    expect(data.history).toBeNull();
-    expect(fetchMock).not.toHaveBeenCalled();
-  });
   it("assembles live values, specs, services and history", async () => {
     fakePrometheus(healthyHost);
     const data = await getInfra();

@@ -2,7 +2,6 @@ import fs from "node:fs";
 import https from "node:https";
 import path from "node:path";
 import { projects, type Project } from "./projects";
-import { isVercelDeployment } from "./deployment";
 
 const TINCAN_REPO = "bilalyazicioglu/tincan-cli";
 export const TINCAN_FALLBACK_STARS = 126;
@@ -272,22 +271,6 @@ export function startStarSyncScheduler(): void {
  * always display the exact same number.
  */
 export async function getTincanStars(): Promise<number> {
-  if (isVercelDeployment()) {
-    try {
-      const response = await fetch(`https://api.github.com/repos/${TINCAN_REPO}`, {
-        headers: { Accept: "application/vnd.github+json", "User-Agent": "bilalyazicioglu.com" },
-        next: { revalidate: 3600 },
-        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-      });
-      if (!response.ok) return TINCAN_FALLBACK_STARS;
-      const data = await response.json();
-      return Number.isSafeInteger(data.stargazers_count) && data.stargazers_count >= 0
-        ? data.stargazers_count
-        : TINCAN_FALLBACK_STARS;
-    } catch {
-      return TINCAN_FALLBACK_STARS;
-    }
-  }
   const state = getState();
   const current = ensureLoaded();
 

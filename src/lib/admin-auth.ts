@@ -1,5 +1,4 @@
 import crypto from "node:crypto";
-import { isVercelDeployment } from "./deployment";
 
 /**
  * Authentication and stealth gate utilities for the Admin Studio.
@@ -21,9 +20,6 @@ const DEFAULT_DEV_SECRET = "dev-insecure-secret-key-change-in-production-1234567
 export const ADMIN_COOKIE_NAME = "admin_session";
 
 export function getAdminConfig() {
-  if (isVercelDeployment()) {
-    return { secretSlug: "", accessKey: "", username: "", password: "", securityPin: "", sessionSecret: "" };
-  }
   const isProd = process.env.NODE_ENV === "production";
   return {
     secretSlug: (process.env.ADMIN_SECRET_SLUG?.trim() || (isProd ? "" : DEFAULT_DEV_SLUG)),
