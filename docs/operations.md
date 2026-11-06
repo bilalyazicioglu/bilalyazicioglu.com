@@ -16,9 +16,9 @@ Cloudflare's GitHub integration supplies deployment authorization; do not commit
 
 ## Domain routing and standby
 
-The homeserver resumed serving the public domains on 2026-10-28. `wrangler.jsonc` deliberately has `routes: []`, so deploying this branch updates only the standby `workers.dev` site. The existing proxied Tunnel DNS records remain unchanged.
+The Cloudflare fallback was reactivated on 2026-11-06. `wrangler.jsonc` currently attaches the four public website routes to `bilal-blog`. The existing proxied Tunnel DNS records remain unchanged, and `main` remains the homeserver application.
 
-To activate the fallback during another outage, replace the empty `routes` array with:
+The active fallback routes are:
 
 ```json
 "routes": [
