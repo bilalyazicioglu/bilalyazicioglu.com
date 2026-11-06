@@ -24,7 +24,7 @@ Docker Compose · Prometheus · Grafana · Loki
 
 ## Cloudflare fallback branch
 
-This is `cloudflare-workers`, the static fallback. **`main` remains the homeserver deployment.** The site is built from Git and served directly from Cloudflare Workers Static Assets, with a small Worker for host routing and terminal responses.
+This is `cloudflare-workers`, the static fallback. **`main` remains the homeserver deployment.** The site is built from Git and served directly from Cloudflare Workers Static Assets, with a small Worker for host routing, terminal responses and automatic failover to the static snapshot when the homeserver is unavailable.
 
 ```sh
 npm ci

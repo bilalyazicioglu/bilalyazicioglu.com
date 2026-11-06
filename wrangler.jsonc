@@ -4,6 +4,7 @@
   "main": "src/cloudflare/worker.ts",
   "compatibility_date": "2026-10-28",
   "workers_dev": true,
+  "vars": { "PRIMARY_ENABLED": "true" },
   "routes": [
     { "pattern": "bilalyazicioglu.com/*", "zone_name": "bilalyazicioglu.com" },
     { "pattern": "www.bilalyazicioglu.com/*", "zone_name": "bilalyazicioglu.com" },

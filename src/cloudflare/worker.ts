@@ -1,7 +1,10 @@
 import { CLI_PAGES, wantsText } from "../lib/cli/client";
 import { isTincanHost, TINCAN_URL } from "../lib/tincan-host";
+import { OriginFailover } from "./failover";
 
-type Env = { ASSETS: { fetch(request: Request): Promise<Response> } };
+type Env = { ASSETS: { fetch(request: Request): Promise<Response> }; PRIMARY_ENABLED?: string };
+type Context = { waitUntil(promise: Promise<unknown>): void };
+const origin = new OriginFailover();
 const MAIN = "https://bilalyazicioglu.com";
 const ROOT_FILES: Record<string, string> = {
   "/favicon.ico": "/tincan/icon-48.png",
@@ -13,7 +16,7 @@ const ROOT_FILES: Record<string, string> = {
 };
 
 const worker = {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  async fetch(request: Request, env: Env, context?: Context): Promise<Response> {
     const url = new URL(request.url);
     const path = url.pathname;
     const host = url.hostname;
@@ -25,6 +28,40 @@ const worker = {
     if (host === "tincan.bilalyazicioglu.com") return redirect(TINCAN_URL, "/");
     if (host === "bilalyazicioglu.com" && (path === "/tincan" || path === "/tincan/tr")) {
       return redirect(TINCAN_URL, path.slice("/tincan".length) || "/");
+    }
+
+    const primaryEnabled = env.PRIMARY_ENABLED === "true" &&
+      ["bilalyazicioglu.com", "tincan.rs"].includes(host);
+    const assetCache = typeof caches === "undefined" ? undefined :
+      (caches as CacheStorage & { default?: Cache }).default;
+
+    // Old fallback pages must keep loading their own hashed JS/CSS after recovery.
+    if (path.startsWith("/_next/static/") && ["GET", "HEAD"].includes(request.method)) {
+      const bundled = await env.ASSETS.fetch(request);
+      if (bundled.ok) return bundled;
+      await bundled.body?.cancel();
+      const cached = await assetCache?.match(request);
+      if (cached) return cached;
+    }
+
+    if (primaryEnabled) {
+      const upstream = await origin.fetch(request);
+      if (upstream) {
+        const headers = new Headers(upstream.headers);
+        headers.set("X-Blog-Backend", "homeserver");
+        const response = new Response(upstream.body, {
+          status: upstream.status, statusText: upstream.statusText, headers,
+        });
+        if (path.startsWith("/_next/static/") && request.method === "GET" && response.ok && assetCache && context) {
+          context.waitUntil(assetCache.put(request, response.clone()).catch(() => {}));
+        }
+        return response;
+      }
+      if (!["GET", "HEAD"].includes(request.method)) {
+        return Response.json({ error: "Homeserver unavailable. Request was not retried." }, {
+          status: 503, headers: { "Cache-Control": "no-store", "X-Blog-Backend": "static-fallback" },
+        });
+      }
     }
 
     // No server-side admin, metrics or writes are part of this deployment.
@@ -71,6 +108,7 @@ const worker = {
     // Each public URL can have HTML and terminal variants: never mix them in cache.
     headers.set("Vary", "User-Agent, Accept");
     headers.set("X-Content-Type-Options", "nosniff");
+    headers.set("X-Blog-Backend", "static-fallback");
     if (terminal || asset.startsWith("/cli/")) {
       headers.set("Content-Type", "text/plain; charset=utf-8");
       headers.set("X-Robots-Tag", "noindex");

@@ -11,6 +11,37 @@ function assets(files: Record<string, string>) {
 }
 
 describe("static worker", () => {
+  it("passes healthy requests through, then serves static pages and refuses writes during an outage", async () => {
+    let healthy = true;
+    const fetchOrigin = vi.spyOn(globalThis, "fetch").mockImplementation(async (req) => {
+      if (!healthy) return new Response("tunnel offline", { status: 530 });
+      return new Response("primary", { status: (req as Request).method === "POST" ? 201 : 200 });
+    });
+    const env = { ASSETS: assets({ "/index.html": "static" }), PRIMARY_ENABLED: "true" };
+    const primary = await worker.fetch(new Request("https://bilalyazicioglu.com/"), env);
+    expect(primary.headers.get("X-Blog-Backend")).toBe("homeserver");
+    expect(await primary.text()).toBe("primary");
+    const write = await worker.fetch(new Request("https://bilalyazicioglu.com/api/views/post", { method: "POST", body: "view" }), env);
+    expect(write.status).toBe(201);
+    healthy = false;
+    const fallback = await worker.fetch(new Request("https://bilalyazicioglu.com/"), env);
+    expect(await fallback.text()).toBe("static");
+    expect(fallback.headers.get("X-Blog-Backend")).toBe("static-fallback");
+    const failedWrite = await worker.fetch(new Request("https://bilalyazicioglu.com/api/views/post", { method: "POST", body: "view" }), env);
+    expect(failedWrite.status).toBe(503);
+    expect(fetchOrigin).toHaveBeenCalledTimes(3);
+  });
+
+  it("keeps the diagnostic workers.dev URL on static assets even with primary enabled", async () => {
+    const fetchOrigin = vi.spyOn(globalThis, "fetch");
+    const response = await worker.fetch(new Request("https://bilal-blog.example.workers.dev/"), {
+      ASSETS: assets({ "/index.html": "static" }), PRIMARY_ENABLED: "true",
+    });
+    expect(await response.text()).toBe("static");
+    expect(response.headers.get("X-Blog-Backend")).toBe("static-fallback");
+    expect(fetchOrigin).not.toHaveBeenCalled();
+  });
+
   it("serves HTML while keeping unknown paths as genuine 404s", async () => {
     const ASSETS = assets({ "/index.html": "home", "/blog/post.html": "article" });
     for (const [path, body] of [["/", "home"], ["/blog/post", "article"]]) {

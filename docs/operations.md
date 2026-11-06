@@ -14,24 +14,19 @@
 
 Cloudflare's GitHub integration supplies deployment authorization; do not commit an API token. First open the generated `workers.dev` URL and verify the homepage, CV, projects, blog, article, offline page, terminal and `/infra`.
 
-## Domain routing and standby
+## Automatic failover
 
-The Cloudflare fallback was reactivated on 2026-11-06. `wrangler.jsonc` currently attaches the four public website routes to `bilal-blog`. The existing proxied Tunnel DNS records remain unchanged, and `main` remains the homeserver application.
+The four public website routes remain attached to `bilal-blog`. With `PRIMARY_ENABLED=true` (set in `wrangler.jsonc`), the Worker first forwards the incoming request to the homeserver through the existing Tunnel DNS. Cloudflare same-zone origin subrequests bypass the Worker route, so this does not recurse. The `workers.dev` URL always serves the static snapshot for diagnosis.
 
-The active fallback routes are:
+A network failure, 5xx response or failure to receive headers within 2.5 seconds sends GET/HEAD traffic to static assets. Once a host fails, requests use the fallback for 30 seconds before trying a HEAD health probe on that host's homepage. Three consecutive successful probes at least 30 seconds apart allow primary traffic again. A failed probe resets the recovery count. Checks are driven by visitor requests; no traffic means no background polling. State is per Cloudflare isolate and hostname, not globally coordinated: a fresh isolate starts with a bounded primary attempt. The snapshot remains available even if that attempt fails.
 
-```json
-"routes": [
-  { "pattern": "bilalyazicioglu.com/*", "zone_name": "bilalyazicioglu.com" },
-  { "pattern": "www.bilalyazicioglu.com/*", "zone_name": "bilalyazicioglu.com" },
-  { "pattern": "tincan.rs/*", "zone_name": "tincan.rs" },
-  { "pattern": "www.tincan.rs/*", "zone_name": "tincan.rs" }
-]
-```
+Genuine 4xx responses pass through and do not trigger failover. Writes are sent at most once and never replayed against the snapshot. During an outage they receive HTTP 503, or the original upstream failure response if it reached the server. Admin editing and runtime APIs exist only on the primary.
 
-Rebuild and deploy. The Worker handles requests before they reach the Tunnel origin and fetches only its own ASSETS binding, so the fallback does not need a connected tunnel. Check for any other Worker routes on these hostnames before activating it.
+Bundled fallback JS/CSS remains available after recovery. Successful primary `/_next/static/` responses are cached in Cloudflare's local asset cache where possible. Already-open pages requesting an uncached primary-only chunk during an outage may need a reload to use the static snapshot.
 
-Test browser and curl requests separately. Terminal responses have `Content-Type: text/plain` and `Vary: User-Agent, Accept`; `?plain` removes ANSI escape codes. Unknown paths and admin/API writes return genuine 404s.
+Inspect `X-Blog-Backend` on page responses: `homeserver` or `static-fallback`. To force static hosting, set `PRIMARY_ENABLED=false` and deploy. No health-check service, persistent database or paid Load Balancer is required; normal Workers request/CPU quotas apply.
+
+The existing proxied Tunnel DNS records remain unchanged. The current routes cover `bilalyazicioglu.com/*`, `www.bilalyazicioglu.com/*`, `tincan.rs/*` and `www.tincan.rs/*`. Unknown paths and admin/API writes in the static deployment do not become successful HTML responses.
 
 ## Content and limitations
 
@@ -53,6 +48,6 @@ npm run preview
 
 `npm run deploy` publishes an already-built `out/` directory. Rebuild first when deploying manually. `npm run check:worker` only bundles locally and does not publish. The Docker files and monitoring configuration inherited from main are not used by this branch.
 
-## Return to the homeserver
+## Bypass the Worker entirely
 
-Leave main and its CI deployment on the homeserver. Once that origin is healthy, explicitly delete the four routes from this Worker's Domains & Routes panel (or the Cloudflare routes API), then keep `routes: []` in this branch so future deployments do not add them again. An empty Wrangler routes array alone did not remove the existing zone routes in our rollback. The unchanged Tunnel DNS records then resume carrying traffic. Keep the fallback branch for future outages. Subsequent changes on main need to be intentionally brought into this branch; pushes to main do not update this fallback.
+Automatic recovery already returns healthy traffic to the homeserver. To remove the failover layer entirely, explicitly delete its four routes in Cloudflare's Domains & Routes panel (or the routes API), then keep `routes: []` in this branch so future deploys do not add them again. An empty Wrangler array alone did not remove existing zone routes during our earlier rollback. The unchanged Tunnel DNS records then carry traffic directly. Keep this branch separate from main.
