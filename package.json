@@ -12,6 +12,8 @@
     "test:watch": "vitest",
     "sync-avatar": "bash scripts/sync-avatar.sh",
     "deploy": "wrangler deploy",
+    "predeploy": "npm run verify:cost && npm run verify:static",
+    "verify:cost": "node scripts/verify-cost-policy.mjs",
     "preview": "wrangler dev",
     "verify:static": "node scripts/verify-static.mjs",
     "check:worker": "wrangler deploy --dry-run --outdir .wrangler/dry-run"

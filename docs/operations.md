@@ -1,5 +1,7 @@
 # Cloudflare fallback deployment
 
+Additional cloud budget: **$0**, on Workers Free. See [cost limits and deployment checks](cost-policy.md). `npm run deploy` checks the policy before publishing; adding new service bindings requires review.
+
 `main` is the homeserver application. `cloudflare-workers` is the separate static fallback; do not merge this branch into main. It produces Next.js HTML, client JavaScript, public assets, a published post index and terminal text at build time. A small Worker serves those assets and preserves domain routing. No Node.js server, tunnel, admin service or writable content volume runs in Cloudflare.
 
 ## Connect GitHub to Workers Builds
