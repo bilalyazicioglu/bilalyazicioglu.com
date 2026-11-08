@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import fs from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
+import { blogMediaDirectory } from "@/lib/blog-media";
 import { isAdminRequestAllowed } from "@/lib/admin-gate";
 
 export const dynamic = "force-dynamic";
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest) {
     const randomSuffix = crypto.randomBytes(4).toString("hex");
     const fileName = `${sanitizedBase}-${Date.now()}-${randomSuffix}${ext}`;
 
-    const uploadDir = path.join(process.cwd(), "public", "uploads", "blog");
+    const uploadDir = blogMediaDirectory();
     await fs.mkdir(uploadDir, { recursive: true });
 
     const arrayBuffer = await file.arrayBuffer();

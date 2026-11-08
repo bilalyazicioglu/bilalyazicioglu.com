@@ -10,7 +10,10 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "sync-avatar": "bash scripts/sync-avatar.sh"
+    "sync-avatar": "bash scripts/sync-avatar.sh",
+    "prebuild": "node scripts/write-release.mjs",
+    "pretypecheck": "node scripts/write-release.mjs",
+    "pretest": "node scripts/write-release.mjs"
   },
   "dependencies": {
     "clsx": "^2.1.1",

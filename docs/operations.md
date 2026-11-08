@@ -41,7 +41,7 @@ After configuring `.env`, run the deploy script on the server:
 scripts/deploy.sh
 ```
 
-It pulls `main`, rebuilds the blog image with the commit's SHA, subject and time baked in (shown on `/infra`), recreates the exporters if their configuration changed, reloads Prometheus's config, and then waits until `/api/infra` reports the new commit. If that check fails, it prints the last log lines and exits non-zero. A plain `docker compose up -d --build blog` still works, but `/infra` then shows no commit.
+It builds and checks an isolated candidate, takes a verified content backup, activates the tested image and restores the previous image if the new release fails its health checks. See [recovery](recovery.md) for manual rollback, backup scheduling and restore drills. Monitoring changes are applied separately.
 
 Public traffic reaches the app through the `cloudflared` service, which dials out to Cloudflare and talks to the app over the Compose network; tunnel routes in the Cloudflare dashboard point at `http://blog:3000`. The app's port is bound to `127.0.0.1:3000` only, for `tailscale serve` on the host. Do not publish it more widely, including from a `docker-compose.override.yml`: the admin gate trusts headers that anyone who can reach the port could forge.
 
@@ -82,7 +82,7 @@ To set up the runner, open *Settings → Actions → Runners → New self-hosted
 
 On each container start, the entrypoint copies seed posts whose filenames are missing from the content directory. Existing files are preserved, including edits made through the studio. Updating an existing post in Git therefore does not overwrite the production copy automatically.
 
-Back up the content and view-count volumes before replacing or migrating a deployment. Uploaded images need their own persistent storage arrangement and backup; the supplied Compose file does not preserve them across container replacement. Avoid `docker compose down -v` when retaining published content.
+Back up the content and view-count volumes before replacing or migrating a deployment. Blog uploads are stored under `/app/content/uploads/blog` on the existing content volume and included in the same verified backup. Legacy public uploads are migrated before replacement. Avoid `docker compose down -v` when retaining published content.
 
 ## Monitoring
 
@@ -99,3 +99,5 @@ docker compose up -d --build
 These ports bind to loopback in the supplied Compose file.
 
 The public `/infra` page reads from Prometheus over the Compose network, never from the browser. It sends only fixed queries, caches live values for 5 seconds and history for 60, and deliberately leaves out hostnames, IPs, ports, versions, kernel version and host uptime. A service shows as *unknown* until Prometheus has a scrape target for it. Node Exporter and Promtail use host mounts intended for a Linux Docker host; review the Compose configuration before running the full monitoring stack on another platform.
+
+See [release and recovery procedures](recovery.md) for candidate validation, automatic rollback and private content backups.

@@ -7,4 +7,7 @@ docker-compose.yml
 npm-debug.log
 README.md
 monitoring
-scripts
+scripts/*
+!scripts/write-release.mjs
+
+.operations

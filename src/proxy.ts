@@ -36,7 +36,7 @@ export function proxy(request: NextRequest) {
 
   // /infra polls its own API every few seconds; counting that would make an
   // open tab look like traffic on the very page that reports it.
-  if (path !== INFRA_API_PATH) {
+  if (path !== INFRA_API_PATH && path !== "/api/status") {
     httpRequests.inc({ site: isTincanHost(host) ? "tincan" : "main" });
   }
 

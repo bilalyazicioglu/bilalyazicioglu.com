@@ -32,6 +32,7 @@ jobs:
       - run: npm run lint -- --max-warnings=0
       - run: npm run typecheck
       - run: npm test
+      - run: python3 -m unittest discover -s scripts -p "test_*.py"
       - run: npm run build
 
   docker:
@@ -46,9 +47,15 @@ jobs:
       - uses: docker/build-push-action@v7
         with:
           context: .
+          build-args: GIT_SHA=${{ github.sha }}
           push: false
+          load: true
+          tags: portfolio-recovery:test
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - run: bash scripts/test-recovery.sh portfolio-recovery:test
+      - run: bash scripts/test-image.sh portfolio-recovery:test "${{ github.sha }}"
 
   # Runs on the homeserver itself, through a self-hosted runner labelled
   # "homeserver", and only once every check above has passed for a push to
@@ -64,6 +71,8 @@ jobs:
       group: deploy
       cancel-in-progress: false
     steps:
+      - uses: actions/checkout@v7
       - name: Deploy the commit CI tested
-        working-directory: /home/bilal/portfolio
-        run: scripts/deploy.sh ${{ github.sha }}
+        env:
+          BLOG_CHECKOUT: /home/bilal/portfolio
+        run: bash "$GITHUB_WORKSPACE/scripts/deploy.sh" "${{ github.sha }}"

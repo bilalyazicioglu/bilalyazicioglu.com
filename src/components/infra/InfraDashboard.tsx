@@ -7,7 +7,7 @@ import { ManRows, ManSection, manLink } from "@/components/Man";
 import { Sparkline } from "./Sparkline";
 import { formatAgo, formatBytes, formatNumber } from "./format";
 
-const POLL_MS = 5_000;
+const POLL_MS = 30_000;
 const REPO = `https://github.com/${siteConfig.githubUsername}/bilalyazicioglu.com`;
 
 const pct = (v: number) => `${formatNumber(v)}%`;

@@ -1,6 +1,7 @@
 services:
   blog:
     container_name: blog
+    image: ${BLOG_IMAGE:-portfolio-blog}
     build:
       context: .
       dockerfile: Dockerfile
@@ -22,6 +23,7 @@ services:
       - "127.0.0.1:3000:3000"
     environment:
       - NODE_ENV=production
+      - DEPLOYED_AT=${DEPLOYED_AT:-}
       - BLOG_DIR_PATH=/app/content/blog
       # Admin gate — see src/lib/admin-gate.ts and src/lib/admin-auth.ts
       - ADMIN_TAILNET_HOST=${ADMIN_TAILNET_HOST:-}

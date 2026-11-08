@@ -1,3 +1,4 @@
+import { DeliveryStatus } from "@/components/infra/DeliveryStatus";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { PageHeader } from "@/components/PageHeader";
@@ -26,13 +27,15 @@ export default async function InfraPage() {
     <div className="font-ui text-[15px] leading-[1.75]">
       <PageHeader name="infra" section={8} kind="System Administration" summary="the machine answering this request">
         <p>
-          This site isn&apos;t on a cloud platform. It runs in Docker on a small server in my homelab in Istanbul. The
-          server dials out to Cloudflare through a tunnel, so visitors never connect to it directly. Everything below is
-          read live from the Prometheus that watches it.
+          This site normally runs in Docker on a small server in my homelab in Istanbul. The
+          server dials out to Cloudflare through a tunnel, so visitors never connect to it directly. A static Cloudflare snapshot takes over when the origin fails. The metrics below
+          come from the Prometheus that watches the homeserver.
         </p>
       </PageHeader>
 
       <InfraDashboard initial={data} />
+
+      <DeliveryStatus />
 
       <ManSection title="HOW THIS REACHED YOU">
         <RequestPath colo={colo} />
