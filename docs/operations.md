@@ -32,7 +32,7 @@ The existing proxied Tunnel DNS records remain unchanged. The current routes cov
 
 ## Content and limitations
 
-Publish posts and offline data through Git on this branch and let Workers Builds redeploy. Only published posts are exported. Admin routes, uploads, metrics and view tracking have no runtime endpoints. GitHub star counts are captured during the build. `/infra` explains that the normal homeserver deployment was temporarily moved after a home internet outage longer than one hour.
+Publish posts and offline data through Git on this branch and let Workers Builds redeploy. Only published posts are exported. Admin routes, uploads, metrics and view tracking have no runtime endpoints. `/api/status` is a read-only Worker response with public release identity. GitHub star counts are captured during the build. `/infra` reports the backend of a live `/api/status` request, commit SHA and build timestamp. The snapshot cannot read homelab metrics; activation time is shown as not recorded rather than inferred. Checks run once per minute while visible and consume the Workers Free request allowance.
 
 Only Git-tracked content and public assets are available. Posts and uploads changed only on the homeserver volume must be recovered after connectivity returns. Never deploy source files as assets: Wrangler uploads only `out/`.
 
@@ -53,3 +53,5 @@ npm run preview
 ## Bypass the Worker entirely
 
 Automatic recovery already returns healthy traffic to the homeserver. To remove the failover layer entirely, explicitly delete its four routes in Cloudflare's Domains & Routes panel (or the routes API), then keep `routes: []` in this branch so future deploys do not add them again. An empty Wrangler array alone did not remove existing zone routes during our earlier rollback. The unchanged Tunnel DNS records then carry traffic directly. Keep this branch separate from main.
+
+Homeserver release/rollback and private backup procedures live in `docs/recovery.md` on `main`. Private archives must never be copied into `out/`.

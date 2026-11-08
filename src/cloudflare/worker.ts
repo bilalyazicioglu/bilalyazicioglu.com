@@ -1,3 +1,4 @@
+import release from "../generated/release.json";
 import { CLI_PAGES, wantsText } from "../lib/cli/client";
 import { isTincanHost, TINCAN_URL } from "../lib/tincan-host";
 import { OriginFailover } from "./failover";
@@ -62,6 +63,13 @@ const worker = {
           status: 503, headers: { "Cache-Control": "no-store", "X-Blog-Backend": "static-fallback" },
         });
       }
+    }
+
+    if (path === "/api/status" && ["GET", "HEAD"].includes(request.method)) {
+      const status = { backend: "static-fallback", release: { ...release, activatedAt: null }, checkedAt: new Date().toISOString() };
+      return new Response(request.method === "HEAD" ? null : JSON.stringify(status), {
+        headers: { "Content-Type": "application/json", "Cache-Control": "no-store", "X-Blog-Backend": "static-fallback" },
+      });
     }
 
     // No server-side admin, metrics or writes are part of this deployment.

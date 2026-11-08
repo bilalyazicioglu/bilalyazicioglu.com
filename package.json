@@ -16,7 +16,10 @@
     "verify:cost": "node scripts/verify-cost-policy.mjs",
     "preview": "wrangler dev",
     "verify:static": "node scripts/verify-static.mjs",
-    "check:worker": "wrangler deploy --dry-run --outdir .wrangler/dry-run"
+    "check:worker": "wrangler deploy --dry-run --outdir .wrangler/dry-run",
+    "prebuild": "node scripts/write-release.mjs",
+    "pretypecheck": "node scripts/write-release.mjs",
+    "pretest": "node scripts/write-release.mjs"
   },
   "dependencies": {
     "clsx": "^2.1.1",

@@ -50,3 +50,8 @@ next-env.d.ts
 
 # Covers and photos uploaded from the admin panel in development; production keeps them on the content volume.
 /src/content/offline-media/
+
+# Public build identity; generated before builds and typechecking
+/src/generated/release.json
+/.operations/
+/src/content/uploads/

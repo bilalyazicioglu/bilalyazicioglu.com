@@ -211,7 +211,7 @@ export function renderHome(
     ...paragraph(
       infra
         ? `This text was rendered a moment ago by ${cpu} in a homelab in Istanbul, and reached you through a Cloudflare Tunnel — no open ports at home.`
-        : "This site normally runs on my homeserver in Istanbul. After the home internet outage lasted over an hour, I moved it temporarily to Cloudflare Workers. This terminal page was generated at build time."
+        : "This site normally runs on my homeserver in Istanbul. Cloudflare Workers serves a static fallback when the origin fails. This terminal page was generated at build time; /api/status reports the backend and release for a current request."
     )
   );
   const status = infra ? vitals(infra) : null;

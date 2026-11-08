@@ -110,3 +110,21 @@ describe("static worker", () => {
     expect(await response.text()).toBe("");
   });
 });
+
+
+describe("public delivery status", () => {
+  it("reports snapshot identity without infrastructure details or caching", async () => {
+    const ASSETS = assets({});
+    const response = await worker.fetch(new Request("https://bilal-blog.example.workers.dev/api/status"), { ASSETS, PRIMARY_ENABLED: "true" });
+    const status = await response.json();
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Cache-Control")).toBe("no-store");
+    expect(status.backend).toBe("static-fallback");
+    expect(Object.keys(status).sort()).toEqual(["backend", "checkedAt", "release"]);
+    expect(Object.keys(status.release).sort()).toEqual(["activatedAt", "builtAt", "sha"]);
+    expect(status.release.activatedAt).toBeNull();
+    expect(ASSETS.fetch).not.toHaveBeenCalled();
+    const head = await worker.fetch(new Request("https://bilal-blog.example.workers.dev/api/status", { method: "HEAD" }), { ASSETS });
+    expect(await head.text()).toBe("");
+  });
+});
