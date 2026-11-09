@@ -3,6 +3,12 @@
 set -euo pipefail
 trap 'exit 130' INT
 trap 'exit 143' TERM
+# EXIT traps can run after Bash has unwound main's local scope on errexit.
+# Recovery state must outlive that function (not just on macOS Bash 3).
+candidate_id=""
+previous=""
+previous_date=""
+activated=false
 main() {
   cd "${BLOG_CHECKOUT:-$(dirname "$(readlink -f "$0")")/..}"
   umask 077
@@ -22,7 +28,7 @@ main() {
   export GIT_SHA=$(git rev-parse HEAD)
   export GIT_SUBJECT=$(git log -1 --format=%s)
   export GIT_COMMIT_TIME=$(git log -1 --format=%ct)
-  local previous previous_date candidate network candidate_id backup activated=false
+  local candidate network backup
   previous=$(docker inspect -f '{{.Image}}' blog)
   previous_date=$(docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' blog | sed -n 's/^DEPLOYED_AT=//p')
   candidate="portfolio-blog:$GIT_SHA"
