@@ -14,7 +14,7 @@ import { TINCAN_URL } from "@/lib/tincan-host";
 export type Lang = "en" | "tr";
 
 export const REPO = "https://github.com/bilalyazicioglu/tincan-cli";
-export const TINCAN_VERSION = "0.3.4";
+export const TINCAN_VERSION = "0.4.1";
 
 export const PAGES: Record<Lang, string> = {
   en: TINCAN_URL,
@@ -79,7 +79,6 @@ const Sag = () => <span className="tc-glyph i-brass">╎</span>;
 const Fray = () => <span className="tc-glyph i-alarm">┆</span>;
 
 const N0 = <a href="https://n0.computer">Number Zero</a>;
-const ISSUE = <a href={`${REPO}/issues/136`}>issue #136</a>;
 const STORY_EN = `${siteConfig.url}/blog/tincan-serverless-voice-chat-in-terminal`;
 const STORY_TR = `${siteConfig.url}/blog/tincan-terminalde-sesli-sohbet`;
 const DESIGN_NOTES = `${REPO}/blob/main/docs/wiki/9-Interface-Design.md`;
@@ -142,7 +141,7 @@ const en: Copy = {
           </p>
           <RoomShell />
           <p>
-            Leave the room name out and you get a 63-character invite code
+            Leave the room name out and you get a 64-character invite code
             instead: the host&apos;s public key, already on your clipboard. No
             accounts, no port forwarding, no VPN.
           </p>
@@ -212,8 +211,9 @@ const en: Copy = {
             registry, and no copy of your conversation anywhere but on the machines
             having it. It doesn&apos;t mean no infrastructure. Peers find each
             other through the DNS and relays run by {N0}, the company behind iroh.
-            If those went away, new connections would stop working. Pointing
-            tincan at your own relay is {ISSUE}.
+            Without those services, new connections using the default mode would
+            stop working. Use <code>--relay</code> to open a room on a relay you
+            run, with discovery and routing independent of n0.
           </p>
           <p>
             Being reachable also means being found. Everyone in a room learns
@@ -308,7 +308,7 @@ const en: Copy = {
       },
       {
         q: "Do I need an account, an email address or a phone number?",
-        a: "No. There is nothing to sign up for or log in to. You open a room and share either its name and a four-word passphrase, or a 63-character invite code. Each machine is known by a public key, and no copy of the conversation is kept anywhere but on the machines having it.",
+        a: "No. There is nothing to sign up for or log in to. You open a room and share either its name and a four-word passphrase, or a 64-character invite code. Each machine is known by a public key, and no copy of the conversation is kept anywhere but on the machines having it.",
       },
       {
         q: "Is tincan encrypted?",
@@ -320,7 +320,7 @@ const en: Copy = {
       },
       {
         q: "Can I keep it running while gaming or coding?",
-        a: "Yes. tincan is a native Rust program that lives in a terminal tab, not an Electron app. Start it with `--ptt` for push-to-talk on F4, or `--no-voice` for text chat only.",
+        a: "Yes. tincan is a native Rust program that lives in a terminal tab, not an Electron app. Start it with `--ptt` for push-to-talk on F4 or Ctrl+P, or `--no-voice` for text chat only.",
       },
       {
         q: "Does tincan run on Windows?",
@@ -430,7 +430,7 @@ const tr: Copy = {
           </p>
           <RoomShell />
           <p>
-            Oda adını vermezsen yerine 63 karakterlik bir davet kodu alırsın:
+            Oda adını vermezsen yerine 64 karakterlik bir davet kodu alırsın:
             host&apos;un açık anahtarı, çoktan panonda. Hesap yok, port yönlendirme
             yok, VPN yok.
           </p>
@@ -499,9 +499,9 @@ const tr: Copy = {
             kaydı yok ve konuşmanın, onu yapan bilgisayarlar dışında hiçbir yerde
             kopyası yok. Hiç altyapı olmadığı anlamına gelmez. Eşler birbirini,
             iroh&apos;un arkasındaki şirket olan {N0}&apos;nun işlettiği DNS ve
-            relay sunucuları üzerinden bulur. Bunlar ortadan kalkarsa yeni
-            bağlantılar kurulamaz. tincan&apos;ı kendi relay&apos;ine yönlendirmek{" "}
-            {ISSUE}&apos;da.
+            relay sunucuları üzerinden bulur. Bu servisler olmazsa varsayılan modda
+            yeni bağlantılar kurulamaz. <code>--relay</code> ile kendi relay
+            sunucunda, keşif ve yönlendirmesi n0&apos;dan bağımsız bir oda açabilirsin.
           </p>
           <p>
             Ulaşılabilir olmak, bulunabilir olmak demek. Bir odadaki herkes diğer
@@ -597,7 +597,7 @@ const tr: Copy = {
       },
       {
         q: "Hesap, e-posta ya da telefon numarası gerekir mi?",
-        a: "Hayır. Kaydolacak ya da giriş yapacak bir şey yok. Bir oda açarsın ve ya adını ile dört kelimelik parolasını ya da 63 karakterlik bir davet kodunu paylaşırsın. Her bilgisayar bir açık anahtarla tanınır ve konuşmanın, onu yapan bilgisayarlar dışında hiçbir yerde kopyası tutulmaz.",
+        a: "Hayır. Kaydolacak ya da giriş yapacak bir şey yok. Bir oda açarsın ve ya adını ile dört kelimelik parolasını ya da 64 karakterlik bir davet kodunu paylaşırsın. Her bilgisayar bir açık anahtarla tanınır ve konuşmanın, onu yapan bilgisayarlar dışında hiçbir yerde kopyası tutulmaz.",
       },
       {
         q: "tincan şifreli mi?",
@@ -609,7 +609,7 @@ const tr: Copy = {
       },
       {
         q: "Oyun oynarken ya da kod yazarken açık bırakabilir miyim?",
-        a: "Evet. tincan bir terminal sekmesinde çalışan yerel bir Rust programı, Electron uygulaması değil. Bas-konuş için `--ptt` ile başlat (F4 tuşu), yalnızca yazılı sohbet için `--no-voice` kullan.",
+        a: "Evet. tincan bir terminal sekmesinde çalışan yerel bir Rust programı, Electron uygulaması değil. Bas-konuş için `--ptt` ile başlat (F4 veya Ctrl+P), yalnızca yazılı sohbet için `--no-voice` kullan.",
       },
       {
         q: "Windows'ta çalışır mı?",
