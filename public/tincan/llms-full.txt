@@ -1,6 +1,6 @@
 # tincan — full reference
 
-> Serverless peer-to-peer voice and text chat for the terminal, written in Rust by Ahmet Bilal Yazıcıoğlu. Open source under the MIT license. Version 0.3.4.
+> Serverless peer-to-peer voice and text chat for the terminal, written in Rust by Ahmet Bilal Yazıcıoğlu. Open source under the MIT license. Version 0.4.1.
 
 - Project page: https://tincan.rs (Turkish: https://tincan.rs/tr)
 - Source: https://github.com/bilalyazicioglu/tincan-cli
@@ -11,12 +11,12 @@
 
 ## What it is
 
-tincan does what Discord's voice channels do without anyone's server in the middle. The first person to run it opens a room and gets a room name and a four-word passphrase, or a 63-character invite code that is the host's public key. Friends join with those from anywhere. There are no accounts, no port forwarding and no VPN. The interface is a terminal UI built with Ratatui: channels and people on the left, chat on the right, and a line between them that shows the connection.
+tincan does what Discord's voice channels do without anyone's server in the middle. The first person to run it opens a room and gets a room name and a four-word passphrase, or a 64-character invite code that is the host's public key. Friends join with those from anywhere. There are no accounts, no port forwarding and no VPN. The interface is a terminal UI built with Ratatui: channels and people on the left, chat on the right, and a line between them that shows the connection.
 
 ## When people use it
 
 - **Discord is blocked or down.** Where Discord is blocked by a country, an ISP, a school or an office network, the block targets Discord's domains and servers. tincan has no server of its own to block, so it usually keeps working without a VPN. It does rely on iroh's public discovery service and relays (see "What it depends on"); a network that blocks those, or all UDP, stops tincan too.
-- **Voice next to a game or a compiler.** tincan is a native program in a terminal tab rather than an Electron app. `--ptt` gives push-to-talk on F4; `--no-voice` is text only.
+- **Voice next to a game or a compiler.** tincan is a native program in a terminal tab rather than an Electron app. `--ptt` gives push-to-talk on F4 or Ctrl+P; `--no-voice` is text only.
 - **Talking without an account.** There is nothing to sign up for, and no copy of the conversation is kept anywhere but on the machines having it.
 
 ## How it works
@@ -36,7 +36,7 @@ tincan does what Discord's voice channels do without anyone's server in the midd
 
 ## What it depends on
 
-"Serverless" means there is no tincan server: no account, no room registry, and nothing this project runs. tincan uses iroh's N0 preset, which relies on services run by Number Zero (https://n0.computer): its pkarr relay and DNS for finding peers, and its relay servers for NAT traversal and fallback. If those went away, new connections would stop working. Pointing tincan at your own relay and DNS is issue #136.
+"Serverless" means there is no tincan server: no account, no room registry, and nothing this project runs. tincan uses iroh's N0 preset, which relies on services run by Number Zero (https://n0.computer): its pkarr relay and DNS for finding peers, and its relay servers for NAT traversal and fallback. Without those services, new connections in the default mode would stop working. Use `--relay` to open a room on your own relay without n0 discovery or routing.
 
 ## tincan, Discord, TeamSpeak and Mumble
 
@@ -69,7 +69,7 @@ Prebuilt binaries: aarch64-apple-darwin, x86_64-apple-darwin, x86_64-unknown-lin
 - `tincan devices` lists audio devices; `--input` and `--output` pick them by part of their name.
 - `--channels general,gaming,music` sets the channel list.
 
-Keys: Tab moves between channels, F2 joins or leaves voice, F3 mutes, F4 is push-to-talk (with `--ptt`), F5 deafens, F6 opens audio settings, F1 shows the full invite code, Ctrl+C quits.
+Keys: Tab moves between channels, F2/Ctrl+G joins or leaves voice, F3/Ctrl+T mutes, F4/Ctrl+P toggles push-to-talk (with `--ptt`), F5/Ctrl+E deafens, F6/Ctrl+O opens audio settings, F1/Ctrl+Y shows the full invite code, Ctrl+C quits.
 
 ## Frequently asked questions
 
@@ -87,3 +87,5 @@ No. iroh's NAT traversal gets through home routers, and falls back to a relay wh
 
 ### Is it free?
 Yes. It is MIT licensed and there is no paid tier.
+
+Mouse controls: click channels to read their chat without moving your voice call, people to select their volume controls, footer shortcuts to activate them, and audio settings to choose devices or adjust microphone controls. Compact layouts retain useful call and audio status.
